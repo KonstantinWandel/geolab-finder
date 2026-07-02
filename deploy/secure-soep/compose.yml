@@ -1,0 +1,77 @@
+name: geolab-soep
+
+# This host blocks Docker bridge/NAT creation (nested, non-systemd dockerd runs
+# with --bridge=none --iptables=false), so every service shares the host network
+# namespace and binds an explicit localhost port. The cloudflare quick tunnel
+# publishes the Caddy frontend (127.0.0.1:15181). Serving runs on CPU; the bge-m3
+# embeddings are precomputed on GPU offline (see scripts/rebuild_embeddings.py).
+
+services:
+  soep-backend:
+    build:
+      context: ../..
+      dockerfile: deploy/secure-geolab/backend.Dockerfile
+      network: host
+      args:
+        TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu124}
+    image: geolab-backend:latest
+    restart: unless-stopped
+    network_mode: host
+    command: ["uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "18001"]
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      GEOLAB_APP_MODE: soep
+      GEOLAB_ENABLE_DESTATIS: "0"
+      SOEP_METADATA_ROOT: /app/data/soep
+      SOEP_RAG_METADATA_PATH: /app/data/soep/soep_metadata_enriched.json
+      SOEP_RAG_CACHE_DIR: /tmp/soep_cache
+      SOEP_RAG_DEVICE: ${SOEP_RAG_DEVICE:-cpu}
+      SOEP_EMBEDDING_MODEL: ${SOEP_EMBEDDING_MODEL:-BAAI/bge-m3}
+      SOEP_RAG_RERANKER_MODEL: ${SOEP_RAG_RERANKER_MODEL:-BAAI/bge-reranker-v2-m3}
+      SOEP_RAG_LOAD_LLM: "0"
+      HF_HOME: /cache/hf
+      TRANSFORMERS_CACHE: /cache/hf/hub
+      TOKENIZERS_PARALLELISM: "false"
+      DESTATIS_RAG_ALLOW_ORIGINS: http://127.0.0.1:15181,http://localhost:15181
+    volumes:
+      - ../../soep_metadata_output:/app/data/soep:ro
+      - /home/researcher/hf_cache:/cache/hf
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  soep-frontend:
+    build:
+      context: ../..
+      dockerfile: deploy/secure-soep/frontend.Dockerfile
+      network: host
+      args:
+        VITE_API_URL: /api
+        VITE_APP_MODE: soep
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - soep-backend
+    environment:
+      GEOLAB_BASIC_AUTH_USER: ${GEOLAB_BASIC_AUTH_USER}
+      GEOLAB_BASIC_AUTH_HASH: ${GEOLAB_BASIC_AUTH_HASH}
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /config
+      - /data
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - soep-frontend
+    command: tunnel --no-autoupdate --url http://127.0.0.1:15181
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

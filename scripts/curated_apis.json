@@ -1,0 +1,147 @@
+[
+    {
+        "title": "regio iT: Abfallnavi API",
+        "documentation_link": "https://bundesapi.github.io/abfallnavi-api/",
+        "description": "Zugriff auf die Termine der Müllabfuhr unterschiedlicher Kommunen."
+    },
+    {
+        "title": "Bundesagentur für Arbeit: Ausbildungssuche API",
+        "documentation_link": "https://bundesapi.github.io/ausbildungssuche-api/",
+        "description": "Ausbildungsdatenbank durchsuchen."
+    },
+    {
+        "title": "Autobahn GmbH: Autobahn App API",
+        "documentation_link": "https://autobahn.api.bund.dev",
+        "description": "Verwaltungsdaten zu Baustellen, Staus, Ladestationen, Verkehrskameras."
+    },
+    {
+        "title": "Bundesagentur für Arbeit: Berufssprachkurssuche API",
+        "documentation_link": "https://bundesapi.github.io/berufssprachkurssuche-api/",
+        "description": "Berufssprachkurse suchen."
+    },
+    {
+        "title": "Bundesagentur für Arbeit: Bewerberbörse API",
+        "documentation_link": "https://bundesapi.github.io/bewerberboerse-api/",
+        "description": "Bewerberprofile abrufen."
+    },
+    {
+        "title": "Bundesagentur für Arbeit: Coachingangebote API",
+        "documentation_link": "https://bundesapi.github.io/coachingangebote-api/",
+        "description": "Coaching- und Aktivierungsmaßnahmen."
+    },
+    {
+        "title": "DESTATIS: Dashboard Deutschland API",
+        "documentation_link": "https://bundesapi.github.io/dashboard-deutschland-api/",
+        "description": "Statistische Daten des Dashboard Deutschland."
+    },
+    {
+        "title": "Deutsche Digitale Bibliothek REST API",
+        "documentation_link": "https://github.com/bundesAPI/ddb-api",
+        "description": "Zugriff auf Millionen digitalisierter Kulturgüter."
+    },
+    {
+        "title": "DESTATIS: DESTATIS API",
+        "documentation_link": "https://destatis.api.bund.dev",
+        "description": "Vollzugriff auf die Genesis-Datenbank via REST."
+    },
+    {
+        "title": "Deutschlandatlas-API",
+        "documentation_link": "https://github.com/bundesAPI/deutschlandatlas-api",
+        "description": "Geodaten und Kartenlayer des Deutschlandatlas."
+    },
+    {
+        "title": "Deutscher Wetterdienst: DWD App API",
+        "documentation_link": "https://dwd.api.bund.dev",
+        "description": "Wetterdaten, Warnungen, Radarbilder."
+    },
+    {
+        "title": "Eco-Counter: Eco-Visio API",
+        "documentation_link": "https://github.com/bundesAPI/eco-visio-api",
+        "description": "Fahrradzählstellendaten."
+    },
+    {
+        "title": "Bundesagentur für Arbeit: Entgeltatlas API",
+        "documentation_link": "https://bundesapi.github.io/entgeltatlas-api/",
+        "description": "Entgeltstatistiken nach Region und Beruf."
+    },
+    {
+        "title": "Feiertage API",
+        "documentation_link": "https://github.com/bundesAPI/feiertage-api",
+        "description": "Deutsche Feiertage pro Bundesland."
+    },
+    {
+        "title": "Hochwasserzentralen API",
+        "documentation_link": "https://bundesapi.github.io/hochwasserzentralen-api/",
+        "description": "Pegelstände und Hochwasserwarnungen der Länder."
+    },
+    {
+        "title": "Bundesagentur für Arbeit: Jobsuche API",
+        "documentation_link": "https://bundesapi.github.io/jobsuche-api/",
+        "description": "Stellensuche, Arbeitgeberdaten."
+    },
+    {
+        "title": "Bundesnetzagentur: Ladesäulenregister",
+        "documentation_link": "https://ladestationen.api.bund.dev",
+        "description": "Standorte und Status von E-Ladesäulen."
+    },
+    {
+        "title": "Umweltbundesamt: Luftqualität",
+        "documentation_link": "https://luftqualitaet.api.bund.dev",
+        "description": "Feinstaub, NO2, Ozon Messwerte."
+    },
+    {
+        "title": "Bundesnetzagentur: Marktdatenstammregister API",
+        "documentation_link": "https://github.com/bundesAPI/marktstammdaten-api",
+        "description": "Stammdaten zu Strom- und Gaserzeugern."
+    },
+    {
+        "title": "BBK: NINA API",
+        "documentation_link": "https://nina.api.bund.dev",
+        "description": "Warnmeldungen (Katastrophenschutz)."
+    },
+    {
+        "title": "WSV: Pegel-Online API",
+        "documentation_link": "https://pegel-online.api.bund.dev",
+        "description": "Gewässerpegel der Bundeswasserstraßen."
+    },
+    {
+        "title": "Polizei Brandenburg API",
+        "documentation_link": "https://polizei.brandenburg.api.bund.dev",
+        "description": "Pressemeldungen, Pegel, Waldbrandwarnstufen."
+    },
+    {
+        "title": "Regionalatlas-API",
+        "documentation_link": "https://github.com/bundesAPI/regionalatlas-api",
+        "description": "Regionalstatistik Layer."
+    },
+    {
+        "title": "Bundesamt für Strahlenschutz: ODL-Info API",
+        "documentation_link": "https://strahlenschutz.api.bund.dev",
+        "description": "Ortsdosisleistung (Radioaktivität) Messnetz."
+    },
+    {
+        "title": "Bundesagentur für Arbeit: Studiensuche API",
+        "documentation_link": "https://bundesapi.github.io/studiensuche-api/",
+        "description": "Studienangebote und Hochschulen."
+    },
+    {
+        "title": "Auswärtiges Amt: Reisewarnungen OpenData",
+        "documentation_link": "https://travelwarning.api.bund.dev",
+        "description": "Reisewarnungen und Botschaftsadressen."
+    },
+    {
+        "title": "VAG Nürnberg API",
+        "documentation_link": "https://opendata.vag.de/dataset/api-echtzeitauskunft",
+        "description": "Echtzeit-ÖPNV Daten Nürnberg (GTFS/API)."
+    },
+    {
+        "title": "Bundesagentur für Arbeit: Weiterbildungssuche API",
+        "documentation_link": "https://bundesapi.github.io/weiterbildungssuche-api/",
+        "description": "Fort- und Weiterbildungsangebote."
+    },
+    {
+        "title": "Handelsregister API",
+        "documentation_link": "https://github.com/bundesAPI/handelsregister",
+        "description": "Unternehmensinformationen."
+    }
+]

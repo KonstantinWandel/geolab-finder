@@ -1,0 +1,49 @@
+# --- Secrets (NEVER commit) ---
+.env
+.env.*
+!.env.example
+*/.env
+**/.auth.env
+.geolab_public_demo.env
+.last_*
+*.pid
+
+# --- Data & generated artifacts (license-bound or large; regenerate via scripts/) ---
+soep_metadata_output/
+backend/app/data/
+**/*.rds
+**/*.npy
+**/*.faiss
+**/*.parquet
+*.csv
+genesis_metadata/
+**/data/indexes/
+
+# --- Logs ---
+*.log
+logs/
+enrichment*.log
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.cache/
+.ipynb_checkpoints/
+*.egg-info/
+.venv/
+
+# --- Frontend ---
+frontend/node_modules/
+frontend/dist/
+node_modules/
+dist/
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/
+
+# build/analysis logs (cruft)
+**/build_log*.txt
+**/analysis_log.txt
+README_SOEP_RAG.md
