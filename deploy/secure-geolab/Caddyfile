@@ -1,0 +1,23 @@
+:8080
+
+encode gzip zstd
+
+header {
+  X-Content-Type-Options "nosniff"
+  X-Frame-Options "DENY"
+  Referrer-Policy "strict-origin-when-cross-origin"
+}
+
+basic_auth * {
+  {$GEOLAB_BASIC_AUTH_USER} {$GEOLAB_BASIC_AUTH_HASH}
+}
+
+handle /api/* {
+  reverse_proxy geolab-backend:8000
+}
+
+handle {
+  root * /srv
+  try_files {path} /index.html
+  file_server
+}

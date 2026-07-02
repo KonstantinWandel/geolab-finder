@@ -1,0 +1,101 @@
+name: geolab-rag-secure
+
+services:
+  geolab-backend:
+    build:
+      context: ../..
+      dockerfile: deploy/secure-geolab/backend.Dockerfile
+      args:
+        TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu124}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    gpus: ${GEOLAB_BACKEND_GPUS:-all}
+    environment:
+      DESTATIS_RAG_DATA_ROOT: /app/data
+      DESTATIS_RAG_INDEX_PATH: /app/data/destatis_advanced.faiss
+      DESTATIS_RAG_MAPPING_PATH: /app/data/destatis_full_metadata.json
+      DESTATIS_RAG_METADATA_DIR: /app/data/genesis_metadata
+      DESTATIS_RAG_API_DATA_PATH: /app/data/curated_apis.json
+      DESTATIS_RAG_REGION_MAP_PATH: /app/data/region_map.csv
+      SOEP_METADATA_ROOT: /app/data/soep
+      SOEP_SEARCH_METADATA_ROOT: /app/data/soep_search
+      SOEP_RAG_CACHE_DIR: /app/cache/soep
+      SOEP_RAG_METADATA_PATH: ${SOEP_RAG_METADATA_PATH:-/app/data/soep/soep_metadata_enriched.json}
+      HF_HOME: /cache/hf
+      TRANSFORMERS_CACHE: /cache/hf/hub
+      TOKENIZERS_PARALLELISM: "false"
+      DESTATIS_RAG_DEVICE: ${GEOLAB_BACKEND_DEVICE:-cuda}
+      SOEP_RAG_DEVICE: ${SOEP_RAG_DEVICE:-cpu}
+      SOEP_RAG_LOAD_LLM: ${SOEP_RAG_LOAD_LLM:-0}
+      SOEP_RAG_LLM_MODEL: ${SOEP_RAG_LLM_MODEL:-meta-llama/Llama-3.1-8B-Instruct}
+      SOEP_RAG_LLM_DEVICE: ${SOEP_RAG_LLM_DEVICE:-${GEOLAB_BACKEND_DEVICE:-cuda}}
+      SOEP_RAG_LLM_LOCAL_ONLY: ${SOEP_RAG_LLM_LOCAL_ONLY:-1}
+      SOEP_RAG_LLM_USE_4BIT: ${SOEP_RAG_LLM_USE_4BIT:-0}
+      SOEP_RAG_LLM_ATTN_IMPLEMENTATION: ${SOEP_RAG_LLM_ATTN_IMPLEMENTATION:-sdpa}
+      NVIDIA_VISIBLE_DEVICES: ${GEOLAB_BACKEND_GPU_IDS:-all}
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      DESTATIS_RAG_ALLOW_ORIGINS: ${DESTATIS_RAG_ALLOW_ORIGINS:-http://127.0.0.1:15173,http://localhost:15173}
+    ports:
+      - "127.0.0.1:${GEOLAB_BACKEND_PORT:-18000}:8000"
+    volumes:
+      - ../../../politics-bert_old/scripts/destatis_advanced.faiss:/app/data/destatis_advanced.faiss:ro
+      - ../../../politics-bert_old/scripts/destatis_full_metadata.json:/app/data/destatis_full_metadata.json:ro
+      - ../../../politics-bert_old/scripts/genesis_metadata:/app/data/genesis_metadata:ro
+      - ../../scripts/curated_apis.json:/app/data/curated_apis.json:ro
+      - ../../backend/app/data/region_map.csv:/app/data/region_map.csv:ro
+      - ../../backend/app/data/soep_metadata_pdf.json:/app/data/soep_search/soep_metadata_pdf.json:ro
+      - ../../backend/app/data/soep_metadata_manual.json:/app/data/soep_search/soep_metadata_manual.json:ro
+      - ../../soep_metadata_output:/app/data/soep:ro
+      - geolab_soep_cache:/app/cache/soep
+      - /mnt/extra/huggingface:/cache/hf
+    networks:
+      - internal
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  geolab-frontend:
+    build:
+      context: ../..
+      dockerfile: deploy/secure-geolab/frontend.Dockerfile
+      args:
+        VITE_API_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - geolab-backend
+    environment:
+      GEOLAB_BASIC_AUTH_USER: ${GEOLAB_BASIC_AUTH_USER}
+      GEOLAB_BASIC_AUTH_HASH: ${GEOLAB_BASIC_AUTH_HASH}
+    read_only: true
+    tmpfs:
+      - /tmp
+    ports:
+      - "127.0.0.1:${GEOLAB_FRONTEND_PORT:-15173}:8080"
+    networks:
+      - internal
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["cloudflare"]
+    restart: unless-stopped
+    depends_on:
+      - geolab-frontend
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflare/geolab-cloudflared.yml:/etc/cloudflared/config.yml:ro
+      - ./cloudflare/credentials.json:/etc/cloudflared/credentials.json:ro
+    networks:
+      - internal
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  internal:
+
+volumes:
+  geolab_soep_cache:

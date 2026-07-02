@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: "GeoLAB Metadata Finders: semantic search for SOEP variables and INKAR regional indicators"
+message: "If you use this software, please cite it using these metadata."
+type: software
+authors:
+  - given-names: Konstantin
+    family-names: Wandel
+    email: konstantin.wandel@uni-bielefeld.de
+    affiliation: "Universität Bielefeld"
+    orcid: "https://orcid.org/0009-0007-3321-7774"
+repository-code: "https://github.com/KonstantinWandel/geolab-finder"
+license: MIT
+version: 0.1.0
+date-released: "2026-05-27"
+keywords:
+  - semantic search
+  - retrieval-augmented generation
+  - cross-encoder reranking
+  - SOEP
+  - INKAR
+  - survey variable metadata
+  - regional indicators

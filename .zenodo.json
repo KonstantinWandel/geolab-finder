@@ -1,0 +1,24 @@
+{
+  "title": "GeoLAB Metadata Finders: semantic search for SOEP variables and INKAR regional indicators",
+  "description": "A research prototype for semantic discovery of research-data metadata. It searches SOEP-Core survey-variable metadata and INKAR regional indicators with a multilingual bi-encoder (bge-m3) and a multilingual cross-encoder reranker (bge-reranker; base by default), fused with a lexical and a dataset-authority signal, over German labels and English descriptions, with optional dataset / year / spatial-level / theme filters. Code only; no microdata is included or distributed.",
+  "upload_type": "software",
+  "license": "MIT",
+  "version": "0.1.0",
+  "publication_date": "2026-05-27",
+  "creators": [
+    {
+      "name": "Wandel, Konstantin",
+      "affiliation": "Universität Bielefeld",
+      "orcid": "0009-0007-3321-7774"
+    }
+  ],
+  "keywords": [
+    "semantic search",
+    "retrieval-augmented generation",
+    "cross-encoder reranking",
+    "SOEP",
+    "INKAR",
+    "survey variable metadata",
+    "regional indicators"
+  ]
+}
