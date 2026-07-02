@@ -287,7 +287,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                     <td>
                       <div style={{ fontWeight: 'bold' }}>{row.variable_name}</div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{row.label}</div>
-                      {row.theme && <div className="mini-chip">{row.theme}</div>}
+                      {row.source_key === 'inkar' && row.theme && <div className="mini-chip">{row.theme}</div>}
                     </td>
                     <td>
                       <div>{row.source_label}</div>

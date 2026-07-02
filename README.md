@@ -1,4 +1,4 @@
-# GeoLAB Metadata Finders
+# GeoLAB Regional Indicator Finder (INKAR)
 
 Semantic search over research-data **metadata**: a [SOEP](https://www.diw.de/soep) survey-variable finder and an [INKAR](https://www.inkar.de/) regional-indicator finder, served from one codebase.
 
