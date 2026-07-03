@@ -23,7 +23,16 @@ CORE_SURVEY_DATASETS = {"pl", "hl"}                                          # m
 # Gross/administrative/exit-sample + employer-side families: almost never the
 # canonical answer for a plain value/status query, but they leak to the top
 # because they are large and lexically similar. Penalized for plain queries.
-NOISE_DATASETS = {"pbrutto", "pbr_exit", "hbrutt", "hbrutto", "selfempl", "lee2estab"}
+NOISE_DATASETS = {
+    "pbrutto", "pbr_exit", "hbrutt", "hbrutto", "selfempl", "lee2estab",
+    # Fieldwork/methodology files. `interviewer` (248 vars) is the worst offender: it
+    # re-uses the person-questionnaire's variable names/labels (the interviewer answers
+    # the same items about themselves, e.g. plh0172-0174 "Zufriedenheit ..."), plus
+    # interviewer-characteristic items ("Geschlecht des Interviewers"). These clutter
+    # substantive queries and, being duplicates, can win the dedup survivor slot over the
+    # real `pl` item. Penalizing them fixes both (they sink, and the pl copy survives).
+    "interviewer", "instrumentation", "design",
+}
 BIOGRAPHY_DATASETS = {"biol", "bioagel"}                                     # biography spells (mild)
 SUBSAMPLE_DATASETS = {
     "jugendl", "youthl", "childl", "kidlong", "biopupil", "p_pupil", "refugspell",
@@ -80,6 +89,58 @@ _SAMPLE_GROUP_MEMBERS = {
     "specialized_modules":   {"health", "gripstr", "pflege", "cognit", "cogdj", "timepref", "trust", "camces"},
 }
 DATASET_SAMPLE_GROUP = {ds: grp for grp, members in _SAMPLE_GROUP_MEMBERS.items() for ds in members}
+
+# Human-readable dataset names for display (instead of bare `{dataset}.rds` filenames).
+# Distilled from the paneldata.org-grounded taxonomy notes (2026-07); the raw dataset id is
+# still shown in parentheses and used for filtering/URLs. Descriptive, not verbatim official
+# labels — swap in exact paneldata labels here if a canonical list is preferred.
+DATASET_TITLE = {
+    # Core - individual (person)
+    "pl": "Individual questionnaire (long)", "pgen": "Person: generated variables",
+    "pequiv": "Cross-National Equivalent File (person)", "ppathl": "Person tracking file (path)",
+    "pkal": "Individual activity calendar", "pwealth": "Individual wealth (imputed)",
+    "selfempl": "Self-employment module", "plueckel": "Catch-up (Lücke) individual questionnaire",
+    "gkal": "Catch-up questionnaire calendar",
+    # Core - household
+    "hl": "Household questionnaire (long)", "hgen": "Household: generated variables",
+    "hpathl": "Household tracking file (path)", "hconsum": "Household consumption",
+    "hwealth": "Household wealth (imputed)", "housing": "Housing / dwelling module",
+    "mihinc": "Household net income (imputed)",
+    # Youth
+    "jugendl": "Youth questionnaire (long)", "youthl": "Youth questionnaire (harmonized)",
+    # Children & parenting
+    "childl": "Child questionnaire (parent-reported)", "kidlong": "Child longitudinal file",
+    "biopupil": "Pupil / school-child questionnaire", "bioagel": "Child development by age",
+    # Biography & life-history
+    "biol": "Biography questionnaire", "lkal": "Biography life-course calendar",
+    "artkalen": "Activity-spell calendar (Artkalender)", "pbiospe": "Biography spell file",
+    "biobirth": "Birth / fertility biography", "bioparen": "Parents' biography",
+    "biojob": "First-job biography", "biosib": "Siblings file", "bioedu": "Educational biography",
+    "biocouplm": "Partnership spells (monthly)", "biocouply": "Partnership spells (yearly)",
+    "biomarsm": "Marriage spells (monthly)", "biomarsy": "Marriage spells (yearly)",
+    "biotwin": "Twins file", "lifespell": "Life / participation spells",
+    "vpl": "Deceased-person questionnaire",
+    # Migration & refugee
+    "migspell": "Migration spells", "refugspell": "Refugee migration spells",
+    "bioimmig": "Immigration biography", "cog_refu": "Refugee cognition tests",
+    "abroad": "Life outside Germany (emigrants)", "more_local": "MORE refugee-mentoring (mentors)",
+    "more_docu": "MORE refugee-mentoring (process)",
+    # Employer-employee (SOEP-LEE2)
+    "lee2estab": "SOEP-LEE2 establishment survey", "lee2person": "SOEP-LEE2 person-establishment link",
+    "lee2brutto": "SOEP-LEE2 sampling frame",
+    # Regional
+    "regionl": "Regional context indicators",
+    # Fieldwork & sampling
+    "pbrutto": "Person fieldwork file (gross)", "hbrutt": "Household address / fieldwork file",
+    "hbrutto": "Household fieldwork file (gross)", "pbr_exit": "Person fieldwork: leavers",
+    "pbr_hhch": "Person fieldwork: household changes", "interviewer": "Interviewer characteristics",
+    "instrumentation": "Survey mode / instrumentation", "design": "Sampling design & weights",
+    # Specialized modules
+    "health": "SF-12 health indices", "gripstr": "Grip-strength measurement",
+    "pflege": "Care / nursing module", "cognit": "Cognitive-ability tests (adults)",
+    "cogdj": "Cognitive tests (youth)", "timepref": "Time-preference experiment",
+    "trust": "Trust-game experiment", "camces": "Education-qualification coding (CAMCES)",
+}
 
 # How SOEP result rows collapse duplicate variables (env-configurable):
 #   "name_label" (default) - collapse only rows with the SAME variable_name AND label.
@@ -409,7 +470,10 @@ class SOEPRagAdvisorService:
             "variable_name": variable,
             "label": label,
             "dataset": dataset,
-            "dataset_label": f"{dataset}.rds" if dataset else "SOEP dataset",
+            "dataset_label": (
+                f"{DATASET_TITLE[dataset]} ({dataset})" if dataset in DATASET_TITLE
+                else (f"{dataset}.rds" if dataset else "SOEP dataset")
+            ),
             "sample_group": DATASET_SAMPLE_GROUP.get(dataset.lower(), "other"),
             "score": 0.0,
             "data_type": self._as_text(row.get("data_type")),
