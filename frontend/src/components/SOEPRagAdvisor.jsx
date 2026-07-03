@@ -479,7 +479,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
       </div>
 
       <div className="cite-footer text-muted">
-        Please cite: {cite.title} —{' '}
+        Please cite: Wandel, K. (2026). {cite.title}. Zenodo.{' '}
         <a href={`https://doi.org/${cite.doi}`} target="_blank" rel="noreferrer">doi.org/{cite.doi}</a>
       </div>
     </div>
