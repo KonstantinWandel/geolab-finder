@@ -149,6 +149,7 @@ class SOEPAdviceRequest(BaseModel):
     year_end: Optional[int] = None
     theme: Optional[str] = None
     regional_only: bool = False
+    sample_groups: Optional[List[str]] = None
 
 @app.post("/api/soep")
 async def aggregate_soep(req: SOEPRequest):
@@ -173,6 +174,7 @@ async def soep_advice(req: SOEPAdviceRequest):
         "year_end": req.year_end,
         "theme": req.theme,
         "regional_only": req.regional_only,
+        "sample_groups": req.sample_groups,
     }
     return soep_rag_advisor.answer_research_question(req.question, req.top_k, filters)
 
