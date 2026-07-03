@@ -753,3 +753,18 @@ tr:hover { background: var(--surface-2); }
 /* Per-finder "Please cite" footer at the bottom of the view. */
 .cite-footer { flex: 0 0 auto; text-align: center; font-size: 0.75rem; padding: 0.45rem 0.5rem 0.1rem; border-top: 1px solid var(--border); margin-top: 0.35rem; }
 .cite-footer a { color: var(--accent); }
+
+/* MOBILE FIX: on narrow screens the fixed 100dvh shell + body overflow:hidden made
+   the query box unreachable after the first search (could only search once). On mobile
+   let the whole page scroll naturally so the query box is always reachable/editable. */
+@media (max-width: 860px) {
+  html, body { height: auto; overflow: auto; }
+  #root { height: auto; }
+  .app-container { height: auto; min-height: 100dvh; overflow: visible; }
+  .main-content { overflow: visible; min-height: 0; }
+  .soep-view { height: auto; min-height: 0; }
+  .two-col-body { flex-direction: column; }
+  .left-col, .right-col { flex: 0 0 auto; }
+  .left-col .filter-panel { overflow-y: visible; }
+  .right-col .chat-history-container { overflow: visible; min-height: auto; }
+}
