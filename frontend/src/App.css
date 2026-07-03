@@ -749,3 +749,7 @@ tr:hover { background: var(--surface-2); }
 
 /* Aesthetic test: put the query box above the filters in the left column. */
 .left-col .chat-section { order: -1; }
+
+/* Per-finder "Please cite" footer at the bottom of the view. */
+.cite-footer { flex: 0 0 auto; text-align: center; font-size: 0.75rem; padding: 0.45rem 0.5rem 0.1rem; border-top: 1px solid var(--border); margin-top: 0.35rem; }
+.cite-footer a { color: var(--accent); }
