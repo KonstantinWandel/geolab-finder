@@ -1,5 +1,7 @@
 # GeoLAB Regional Indicator Finder (INKAR)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21134145.svg)](https://doi.org/10.5281/zenodo.21134145)
+
 Semantic search over research-data **metadata**: a [SOEP](https://www.diw.de/soep) survey-variable finder and an [INKAR](https://www.inkar.de/) regional-indicator finder, served from one codebase.
 
 You ask in plain language ("net individual income from labour", "rural childcare coverage by district") and get the most relevant variables/indicators back, ranked — across German labels and English descriptions.
