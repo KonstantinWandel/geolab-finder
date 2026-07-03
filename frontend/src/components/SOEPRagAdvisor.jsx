@@ -5,6 +5,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
   const isSoep = mode === 'soep'
   const isAll = mode === 'all'
   const showRegionalFilters = isInkar || isAll
+  const showSoepFilters = isSoep || isAll
   const STORAGE_KEY = `geolab_history_${mode}`
   const headerTitle = isInkar
     ? 'INKAR Regional Indicator Finder'
@@ -45,8 +46,13 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     year_start: '',
     year_end: '',
     regional_only: false,
+    sample_group: 'Any',
     top_k: 12,
   })
+
+  // Human label for a SOEP sample/questionnaire group key (from the fetched facet).
+  const sampleGroupLabel = (key) =>
+    (filterOptions?.sample_groups || []).find((g) => g.value === key)?.label || null
 
   const [chatHistory, setChatHistory] = useState([])
   const [selectedRows, setSelectedRows] = useState({})
@@ -124,6 +130,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
           year_start: filterSnapshot.year_start ? Number(filterSnapshot.year_start) : null,
           year_end: filterSnapshot.year_end ? Number(filterSnapshot.year_end) : null,
           regional_only: Boolean(filterSnapshot.regional_only),
+          sample_groups: filterSnapshot.sample_group === 'Any' ? null : [filterSnapshot.sample_group],
         }),
       })
 
@@ -296,6 +303,14 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                       <div style={{ fontWeight: 'bold' }}>{row.variable_name}</div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{row.label}</div>
                       {row.source_key === 'inkar' && row.theme && <div className="mini-chip">{row.theme}</div>}
+                      {row.source_key === 'soep' && sampleGroupLabel(row.sample_group) && (
+                        <div className="mini-chip">{sampleGroupLabel(row.sample_group)}</div>
+                      )}
+                      {row.also_in_datasets?.length > 0 && (
+                        <div className="text-muted" style={{ fontSize: '0.8rem', marginTop: '2px' }}>
+                          also in: {row.also_in_datasets.join(', ')}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <div>{row.source_label}</div>
@@ -366,6 +381,17 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
             ))}
           </select>
         </div>
+        {showSoepFilters && (filterOptions?.sample_groups || []).length > 0 && (
+          <div>
+            <label>Sample / questionnaire</label>
+            <select value={filters.sample_group} onChange={(e) => updateFilter('sample_group', e.target.value)}>
+              <option value="Any">Any sample / questionnaire</option>
+              {(filterOptions?.sample_groups || []).map((g) => (
+                <option key={g.value} value={g.value}>{g.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
         {showRegionalFilters && (
           <>
             <div>

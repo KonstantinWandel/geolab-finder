@@ -37,6 +37,59 @@ SUBSAMPLE_QUERY_TOKENS = {
     "refugee", "refugees", "geflüchtet", "geflüchtete", "flucht", "migrant", "migration",
 }
 
+# --- Sample / questionnaire groups ----------------------------------------
+# A user-facing facet so one can narrow to "the adult Core person questionnaire"
+# without knowing which dataset a variable lives in ("Geschlechterrollen" should
+# be findable in pl without wading through jugendl/childl copies).
+#
+# IMPORTANT — this is a POPULATION / QUESTIONNAIRE grouping DERIVED FROM THE
+# DATASET, not true SOEP sample membership. Real sample membership (Samples A-N;
+# IAB-SOEP Migration M1/M2; IAB-BAMF-SOEP Refugee M3-M6) is a *respondent*
+# attribute living in the psample/hsample VALUES inside tracking files
+# (ppathl/hpathl/design), never a field on every variable. A single dataset
+# (e.g. pl) pools respondents from all samples, so a group narrows the
+# questionnaire/topic/population-role, not the sampling frame. Mapping grounded
+# against paneldata.org / SOEPcompanion + inspected variable labels (2026-07).
+SAMPLE_GROUP_LABELS = [
+    ("core_person",          "Core - Individual (adult)"),
+    ("core_household",       "Core - Household"),
+    ("youth",                "Youth (16-17)"),
+    ("children_parenting",   "Children & parenting"),
+    ("biography_lifehistory","Biography & life-history"),
+    ("migration_refugee",    "Migration & refugee"),
+    ("employer_employee_lee","Employer-employee (SOEP-LEE2)"),
+    ("regional_context",     "Regional context"),
+    ("specialized_modules",  "Specialized modules & tests"),
+    ("fieldwork_sampling",   "Fieldwork & sampling"),
+    ("other",                "Other / unclassified"),
+]
+SAMPLE_GROUP_ORDER = {key: i for i, (key, _) in enumerate(SAMPLE_GROUP_LABELS)}
+_SAMPLE_GROUP_MEMBERS = {
+    "core_person":           {"pl", "pgen", "pequiv", "ppathl", "pkal", "pwealth", "selfempl", "plueckel", "gkal"},
+    "core_household":        {"hl", "hgen", "hpathl", "hconsum", "hwealth", "housing", "mihinc"},
+    "youth":                 {"jugendl", "youthl"},
+    "children_parenting":    {"childl", "kidlong", "biopupil", "bioagel"},
+    "biography_lifehistory": {"biol", "lkal", "artkalen", "pbiospe", "biobirth", "bioparen", "biojob",
+                              "biosib", "bioedu", "biocouplm", "biocouply", "biomarsm", "biomarsy",
+                              "biotwin", "lifespell", "vpl"},
+    "migration_refugee":     {"migspell", "refugspell", "bioimmig", "cog_refu", "abroad", "more_local", "more_docu"},
+    "employer_employee_lee": {"lee2estab", "lee2person", "lee2brutto"},
+    "regional_context":      {"regionl"},
+    "fieldwork_sampling":    {"pbrutto", "hbrutt", "hbrutto", "pbr_exit", "pbr_hhch", "interviewer",
+                              "instrumentation", "design"},
+    "specialized_modules":   {"health", "gripstr", "pflege", "cognit", "cogdj", "timepref", "trust", "camces"},
+}
+DATASET_SAMPLE_GROUP = {ds: grp for grp, members in _SAMPLE_GROUP_MEMBERS.items() for ds in members}
+
+# How SOEP result rows collapse duplicate variables (env-configurable):
+#   "name_label" (default) - collapse only rows with the SAME variable_name AND label.
+#       Safe: `sex`="Geschlecht" (respondent) and `sex`="Geschlecht des Kindes" (child)
+#       share a name across datasets but differ in meaning, so they stay separate.
+#       (430 variable_names recur across datasets here; 272 of them differ in label.)
+#   "name"    - collapse purely by variable_name (aggressive; merges the 272 above).
+#   "item_id" - no cross-dataset collapse (legacy: keyed on soep:{dataset}:{variable}).
+SOEP_DEDUP_MODE = os.getenv("SOEP_RAG_SOEP_DEDUP", "name_label").strip().lower()
+
 
 class SOEPRagAdvisorService:
     """Semantic metadata advisor for SOEP variables and regionalized INKAR indicators."""
@@ -352,6 +405,7 @@ class SOEPRagAdvisorService:
             "label": label,
             "dataset": dataset,
             "dataset_label": f"{dataset}.rds" if dataset else "SOEP dataset",
+            "sample_group": DATASET_SAMPLE_GROUP.get(dataset.lower(), "other"),
             "score": 0.0,
             "data_type": self._as_text(row.get("data_type")),
             "value_labels": self._strip_missing_value_labels(row.get("value_labels", "") or ""),
@@ -608,6 +662,12 @@ class SOEPRagAdvisorService:
             "spatial_levels": sorted({level for row in self._rows for level in row.get("spatial_levels", [])}),
             "themes": sorted({row.get("theme", "") for row in self._rows if row.get("theme") and row.get("source_key") == "inkar"}),
             "datasets": sorted({row.get("dataset_label", row.get("dataset", "")) for row in self._rows if row.get("dataset_label") or row.get("dataset")}),
+            # Sample/questionnaire groups present among SOEP rows, in display order.
+            "sample_groups": [
+                {"value": key, "label": label}
+                for key, label in SAMPLE_GROUP_LABELS
+                if key in {row.get("sample_group") for row in self._rows if row.get("source_key") == "soep"}
+            ],
             "year_min": min(years) if years else None,
             "year_max": max(years) if years else None,
             "bbsr_reference": self._bbsr_reference,
@@ -626,6 +686,16 @@ class SOEPRagAdvisorService:
             row.get("sheet", ""),
         }:
             return False
+
+        # Sample/questionnaire group (SOEP only). Accepts a list (multi-select) or
+        # a scalar; INKAR rows have no sample group and are gated by source above.
+        sample_groups = filters.get("sample_groups")
+        if sample_groups:
+            if isinstance(sample_groups, str):
+                sample_groups = [sample_groups]
+            wanted = {self._as_text(g) for g in sample_groups if self._as_text(g) and self._as_text(g) != "Any"}
+            if wanted and row.get("source_key") == "soep" and row.get("sample_group") not in wanted:
+                return False
 
         nuts_level = self._as_text(filters.get("nuts_level"))
         if nuts_level and nuts_level != "Any":
@@ -810,12 +880,21 @@ class SOEPRagAdvisorService:
 
     @staticmethod
     def _dedup_key(cand: Dict[str, Any]):
-        """Collapse the same INKAR indicator that appears on multiple sheets
-        (item_id = inkar:{sheet}:{code}) to one ranked slot keyed on the code.
-        SOEP rows stay keyed on their already-unique item_id."""
+        """One ranked slot per logical variable.
+
+        INKAR: collapse the same indicator across sheets (keyed on the code).
+        SOEP: collapse duplicate variables that recur across datasets. Default
+        keys on (variable_name, label) so genuinely-different variables that
+        merely share a name (e.g. `sex`="Geschlecht" vs "Geschlecht des Kindes")
+        stay separate; configurable via SOEP_RAG_SOEP_DEDUP (see SOEP_DEDUP_MODE)."""
         if cand.get("source_key") == "inkar":
             return ("inkar", (cand.get("variable_name") or "").lower())
-        return cand.get("item_id")
+        variable = (cand.get("variable_name") or "").lower()
+        if SOEP_DEDUP_MODE == "item_id":
+            return cand.get("item_id")
+        if SOEP_DEDUP_MODE == "name":
+            return ("soep", variable)
+        return ("soep", variable, (cand.get("label") or "").strip().lower())
 
     def _get_llm_pipe(self):
         if not self._use_llm:
@@ -1011,6 +1090,20 @@ class SOEPRagAdvisorService:
             idx += 1
 
         recommended.sort(key=lambda x: x.get("score", -999), reverse=True)
+
+        # Annotate each surviving row with the OTHER datasets (among the retrieved
+        # candidates) that shared its dedup key, so a collapse never hides the fact
+        # that the same variable also occurs in, e.g., the Core dataset one wants.
+        key_datasets: Dict[Any, set] = {}
+        for cand in all_unique_cands.values():
+            key_datasets.setdefault(self._dedup_key(cand), set()).add(cand.get("dataset"))
+        for cand in recommended:
+            others = sorted(
+                d for d in key_datasets.get(self._dedup_key(cand), set())
+                if d and d != cand.get("dataset")
+            )
+            if others:
+                cand["also_in_datasets"] = others
 
         datasets_found = sorted(
             {
