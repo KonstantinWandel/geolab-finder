@@ -163,7 +163,11 @@ async def search_soep(q: str):
 
 
 @app.post("/api/soep/advice")
-async def soep_advice(req: SOEPAdviceRequest):
+def soep_advice(req: SOEPAdviceRequest):
+    # Sync (not async) on purpose: the body does blocking CPU model inference. As a sync
+    # path operation FastAPI runs it in a threadpool, so concurrent requests (e.g. a class
+    # of students) run in parallel across cores instead of serializing on the event loop.
+    # Inference is read-only over shared models/embeddings (loaded at startup) -> thread-safe.
     soep_rag_advisor.load()
     filters = {
         "dataset_scope": req.dataset_scope,
