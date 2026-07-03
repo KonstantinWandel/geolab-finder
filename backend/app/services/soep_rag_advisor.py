@@ -107,8 +107,13 @@ class SOEPRagAdvisorService:
         self.metadata_path = self._resolve_soep_metadata_path() if self.load_soep else None
         self.inkar_metadata_path = self._resolve_inkar_metadata_path() if self.load_inkar else None
         self.bbsr_reference_path = self._resolve_bbsr_reference_path() if self.load_inkar else None
-        self.model_name = os.getenv("SOEP_EMBEDDING_MODEL", "BAAI/bge-m3")
-        self.embedding_max_seq_length = int(os.getenv("SOEP_EMBEDDING_MAX_SEQ_LENGTH", "8192"))
+        # Default bi-encoder: multilingual-e5-large-instruct. An A/B over the corpus
+        # (bge-m3, e5-instruct, Qwen3-Embedding-4B, arctic-embed-l-v2.0) showed e5 is the
+        # only model that surfaces terse German concept queries (e.g. "Geschlechterrollen"
+        # -> adult-Core gender-role battery, dense rank 2 vs 203 for bge-m3). e5 needs an
+        # instruction prefix on queries (see _format_query); documents are embedded raw.
+        self.model_name = os.getenv("SOEP_EMBEDDING_MODEL", "intfloat/multilingual-e5-large-instruct")
+        self.embedding_max_seq_length = int(os.getenv("SOEP_EMBEDDING_MAX_SEQ_LENGTH", "512"))
         self.top_k_default = 8
 
         retrieval_device = os.getenv("SOEP_RAG_DEVICE", "cpu")
@@ -733,6 +738,18 @@ class SOEPRagAdvisorService:
 
         return True
 
+    def _format_query(self, query: str) -> str:
+        # e5-instruct models require an instruction prefix on QUERIES only (documents stay
+        # raw). Without it e5 retrieval degrades sharply; bge-m3 and most others take the
+        # raw query, so this is a no-op unless the configured model is an e5 variant.
+        if "e5" in self.model_name.lower():
+            task = os.getenv(
+                "SOEP_RAG_E5_QUERY_TASK",
+                "Given a search query, retrieve relevant survey-variable descriptions",
+            )
+            return f"Instruct: {task}\nQuery: {query}"
+        return query
+
     def _search(self, query: str, k: int, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         if not self._rows or self._embedder is None or self._embeddings is None:
             raise RuntimeError("Metadata RAG advisor not loaded.")
@@ -742,7 +759,7 @@ class SOEPRagAdvisorService:
             return []
 
         q_vec = self._embedder.encode(
-            [query],
+            [self._format_query(query)],
             batch_size=1,
             convert_to_numpy=True,
             normalize_embeddings=True,
