@@ -45,17 +45,36 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-08-25: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 5,056 rows**
-(4,396 GeoDB records + 660 INKAR). By source: Regionalstatistik/GENESIS 3,623 (2,757 Merkmale +
-866 Tabellen), Regionalatlas 232, Migration & Integration 140, Deutschlandatlas 86, Open Data ÖPNV
-77, BA Strukturdaten 68, Bundestagswahl 2021 49, Bundes-Klinik-Atlas 41, Ländermonitor 17, G-BA
-Qualitätsberichte 16, German Company Data 12, Hochschulkompass 11, plus 25 portal-level records.
-Adding a source means: a `FETCH_PLAN` entry, a flattener, rebuild, re-embed, redeploy.
+State as of 2026-08-25: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 10,046 rows**
+(9,386 GeoDB records + 660 INKAR) from **19 sources**. Largest: Regionalstatistik/GENESIS 3,622
+(2,757 Merkmale + 866 Tabellen), GENESIS-Online Bund 3,026 tables, Zensus 2022 1,440 tables,
+Gigabit-Grundbuch/Breitbandatlas 463, Regionalatlas 232, Migration & Integration 140,
+Deutschlandatlas 86, Open Data ÖPNV 77, BA Strukturdaten 68, Bundestagswahl 2021 49,
+Bundes-Klinik-Atlas 41, Arbeitsmarkt kommunal 33, Unfallatlas 25, Ländermonitor 17, G-BA 16,
+German Company Data 12, Hochschulkompass 11, plus 26 portal-level records.
 
-**Every record carries `link_level`**, saying how precisely its link lands: `indicator` (232),
-`table` (866), `statistic` (965), `dataset` (511), `portal` (1,822). The UI shows it as a chip, the
-checklist totals it per source, and the honest answer to "how good is the linking" is that number.
-Improving it is the main quality lever: a source whose records are all `portal` is a stub.
+**Every record carries `link_level`**, saying how precisely its link lands: `table` (5,332),
+`portal` (1,823), `dataset` (1,032), `statistic` (965), `indicator` (232). The UI shows it as a
+chip, the checklist totals it per source, and the honest answer to "how good is the linking" is
+that number. Improving it is the main quality lever; a source whose records are all `portal` is a
+stub. Two caveats are recorded in the records themselves: the federal GENESIS and Zensus portals
+are client-rendered SPAs, so their table links follow the documented form but could not be
+verified server-side from here, and Zensus leaves `spatial_levels` empty where the title does not
+name a level (the level is encoded in the opaque table code).
+
+**Crawl instances in parallel, never within one instance.** Regionalstatistik, federal GENESIS and
+Zensus are separate hosts with separate tokens and separate rate limits, so three concurrent
+`fetch_genesis_catalogue.py` processes are fine and each writes its own file. Inside one instance
+stay sequential: the services cap parallel requests (Destatis says 3, Regionalstatistik 10) and
+kill long-running ones. Runtimes measured here: regionalstatistik 129 statistics / 866 tables in
+about 20 min, federal 331 / 3,026 in about 50 min, Zensus 12 / 1,440 in about 20 min.
+
+**Adding a source that is not in the workbook means adding a workbook row**, not a special case:
+`build_source_registry.py` asserts the expected count (`EXPECTED_SOURCES`, currently 29) and
+derives folder numbering from row order, so Unfallatlas, GENESIS-Bund and Zensus each got a blue
+row in `Tabelle1` and their own `data_sources/<NN>-<slug>/` folder. **Reordering sources reorders
+the records, which silently invalidates the embedding cache** (it matches on row count only), so
+always re-embed after adding or moving a source, never only after changing content.
 
 **`data_sources/CHECKLIST.md` is the per-source tracker** and is generated, never hand-edited:
 `scripts/build_status_report.py` reads the registry, each `raw/` folder, the built metadata and a

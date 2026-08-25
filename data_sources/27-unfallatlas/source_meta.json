@@ -1,0 +1,47 @@
+{
+  "name": "Unfallatlas",
+  "slug": "unfallatlas",
+  "url": "https://unfallatlas.statistikportal.de/",
+  "excel_row": 28,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "Adressen / Koordinaten"
+  ],
+  "topic_groups": [
+    "Verkehr / Mobilität"
+  ],
+  "topics": [
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Straßenverkehrsunfälle"
+    }
+  ],
+  "topic_labels": [
+    "Verkehr / Mobilität",
+    "Straßenverkehrsunfälle"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2016,
+  "coverage_end_month": null,
+  "coverage_end_year": 2025,
+  "update_frequency": "jährlich",
+  "note": "Unfälle mit Personenschaden, georeferenziert (Einzelunfälle); Länder treten schrittweise bei"
+}

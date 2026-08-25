@@ -36,7 +36,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
   // Per-finder citation (each deployment is archived on Zenodo under its own DOI).
   const CITATION = {
     soep: { title: 'SOEP Variable Finder', doi: '10.5281/zenodo.21134306' },
-    inkar: { title: 'GeoLAB Regional Indicator Finder', doi: '10.5281/zenodo.21134145' },
+    inkar: { title: 'GeoDB Geodata Index', doi: '10.5281/zenodo.21134145' },
     all: { title: 'GeoLAB Metadata Finders', doi: '10.5281/zenodo.21134145' },
   }
   const cite = CITATION[mode] || CITATION.all

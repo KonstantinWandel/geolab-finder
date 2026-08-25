@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "workbook": "Geospatial_Data_Sources.xlsx",
-  "n_sources": 26,
+  "n_sources": 29,
   "sources": [
     {
       "name": "Regionalatlas Deutschland",
@@ -2311,6 +2311,190 @@
       "coverage_end_year": 2021,
       "update_frequency": "vierjährig",
       "note": "abhängig von Variable"
+    },
+    {
+      "name": "Unfallatlas",
+      "slug": "unfallatlas",
+      "url": "https://unfallatlas.statistikportal.de/",
+      "excel_row": 28,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": false,
+        "API": false,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "Adressen / Koordinaten"
+      ],
+      "topic_groups": [
+        "Verkehr / Mobilität"
+      ],
+      "topics": [
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "Verkehr / Mobilität"
+        },
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "Straßenverkehrsunfälle"
+        }
+      ],
+      "topic_labels": [
+        "Verkehr / Mobilität",
+        "Straßenverkehrsunfälle"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 2016,
+      "coverage_end_month": null,
+      "coverage_end_year": 2025,
+      "update_frequency": "jährlich",
+      "note": "Unfälle mit Personenschaden, georeferenziert (Einzelunfälle); Länder treten schrittweise bei"
+    },
+    {
+      "name": "GENESIS-Online (Bund)",
+      "slug": "genesis-online-bund",
+      "url": "https://www-genesis.destatis.de/genesis/online",
+      "excel_row": 29,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only",
+        "machine-readable API"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": true,
+        "Karte": false,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte"
+      ],
+      "topic_groups": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Bauen / Wohnen",
+        "Bevölkerung",
+        "Bildung",
+        "Soziales",
+        "Wirtschaft und Unternehmen"
+      ],
+      "topics": [
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Arbeitsmarkt & Beschäftigung"
+        },
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Bauen / Wohnen"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerung"
+        },
+        {
+          "group": "Bildung",
+          "topic": "Bildung"
+        },
+        {
+          "group": "Soziales",
+          "topic": "Soziales"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Wirtschaft und Unternehmen"
+        }
+      ],
+      "topic_labels": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Bauen / Wohnen",
+        "Bevölkerung",
+        "Bildung",
+        "Soziales",
+        "Wirtschaft und Unternehmen"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 1949,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "laufend",
+      "note": "Bundesdatenbank der amtlichen Statistik; Tabellenkatalog über die REST-API abrufbar"
+    },
+    {
+      "name": "Zensus 2022",
+      "slug": "zensus-2022",
+      "url": "https://ergebnisse.zensus2022.de/",
+      "excel_row": 30,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only",
+        "machine-readable API",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": true,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Bauen / Wohnen",
+        "Bevölkerung",
+        "Bildung"
+      ],
+      "topics": [
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Bauen / Wohnen"
+        },
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Wohnfläche je Wohnung / Einwohner"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerung"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerung nach Geschlecht / Alter"
+        },
+        {
+          "group": "Bildung",
+          "topic": "Bildung"
+        }
+      ],
+      "topic_labels": [
+        "Bauen / Wohnen",
+        "Wohnfläche je Wohnung / Einwohner",
+        "Bevölkerung",
+        "Bevölkerung nach Geschlecht / Alter",
+        "Bildung"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 2022,
+      "coverage_end_month": null,
+      "coverage_end_year": 2022,
+      "update_frequency": "alle 10 Jahre",
+      "note": "Gebäude, Wohnungen, Haushalte und Personenmerkmale; Ebene steckt im Tabellencode, bis Gemeinde/Gitterzelle"
     }
   ]
 }

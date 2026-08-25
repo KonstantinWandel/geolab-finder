@@ -13,7 +13,7 @@ call. A 200 is not proof of auth: check that `Username` is not GAST before trust
 Tokens live in ~/kwandel/.config/secrets/ as `key=<token>`; this script reads them and never
 prints them.
 
-Output: data_sources/21-datenguide-abgeschaltet/raw/genesis_catalogue_<instance>.json
+Output: data_sources/<the instance's own folder>/raw/genesis_catalogue_<instance>.json
         {"instance", "fetched_at", "statistics": [...], "tables": [...]}
 
 Run detached; a full table enumeration takes minutes:
@@ -34,7 +34,12 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-OUT_DIR = REPO_ROOT / "data_sources" / "21-datenguide-abgeschaltet" / "raw"
+# Each instance is its own row in the workbook, so its catalogue lands in its own folder.
+OUT_DIRS = {
+    "regionalstatistik": REPO_ROOT / "data_sources" / "21-datenguide-abgeschaltet" / "raw",
+    "destatis": REPO_ROOT / "data_sources" / "28-genesis-online-bund" / "raw",
+    "zensus": REPO_ROOT / "data_sources" / "29-zensus-2022" / "raw",
+}
 SECRETS = Path.home() / "kwandel" / ".config" / "secrets"
 
 INSTANCES = {
@@ -48,7 +53,17 @@ INSTANCES = {
         "secret": "destatis_key.txt",
         "portal": "https://www-genesis.destatis.de/genesis/online",
     },
+    "zensus": {
+        "base": "https://ergebnisse.zensus2022.de/api/rest/2020/",
+        "secret": "zensus_token.txt",
+        "portal": "https://ergebnisse.zensus2022.de/datenbank/online",
+    },
 }
+
+# Instances are separate hosts with separate tokens and separate rate limits, so crawling
+# them concurrently is safe. Concurrency WITHIN one instance is not: the service caps
+# parallel requests (Destatis says 3, Regionalstatistik 10) and starts killing long-running
+# ones. One process per instance, sequential inside it.
 
 
 def read_token(filename: str) -> str:
@@ -115,8 +130,9 @@ def main() -> None:
             print(f"[tables] {position}/{len(statistics)} statistics, {len(tables)} tables", flush=True)
         time.sleep(args.sleep)
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = OUT_DIR / f"genesis_catalogue_{args.instance}.json"
+    out_dir = OUT_DIRS[args.instance]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"genesis_catalogue_{args.instance}.json"
     out_path.write_text(json.dumps({
         "instance": args.instance,
         "portal": config["portal"],

@@ -35,6 +35,9 @@ METADATA = REPO_ROOT / "soep_metadata_output" / "geodb_metadata.json"
 WORKBOOK = REPO_ROOT / "Geospatial_Data_Sources.xlsx"
 WORKBOOK_ORIGINAL = REPO_ROOT / "Geospatial_Data_Sources_orig.xlsx"
 CHECKLIST = DATA_SOURCES / "CHECKLIST.md"
+# Clean handoff folder: only what a human needs, named so it is identifiable on sight.
+DELIVERABLES = REPO_ROOT / "deliverables_geodb_datenquellen"
+PROGRESS_BASE = "geodb_datenquellen_fortschritt"
 
 AI_BLUE = Font(color="FF1F77B4")
 AI_BLUE_BOLD = Font(color="FF1F77B4", bold=True)
@@ -56,39 +59,51 @@ SOURCE_KEYS: Dict[str, List[str]] = {
     "bundes-klinik-atlas": ["bundes_klinik_atlas"],
     "open-data-oepnv": ["opendata_oepnv"],
     "german-companies": ["german_companies"],
+    "unfallatlas": ["unfallatlas"],
+    "genesis-online-bund": ["genesis_bund"],
+    "zensus-2022": ["zensus2022"],
+    "breitband-monitor": ["breitband"],
+    "arbeitsmarkt-kommunal-ba": ["ba_arbeitsmarkt_kommunal"],
 }
 
 # Curated per-source state. `state` drives the checklist marker:
 #   done     nothing outstanding
 #   partial  indexed, but a better or fuller catalogue is still reachable
 #   open     needs a human step before it can be indexed properly
+# `next` is the developer detail (English, shown in CHECKLIST.md); `de` is the short phrase
+# that goes into the German handoff table.
 OPEN_ITEMS: Dict[str, Dict[str, str]] = {
-    "regionalatlas-deutschland": {"state": "done", "next": "Nothing outstanding. Re-fetch services.json when the atlas updates (it carries a timestamp per theme)."},
-    "breitband-monitor": {"state": "open", "next": "Portal page only. The indicator list (Breitbandverfügbarkeit by bandwidth class and spatial level) sits behind the Gigabitgrundbuch map; needs a browser export or the BMDV open-data download."},
-    "breitbandatlas": {"state": "open", "next": "The bmvi.de link in the workbook is dead; Gigabitgrundbuch is the successor. Needs the indicator/download page saved from a browser."},
-    "arbeitsmarktstatistik-ba-karte": {"state": "partial", "next": "Glossary and portal saved. The map's own indicator list is not machine-readable; BA's API page may expose a catalogue worth crawling."},
-    "strukturdaten-und-indikatoren-ba": {"state": "done", "next": "One booklet defines the series. Refresh with a newer heft when the BA publishes one."},
-    "arbeitsmarktreport-ba": {"state": "partial", "next": "Booklet downloaded but not yet flattened: its 22 sheets (Eckwerte, Unterbeschäftigung, Alo_Bestand, ...) would add a second BA indicator set."},
-    "arbeitsmarkt-kommunal-ba": {"state": "open", "next": "Only the search page. Needs one 'Arbeitsmarkt kommunal' booklet (XLSX) to flatten, same pattern as the Strukturdaten heft."},
-    "migration-integration-in-regionen": {"state": "done", "next": "Nothing outstanding."},
-    "krankenhausatlas-deutschland": {"state": "open", "next": "Portal page only, and the atlas is at 2016. Superseded in practice by the G-BA Qualitätsberichte and the Bundes-Klinik-Atlas, both indexed."},
-    "krankenhausverzeichnis": {"state": "done", "next": "Schema sections indexed from the 2024 archive; the 2008-2024 archives are on disk (about 1.7 GB per year uncompressed, deliberately never extracted). Indexing the per-hospital rows would be a different product."},
-    "bundes-klinik-atlas": {"state": "done", "next": "Row renamed in the workbook on 2026-08-25: Weisse Liste is discontinued, the Bundes-Klinik-Atlas open-data export (IQTIG, 1,577 sites with coordinates) replaces it and is indexed."},
-    "arztsuche-bundesaerztekammer": {"state": "open", "next": "Search UI over the Landesärztekammer registers, no export. Portal-level record only unless a state chamber publishes a list."},
-    "deutschlandatlas-erreichbarkeit-von-apotheken": {"state": "done", "next": "All indicators indexed from the PDF + XLSX. This row covers the whole Deutschlandatlas, not only the pharmacy map."},
-    "hochschulkompass": {"state": "done", "next": "Register attributes indexed. A refreshed hs_liste.txt is a drop-in replacement."},
-    "deutsche-bahn-infrastrukturregister": {"state": "open", "next": "ISR needs a company registration. On the form: Unternehmen = Universität Bielefeld, Art des Unternehmens = 'Anderes / Sonstige' (the university is neither an EVU/ZB nor an EIU). Alternative without login: DB's StaDa station dataset and OSM railway data."},
-    "deutsche-bahn-bahnhofsuche": {"state": "open", "next": "Portal page only. DB's StaDa station dataset would give station attributes (category, accessibility, facilities)."},
-    "open-data-oepnv": {"state": "done", "next": "71 named datasets indexed from the public catalogue (Deutschlandweite Sollfahrplandaten GTFS/NeTEX, Deutschlandweite Haltestellendaten, plus Soll-Fahrplandaten/Haltestellen/Liniendaten per Verbund), each with its own deep link, plus the no-login OpenService API products. Downloading a dataset still needs the free account."},
-    "spielplatztreff-suchmaschine-fuer-spielplaetze": {"state": "open", "next": "Crowd-sourced search UI, no export. Portal record only; OSM leisure=playground is the systematic alternative."},
-    "spielplatzkarte": {"state": "open", "next": "Same as Spielplatztreff: map UI, no export."},
-    "destatis-regionale-mobilitaet-und-infektionsgesc": {"state": "partial", "next": "Discontinued experimental statistic (2020-2022). The published mobility indicators could be flattened from the EXSTAT page if the historical series matters."},
-    "datenguide-abgeschaltet": {"state": "done", "next": "Two catalogues under this row: the Datenguide GENESIS Merkmalskatalog (2,757 Merkmale) and, since 2026-08-25, the live Regionaldatenbank table catalogue pulled over the API (129 statistics, 866 tables, each with a working table-level deep link). Re-run scripts/fetch_genesis_catalogue.py to refresh. The federal instance (genesis.destatis.de, own token) is not enumerated yet."},
-    "inkar": {"state": "done", "next": "Already the finder's original source (660 indicators)."},
-    "german-companies": {"state": "done", "next": "API fields indexed and verified against live responses (samples in raw/). The endpoint is POST /lookup only, a record-linkage service: it resolves a company you already name. There is no bulk or search endpoint (every GET 404s, a city-only filter returns 0 rows), so the register cannot be downloaded through it, and the finder does not need it to. Key now lives in ~/kwandel/.config/secrets/."},
-    "open-data-handelsregister": {"state": "partial", "next": "Portal record only. The dump's field list (offeneregister schema) could be flattened without downloading the multi-GB data."},
-    "laendermonitor-fruehkindliche-bildungssysteme": {"state": "partial", "next": "Indicator names scraped from the overview page; the per-indicator definitions live on separate pages and would improve the descriptions."},
-    "strukturdaten-bundestagswahl-2021": {"state": "done", "next": "Nothing outstanding. The 2025 Strukturdaten would extend it."},
+    "regionalatlas-deutschland": {"de": "Nichts offen; Katalog bei Aktualisierung neu ziehen", "state": "done", "next": "Nothing outstanding. Re-fetch services.json when the atlas updates (it carries a timestamp per theme)."},
+    "breitband-monitor": {"de": "Eingebunden: Breitbandatlas + Mobilfunk-Monitoring; Rasterdaten noch nicht ausgewertet", "state": "partial", "next": "Breitbandatlas (bba_12_2025.xlsx) and Mobilfunk-Monitoring flattened into 463 availability indicators (use case x technology/bandwidth class, Bund to Gemeinde). Still unused: the 307 MB Gitterzellen GeoPackage and the mobile-coverage geodata, which would add raster-level coverage."},
+    "breitbandatlas": {"de": "Nachfolger Gigabitgrundbuch; Indikatorliste fehlt noch", "state": "open", "next": "The bmvi.de link in the workbook is dead; Gigabitgrundbuch is the successor. Needs the indicator/download page saved from a browser."},
+    "arbeitsmarktstatistik-ba-karte": {"de": "Glossar eingebunden; Karten-Indikatorliste nicht maschinenlesbar", "state": "partial", "next": "Glossary and portal saved. The map's own indicator list is not machine-readable; BA's API page may expose a catalogue worth crawling."},
+    "strukturdaten-und-indikatoren-ba": {"de": "Nichts offen; neueres Heft bei Bedarf", "state": "done", "next": "One booklet defines the series. Refresh with a newer heft when the BA publishes one."},
+    "arbeitsmarktreport-ba": {"de": "Heft vorhanden, noch nicht ausgewertet (22 Blätter)", "state": "partial", "next": "Booklet downloaded but not yet flattened: its 22 sheets (Eckwerte, Unterbeschäftigung, Alo_Bestand, ...) would add a second BA indicator set."},
+    "arbeitsmarkt-kommunal-ba": {"de": "Gemeindescharfe Merkmale eingebunden; weitere Kreis-Hefte optional", "state": "done", "next": "33 indicators flattened from one district archive (one XLSX per municipality, sheet 'Daten'). The indicator set is identical across districts, so more archives add regions, not concepts."},
+    "migration-integration-in-regionen": {"de": "Nichts offen", "state": "done", "next": "Nothing outstanding."},
+    "krankenhausatlas-deutschland": {"de": "Stand 2016; praktisch ersetzt durch G-BA und Klinik-Atlas", "state": "open", "next": "Portal page only, and the atlas is at 2016. Superseded in practice by the G-BA Qualitätsberichte and the Bundes-Klinik-Atlas, both indexed."},
+    "krankenhausverzeichnis": {"de": "Schema eingebunden; Einzelberichte bewusst nicht ausgewertet", "state": "done", "next": "Schema sections indexed from the 2024 archive; the 2008-2024 archives are on disk (about 1.7 GB per year uncompressed, deliberately never extracted). Indexing the per-hospital rows would be a different product."},
+    "bundes-klinik-atlas": {"de": "Nichts offen; ersetzt die eingestellte Weisse Liste", "state": "done", "next": "Row renamed in the workbook on 2026-08-25: Weisse Liste is discontinued, the Bundes-Klinik-Atlas open-data export (IQTIG, 1,577 sites with coordinates) replaces it and is indexed."},
+    "arztsuche-bundesaerztekammer": {"de": "Nur Suchmaske, kein Export; nur Portaleintrag möglich", "state": "open", "next": "Search UI over the Landesärztekammer registers, no export. Portal-level record only unless a state chamber publishes a list."},
+    "deutschlandatlas-erreichbarkeit-von-apotheken": {"de": "Nichts offen; alle Indikatoren eingebunden", "state": "done", "next": "All indicators indexed from the PDF + XLSX. This row covers the whole Deutschlandatlas, not only the pharmacy map."},
+    "hochschulkompass": {"de": "Nichts offen; aktualisierte Liste einfach ersetzbar", "state": "done", "next": "Register attributes indexed. A refreshed hs_liste.txt is a drop-in replacement."},
+    "deutsche-bahn-infrastrukturregister": {"de": "Registrierung nötig (Art des Unternehmens: Anderes/Sonstige)", "state": "open", "next": "ISR needs a company registration. On the form: Unternehmen = Universität Bielefeld, Art des Unternehmens = 'Anderes / Sonstige' (the university is neither an EVU/ZB nor an EIU). Alternative without login: DB's StaDa station dataset and OSM railway data."},
+    "deutsche-bahn-bahnhofsuche": {"de": "Nur Portaleintrag; StaDa-Datensatz wäre die Alternative", "state": "open", "next": "Portal page only. DB's StaDa station dataset would give station attributes (category, accessibility, facilities)."},
+    "open-data-oepnv": {"de": "71 Datensätze eingebunden; Download nur mit kostenlosem Konto", "state": "done", "next": "71 named datasets indexed from the public catalogue (Deutschlandweite Sollfahrplandaten GTFS/NeTEX, Deutschlandweite Haltestellendaten, plus Soll-Fahrplandaten/Haltestellen/Liniendaten per Verbund), each with its own deep link, plus the no-login OpenService API products. Downloading a dataset still needs the free account."},
+    "spielplatztreff-suchmaschine-fuer-spielplaetze": {"de": "Kein Export; OSM wäre die systematische Alternative", "state": "open", "next": "Crowd-sourced search UI, no export. Portal record only; OSM leisure=playground is the systematic alternative."},
+    "spielplatzkarte": {"de": "Kein Export; wie Spielplatztreff", "state": "open", "next": "Same as Spielplatztreff: map UI, no export."},
+    "destatis-regionale-mobilitaet-und-infektionsgesc": {"de": "Eingestellt (2020-2022); Indikatoren optional nachtragbar", "state": "partial", "next": "Discontinued experimental statistic (2020-2022). The published mobility indicators could be flattened from the EXSTAT page if the historical series matters."},
+    "datenguide-abgeschaltet": {"de": "Merkmalskatalog (2.757) + 866 Regionaltabellen eingebunden", "state": "done", "next": "Two catalogues under this row: the Datenguide GENESIS Merkmalskatalog (2,757 Merkmale) and, since 2026-08-25, the live Regionaldatenbank table catalogue pulled over the API (129 statistics, 866 tables, each with a working table-level deep link). Re-run scripts/fetch_genesis_catalogue.py to refresh. The federal instance (genesis.destatis.de, own token) is not enumerated yet."},
+    "inkar": {"de": "Ursprungsquelle des Finders", "state": "done", "next": "Already the finder's original source (660 indicators)."},
+    "german-companies": {"de": "Felder eingebunden; kein Bulk-Download möglich (Lookup-API)", "state": "done", "next": "API fields indexed and verified against live responses (samples in raw/). The endpoint is POST /lookup only, a record-linkage service: it resolves a company you already name. There is no bulk or search endpoint (every GET 404s, a city-only filter returns 0 rows), so the register cannot be downloaded through it, and the finder does not need it to. Key now lives in ~/kwandel/.config/secrets/."},
+    "open-data-handelsregister": {"de": "Nur Portaleintrag; Feldliste nachtragbar", "state": "partial", "next": "Portal record only. The dump's field list (offeneregister schema) could be flattened without downloading the multi-GB data."},
+    "laendermonitor-fruehkindliche-bildungssysteme": {"de": "Indikatornamen eingebunden; Definitionen nachtragbar", "state": "partial", "next": "Indicator names scraped from the overview page; the per-indicator definitions live on separate pages and would improve the descriptions."},
+    "genesis-online-bund": {"de": "3.026 Tabellen über die API eingebunden; Deep-Links nicht serverseitig prüfbar",
+        "state": "partial", "next": "3,026 tables enumerated over the REST API (331 statistics) and indexed with table-level links. The portal is a client-rendered SPA, so the documented ?operation=table&code= link form could not be verified from here: worth one browser check. Mostly Bund/Land depth; only 55 titles name Kreise or Gemeinden."},
+    "zensus-2022": {"de": "1.440 Tabellen eingebunden; räumliche Ebene steckt im Tabellencode",
+        "state": "partial", "next": "1,440 tables from 12 statistics indexed with table-level links. Two caveats: the portal is an SPA so links are unverified from here, and the regional level is encoded in the opaque table code rather than the title, so spatial_levels is deliberately left empty where the title does not name a level. Resolving those codes to levels would be the next quality step."},
+    "unfallatlas": {"de": "Eingebunden: 25 Merkmale, Unfalljahre 2016-2025, punktgenau", "state": "done", "next": "Attributes of the geocoded accident records indexed (2016-2025, point level with WGS84 and UTM32 coordinates). The yearly CSV archives stay on disk; individual accidents are never indexed."},
+    "strukturdaten-bundestagswahl-2021": {"de": "Nichts offen; Strukturdaten 2025 wären eine Erweiterung", "state": "done", "next": "Nothing outstanding. The 2025 Strukturdaten would extend it."},
 }
 
 
@@ -187,7 +202,7 @@ def gather(link_check: bool) -> List[Dict[str, Any]]:
         for key in SOURCE_KEYS.get(source["slug"], []):
             for level, count in link_levels.get(key, {}).items():
                 levels[level] = levels.get(level, 0) + count
-        item = OPEN_ITEMS.get(source["slug"], {"state": "open", "next": "not reviewed yet"})
+        item = OPEN_ITEMS.get(source["slug"], {"state": "open", "next": "not reviewed yet", "de": "noch nicht geprüft"})
         rows.append({
             "position": position,
             "name": source["name"],
@@ -202,6 +217,7 @@ def gather(link_check: bool) -> List[Dict[str, Any]]:
             "link_levels": levels,
             "state": item["state"],
             "next": item["next"],
+            "next_de": item.get("de", item["next"]),
             "note": source["note"],
             "coverage": f"{source['coverage_start_year'] or '?'}-{source['coverage_end_year'] or '?'}"
                         if (source["coverage_start_year"] or source["coverage_end_year"]) else "",
@@ -337,6 +353,61 @@ def write_workbook(rows: List[Dict[str, Any]], stamp: str) -> None:
     workbook.save(WORKBOOK)
 
 
+STATE_DE = {"done": "fertig", "partial": "teilweise", "open": "offen"}
+LINK_LEVEL_DE = {
+    "indicator": "Indikator", "table": "Tabelle", "statistic": "Statistik",
+    "dataset": "Datensatz", "portal": "Portal",
+}
+
+
+def write_progress_table(rows: List[Dict[str, Any]], stamp: str) -> Optional[Path]:
+    """A single presentable table of where every source stands, for handing on. Written as
+    CSV and rendered to PDF/PNG through tinytable (one canonical table package, notes inside
+    the image), so the deliverable is regenerated by the same command that updates the
+    checklist and can never drift from it."""
+    import csv as _csv
+    import shutil
+    import subprocess
+
+    DELIVERABLES.mkdir(parents=True, exist_ok=True)
+    csv_path = DELIVERABLES / f"{PROGRESS_BASE}.csv"
+    header = ["Nr.", "Datenquelle", "Status", "Dat.", "Anz.", "Verlinkung", "Stand / offener Schritt"]
+
+    def plain(text: str) -> str:
+        return (text.replace("\u2265", ">=").replace("\u2264", "<=")
+                    .replace("\u2019", "'").replace("\u2018", "'"))
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = _csv.writer(handle)
+        writer.writerow(header)
+        for row in rows:
+            levels = sorted(row["link_levels"].items(), key=lambda kv: -kv[1])
+            spelled = ", ".join(f"{LINK_LEVEL_DE.get(level, level)} {count}" for level, count in levels) or "Portal 1"
+            step = row["next_de"]
+            writer.writerow([
+                row["position"], plain(row["name"]), STATE_DE[row["state"]],
+                len(row["files"]), row["indexed"] + row["portal_record"], spelled,
+                plain(row["next_de"]),
+            ])
+
+    done = sum(1 for r in rows if r["state"] == "done")
+    partial = sum(1 for r in rows if r["state"] == "partial")
+    open_count = sum(1 for r in rows if r["state"] == "open")
+    total = sum(r["indexed"] + r["portal_record"] for r in rows)
+    summary = (f"{len(rows)} Datenquellen: {done} fertig, {partial} teilweise, {open_count} offen; "
+               f"{total} indexierte Merkmale im Finder (geodb.geolab.soz.uni-bielefeld.de).")
+
+    rscript = shutil.which("Rscript") or "/home/researcher/miniconda3/envs/rstats/bin/Rscript"
+    try:
+        subprocess.run([rscript, str(REPO_ROOT / "scripts" / "render_progress_table.R"),
+                        str(csv_path), str(DELIVERABLES / PROGRESS_BASE), stamp, summary],
+                       check=True, capture_output=True, timeout=600, cwd=str(REPO_ROOT))
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        detail = getattr(exc, "stderr", b"")
+        print(f"[warn] progress table not rendered: {exc} {detail[-400:] if detail else ''}")
+        return csv_path
+    return DELIVERABLES / f"{PROGRESS_BASE}.pdf"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--no-link-check", action="store_true")
@@ -347,6 +418,7 @@ def main() -> None:
     rows = gather(link_check=not args.no_link_check)
     write_checklist(rows, args.date)
     write_workbook(rows, args.date)
+    progress = write_progress_table(rows, args.date)
     print(json.dumps({
         "sources": len(rows),
         "done": sum(1 for r in rows if r["state"] == "done"),
@@ -355,6 +427,7 @@ def main() -> None:
         "indexed_records": sum(r["indexed"] for r in rows),
         "checklist": str(CHECKLIST),
         "workbook": str(WORKBOOK),
+        "progress_table": str(progress) if progress else None,
         "unreachable": [r["name"] for r in rows if r["link"].startswith("unreachable") or r["link"].startswith("HTTP 4") or r["link"].startswith("HTTP 5")],
     }, ensure_ascii=False, indent=2))
 

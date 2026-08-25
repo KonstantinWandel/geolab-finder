@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "GeoLAB Regional Indicator Finder: semantic search over INKAR 2025 regional indicators"
+title: "GeoDB Geodata Index: semantic search over German georeferenced data sources"
 message: "If you use this software, please cite it using these metadata."
 type: software
 authors:
@@ -18,5 +18,8 @@ keywords:
   - cross-encoder reranking
   - INKAR
   - regional indicators
+  - georeferenced data
+  - official statistics
+  - GENESIS
   - BBSR
   - metadata discovery

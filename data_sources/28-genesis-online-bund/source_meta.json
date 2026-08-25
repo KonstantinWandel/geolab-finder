@@ -1,0 +1,71 @@
+{
+  "name": "GENESIS-Online (Bund)",
+  "slug": "genesis-online-bund",
+  "url": "https://www-genesis.destatis.de/genesis/online",
+  "excel_row": 29,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "web UI / search form only",
+    "machine-readable API"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": true,
+    "API": true,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Bauen / Wohnen",
+    "Bevölkerung",
+    "Bildung",
+    "Soziales",
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Bauen / Wohnen"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Soziales"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Bauen / Wohnen",
+    "Bevölkerung",
+    "Bildung",
+    "Soziales",
+    "Wirtschaft und Unternehmen"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 1949,
+  "coverage_end_month": null,
+  "coverage_end_year": 2026,
+  "update_frequency": "laufend",
+  "note": "Bundesdatenbank der amtlichen Statistik; Tabellenkatalog über die REST-API abrufbar"
+}
