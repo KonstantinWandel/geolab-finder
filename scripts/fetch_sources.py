@@ -22,7 +22,9 @@ import hashlib
 import json
 import ssl
 import time
+import re
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -165,6 +167,29 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
     ],
     "deutsche-bahn-infrastrukturregister": [
         {"name": "portal.html", "url": "https://geovdbn.deutschebahn.com/isr", "kind": "portal", "note": ""},
+        {
+            "name": "isr_wms_capabilities.xml",
+            "url": "https://geoviewer.deutschebahn.com/geoviewer-geoserver/ows"
+                   "?service=WMS&version=1.3.0&request=GetCapabilities",
+            "kind": "catalogue",
+            "note": "The ISR viewer is a MapStore2 app over a public GeoServer. No login: 66 ISR "
+                    "layers with titles and abstracts (Streckenklasse, Elektrifizierung, ETCS, "
+                    "Gleisanzahl, Betriebsstellen, Tunnel, Brücken, Bahnübergänge, ...).",
+        },
+        {
+            "name": "isr_wfs_capabilities.xml",
+            "url": "https://geoviewer.deutschebahn.com/geoviewer-geoserver/ows"
+                   "?service=WFS&version=2.0.0&request=GetCapabilities",
+            "kind": "catalogue",
+            "note": "28 ISR feature types, downloadable as GML/GeoJSON through WFS without a login.",
+        },
+        {
+            "name": "isr_wfs_attributes.json",
+            "url": "https://geoviewer.deutschebahn.com/geoviewer-geoserver/ows",
+            "kind": "catalogue",
+            "handler": "isr_wfs_attributes",
+            "note": "DescribeFeatureType per ISR feature type, i.e. the attribute list per layer.",
+        },
     ],
     "deutsche-bahn-bahnhofsuche": [
         {"name": "portal.html", "url": "https://www.bahnhof.de/bahnhof-de", "kind": "portal", "note": ""},
@@ -382,6 +407,51 @@ def fetch_genesapi_keys(url: str, target_dir: Path) -> Dict[str, Any]:
     }
 
 
+def fetch_isr_attributes(url: str, target: Path) -> Dict[str, Any]:
+    """Ask the ISR GeoServer what each of its feature types contains.
+
+    WFS DescribeFeatureType returns the attribute list per layer, which is what turns "there is
+    a layer called ISR_V_GEO_STRECKENABSCHNITTE" into something a researcher can judge."""
+    import xml.etree.ElementTree as ET
+
+    started = time.time()
+    caps_url = f"{url}?service=WFS&version=2.0.0&request=GetCapabilities"
+    request = urllib.request.Request(caps_url, headers={"User-Agent": UA})
+    with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+        caps = response.read().decode("utf-8", "replace")
+    names = sorted({name for name in re.findall(r"<(?:wfs:)?Name>([^<]+)</(?:wfs:)?Name>", caps)
+                    if name.startswith("ISR:")})
+
+    out: Dict[str, Any] = {"endpoint": url, "layers": {}}
+    for position, name in enumerate(names, start=1):
+        describe = (f"{url}?service=WFS&version=2.0.0&request=DescribeFeatureType"
+                    f"&typeNames={urllib.parse.quote(name)}")
+        try:
+            with urllib.request.urlopen(urllib.request.Request(describe, headers={"User-Agent": UA}),
+                                        timeout=TIMEOUT) as response:
+                body = response.read().decode("utf-8", "replace")
+        except (urllib.error.URLError, urllib.error.HTTPError, OSError) as exc:
+            out["layers"][name] = {"error": str(exc)[:200]}
+            continue
+        fields = [
+            {"name": match.group(1), "type": match.group(2).split(":")[-1]}
+            for match in re.finditer(r'<xsd:element[^>]*name="([^"]+)"[^>]*type="([^"]+)"', body)
+        ]
+        out["layers"][name] = {"fields": fields}
+        time.sleep(0.2)
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {
+        "status": 200,
+        "bytes": target.stat().st_size,
+        "content_type": "application/json (DescribeFeatureType)",
+        "sha256": sha256_of(target),
+        "layers": len(out["layers"]),
+        "seconds": round(time.time() - started, 2),
+    }
+
+
 def load_log(folder: Path) -> Dict[str, Any]:
     path = folder / "raw" / "FETCH_LOG.json"
     if path.exists():
@@ -437,6 +507,8 @@ def main() -> None:
             try:
                 if artifact.get("handler") == "genesapi_keys":
                     result = fetch_genesapi_keys(artifact["url"], target)
+                elif artifact.get("handler") == "isr_wfs_attributes":
+                    result = fetch_isr_attributes(artifact["url"], target)
                 else:
                     result = fetch_one(artifact["url"], target, insecure=bool(artifact.get("insecure")))
             except (urllib.error.URLError, urllib.error.HTTPError, OSError) as exc:
