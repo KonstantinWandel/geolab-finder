@@ -75,7 +75,9 @@ def log_feedback(query_id: str, item_id: Optional[str], vote: str, question: Opt
     _append("feedback", {
         "query_id": query_id,
         "item_id": item_id,
-        "vote": "up" if str(vote).lower() in {"up", "1", "true", "yes"} else "down",
+        # A rating can be taken back, so "clear" is a state of its own rather than a down-vote.
+        "vote": ("up" if str(vote).lower() in {"up", "1", "true", "yes"}
+                 else "clear" if str(vote).lower() in {"clear", "none", "reset"} else "down"),
         "question": (question or "")[:400],
         "comment": (comment or "")[:1000],
     })

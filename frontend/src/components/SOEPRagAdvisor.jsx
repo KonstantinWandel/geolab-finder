@@ -85,7 +85,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
 
   const sendVote = async (queryId, row, vote, question) => {
     const key = `${queryId}:${row.item_id || row.variable_name}`
-    setVotes((current) => ({ ...current, [key]: vote }))
+    setVotes((current) => ({ ...current, [key]: vote === 'clear' ? undefined : vote }))
     try {
       await fetch(`${apiUrl}/soep/feedback`, {
         method: 'POST',
@@ -347,17 +347,6 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
 
           <div className="table-scroll metadata-table">
             <table className="results-table">
-              {/* Fixed column widths: with auto layout an opened "Why useful" description
-                  stretched the table past the container and pushed "Get it from" out of view. */}
-              <colgroup>
-                <col style={{ width: '3%' }} />
-                <col style={{ width: '22%' }} />
-                <col style={{ width: '15%' }} />
-                <col style={{ width: '6%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '26%' }} />
-                <col style={{ width: '14%' }} />
-              </colgroup>
               <thead>
                 <tr>
                   <th>Select</th>
@@ -367,6 +356,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                   <th>Coverage</th>
                   <th>Why useful</th>
                   <th>Get it from</th>
+                  <th>Helpful?</th>
                 </tr>
               </thead>
               <tbody>
@@ -421,8 +411,10 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                         </div>
                       </details>
                     </td>
+                    <td>{renderSourceLink(row)}</td>
                     <td>
-                      {renderSourceLink(row)}
+                      {/* Its own column with a header, so it reads as feedback rather than as a
+                          reordering control. Clicking the active choice again clears it. */}
                       <div className="vote-row">
                         {['up', 'down'].map((vote) => {
                           const key = `${result.query_id}:${row.item_id || row.variable_name}`
@@ -432,12 +424,17 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                               key={vote}
                               type="button"
                               className={`vote-button${active ? ' vote-active' : ''}`}
-                              title={vote === 'up' ? 'Useful hit' : 'Not what I meant'}
-                              aria-label={vote === 'up' ? 'Useful hit' : 'Not what I meant'}
-                              disabled={!result.query_id || Boolean(votes[key])}
-                              onClick={() => sendVote(result.query_id, row, vote, chatHistory[i - 1]?.content || '')}
+                              title={vote === 'up'
+                                ? 'This result answered my question'
+                                : 'This result is not what I meant'}
+                              aria-pressed={active}
+                              aria-label={vote === 'up' ? 'Helpful result' : 'Unhelpful result'}
+                              disabled={!result.query_id}
+                              onClick={() => sendVote(result.query_id, row,
+                                                      active ? 'clear' : vote,
+                                                      chatHistory[i - 1]?.content || '')}
                             >
-                              {vote === 'up' ? '\u2191' : '\u2193'}
+                              {vote === 'up' ? '\uD83D\uDC4D' : '\uD83D\uDC4E'}
                             </button>
                           )
                         })}

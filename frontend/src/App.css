@@ -483,12 +483,18 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   max-width: 100%;
 }
 
-/* Results table: fixed layout so no single cell can widen the table past its container,
-   and long values (GENESIS table titles, URLs) wrap instead of pushing columns out of view.
-   A long opened description scrolls inside its own cell rather than stretching the row. */
+/* Results table: natural column sizing with a floor on the total width, so no column can be
+   squeezed to a vertical stack of letters. When the table does not fit, the container scrolls
+   horizontally (scrollbar at the bottom) rather than columns being crushed or pushed out of
+   view. Long values still wrap, and a long description scrolls inside its own cell. */
 .results-table {
-  table-layout: fixed;
+  table-layout: auto;
   width: 100%;
+  min-width: 1180px;
+}
+
+.results-table th {
+  white-space: nowrap;
 }
 
 .results-table th,
@@ -496,6 +502,10 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   vertical-align: top;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.why-useful {
+  max-width: 460px;
 }
 
 .why-useful > div {
@@ -506,6 +516,12 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 
 .why-useful summary {
   white-space: nowrap;
+}
+
+/* Make the horizontal scrollbar of the results table visible rather than overlay-thin. */
+.table-scroll.metadata-table {
+  scrollbar-width: auto;
+  padding-bottom: 0.3rem;
 }
 
 @media (max-width: 900px) {
