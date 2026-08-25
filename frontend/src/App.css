@@ -906,3 +906,39 @@ button, input, select, textarea,
   .brand-leibniz { height: 40px; }
   .brand-soep { height: 32px; }
 }
+
+/* Result feedback: two small arrows per row. A vote is anonymous, is tied only to the
+   query_id the backend returned, and disables itself once cast. */
+.vote-row {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.vote-button {
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.35));
+  background: transparent;
+  color: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0.15rem 0.4rem;
+  opacity: 0.65;
+}
+
+.vote-button:hover:enabled { opacity: 1; }
+.vote-button:disabled { cursor: default; }
+.vote-button.vote-active { opacity: 1; font-weight: 700; }
+
+/* Legal and attribution links: required on a public service, kept quiet visually. */
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.legal-links a { color: inherit; opacity: 0.75; }
+.legal-links a:hover { opacity: 1; }

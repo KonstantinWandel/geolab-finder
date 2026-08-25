@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Any
 import os
+import time
 from app.services.search import SearchService
 from app.services.data_fetch_agent import DataFetchAgentService
 from app.services.execution_service import ExecutionService
@@ -10,6 +11,7 @@ from app.services.harmonizer import HarmonizerService
 from app.services.soep_aggregator import SOEPAggregatorService
 from app.services.soep_search import SOEPSearchService
 from app.services.soep_rag_advisor import SOEPRagAdvisorService
+from app.services import usage_log
 
 app = FastAPI(title="Destatis Local RAG", version="1.0.0")
 
@@ -149,6 +151,7 @@ class SOEPAdviceRequest(BaseModel):
     year_end: Optional[int] = None
     theme: Optional[str] = None
     regional_only: bool = False
+    include_raw: bool = False
     sample_groups: Optional[List[str]] = None
 
 @app.post("/api/soep")
@@ -160,6 +163,22 @@ async def aggregate_soep(req: SOEPRequest):
 @app.get("/api/search_soep")
 async def search_soep(q: str):
     return soep_search_service.search(q)
+
+
+class FeedbackRequest(BaseModel):
+    query_id: str
+    vote: str
+    item_id: Optional[str] = None
+    question: Optional[str] = None
+    comment: Optional[str] = None
+
+
+@app.post("/api/soep/feedback")
+def soep_feedback(req: FeedbackRequest):
+    """A thumbs up or down on one result. Stored anonymously and never applied to ranking
+    automatically: votes become eval candidates that a human confirms."""
+    usage_log.log_feedback(req.query_id, req.item_id, req.vote, req.question, req.comment)
+    return {"status": "recorded"}
 
 
 @app.post("/api/soep/advice")
@@ -178,9 +197,16 @@ def soep_advice(req: SOEPAdviceRequest):
         "year_end": req.year_end,
         "theme": req.theme,
         "regional_only": req.regional_only,
+        "include_raw": req.include_raw,
         "sample_groups": req.sample_groups,
     }
-    return soep_rag_advisor.answer_research_question(req.question, req.top_k, filters)
+    started = time.perf_counter()
+    result = soep_rag_advisor.answer_research_question(req.question, req.top_k, filters)
+    query_id = usage_log.new_query_id()
+    result["query_id"] = query_id
+    usage_log.log_query(query_id, soep_rag_advisor.app_mode, req.question, filters,
+                        result.get("recommended_variables") or [], time.perf_counter() - started)
+    return result
 
 
 @app.get("/api/soep/filter-options")

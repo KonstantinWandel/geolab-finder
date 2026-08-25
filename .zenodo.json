@@ -3,8 +3,8 @@
   "description": "Semantic discovery of metadata for German georeferenced data sources: plain-language search with filters over spatial level, theme and year across INKAR, the Regionaldatenbank/GENESIS catalogue, Regionalatlas, Deutschlandatlas, Bundesagentur-fuer-Arbeit indicators, Bundestagswahl structural data, hospital and broadband registers, public-transport datasets and the Unfallatlas. Every hit links out to the source that holds it and states how precisely that link lands (indicator, table, statistic, dataset or portal). Retrieval uses a multilingual e5 bi-encoder with a cross-encoder reranker. This record is the georeferenced-data deployment of the shared GeoLAB metadata-finder codebase (the SOEP-variable deployment is archived separately). Code only; no data included.",
   "upload_type": "software",
   "license": "MIT",
-  "version": "0.1.1",
-  "publication_date": "2026-07-02",
+  "version": "0.2.0",
+  "publication_date": "2026-08-25",
   "creators": [
     {
       "name": "Wandel, Konstantin",

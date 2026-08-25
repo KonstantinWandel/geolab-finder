@@ -469,7 +469,17 @@ class SOEPRagAdvisorService:
         variable = self._as_text(row.get("variable_name"))
         label = self._as_text(row.get("label"))
         rich_description = self._as_text(row.get("rich_description"))
-        source_url = f"https://paneldata.org/soep-core/datasets/{dataset}/{variable}" if dataset and variable else ""
+        source_url = self._as_text(row.get("source_url")) or (
+            f"https://paneldata.org/soep-core/datasets/{dataset}/{variable}" if dataset and variable else ""
+        )
+        # Official v41 fields (absent in the older corpus, so everything below degrades
+        # gracefully): English label, concept, topic path, dataset kind and raw flag.
+        label_en = self._as_text(row.get("label_en"))
+        topic_path = self._as_text(row.get("topic_path"))
+        concept_label = self._as_text(row.get("concept_label"))
+        conceptual_dataset = self._as_text(row.get("conceptual_dataset"))
+        official_dataset_label = self._as_text(row.get("dataset_label_official"))
+        is_raw = bool(row.get("is_raw"))
         spatial_levels: List[str] = []
         nuts_levels: List[str] = []
         lower_text = f"{dataset} {variable} {label} {rich_description}".lower()
@@ -486,8 +496,18 @@ class SOEPRagAdvisorService:
             "dataset": dataset,
             "dataset_label": (
                 f"{DATASET_TITLE[dataset]} ({dataset})" if dataset in DATASET_TITLE
-                else (f"{dataset}.rds" if dataset else "SOEP dataset")
+                else (f"{official_dataset_label} ({dataset})" if official_dataset_label
+                      else (f"{dataset}.rds" if dataset else "SOEP dataset"))
             ),
+            "label_en": label_en,
+            "concept_label": concept_label,
+            "conceptual_dataset": conceptual_dataset,
+            "is_raw": is_raw,
+            "soep_version": self._as_text(row.get("soep_version")),
+            # paneldata.org resolves a real page per variable (a bogus code returns HTTP 500),
+            # so a SOEP hit is an indicator-level, verified link.
+            "link_level": "indicator",
+            "link_verified": True,
             "sample_group": DATASET_SAMPLE_GROUP.get(dataset.lower(), "other"),
             "score": 0.0,
             "data_type": self._as_text(row.get("data_type")),
@@ -497,7 +517,7 @@ class SOEPRagAdvisorService:
             "rich_description": rich_description,
             "search_description": self._build_search_description(row, dataset, label),
             "source_url": source_url,
-            "theme": "SOEP survey variable",
+            "theme": topic_path or "SOEP survey variable",
             "sheet": "",
             "spatial_levels": spatial_levels,
             "nuts_levels": nuts_levels,
@@ -558,6 +578,11 @@ class SOEPRagAdvisorService:
             "year_end": year_end,
             "available_years_text": year_text or self._as_text(row.get("spatial_coverage_text")),
             "geography_reference": "BBSR Raumgliederungssystem 2023; includes municipalities, districts/NUTS3, NUTS2 and BBSR urban-rural typologies.",
+            # INKAR predates the GeoDB record schema. Without these two fields its rows were
+            # the only ones in the result table with no link chip, which read as a gap rather
+            # than as what it is: inkar.de has no per-indicator URL, so the link is the portal.
+            "link_level": "portal",
+            "link_verified": True,
             "embedding_context": row.get("embedding_context", ""),
         }
 
@@ -613,18 +638,61 @@ class SOEPRagAdvisorService:
             raise ValueError(f"Expected a JSON list in {path}")
         return data
 
+    def _cache_candidates(self, metadata_path: Optional[Path], legacy_name: str) -> List[Path]:
+        """Cache file names are bound to the metadata file they were built from.
+
+        The old scheme used one fixed name per source (`soep_rag_embeddings.npy`), so building
+        embeddings for a second SOEP corpus silently overwrote the first, and the only check on
+        load was the row count. The stem-derived name makes two corpora coexist; the legacy name
+        is still read last so an existing deployment keeps working until it is re-embedded.
+        """
+        if metadata_path is None:
+            return []
+        stem = f"{metadata_path.stem}_embeddings.npy"
+        return [
+            metadata_path.parent / stem,
+            self._cache_dir / stem,
+            metadata_path.parent / legacy_name,
+            self._cache_dir / legacy_name,
+        ]
+
+    def _sidecar_path(self, npy_path: Path) -> Path:
+        return npy_path.with_suffix(npy_path.suffix + ".meta.json")
+
     def _load_cached_embeddings(self, candidates: List[Path], expected_rows: int) -> Optional[np.ndarray]:
         for candidate in candidates:
             if not candidate.exists():
                 continue
+            # A row count alone cannot tell an e5 cache from a bge one. Where a sidecar exists,
+            # the model has to match as well, and a mismatch is loud rather than silent.
+            sidecar = self._sidecar_path(candidate)
+            if sidecar.exists():
+                try:
+                    stamp = json.loads(sidecar.read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    stamp = {}
+                if stamp.get("model") and stamp["model"] != self.model_name:
+                    print(f"REFUSING {candidate}: built with {stamp['model']}, serving {self.model_name}")
+                    continue
             try:
                 embeddings = np.load(candidate).astype("float32")
                 if embeddings.shape[0] == expected_rows:
                     print(f"Loaded metadata embeddings from {candidate}")
                     return embeddings
+                print(f"Skipping {candidate}: {embeddings.shape[0]} rows, expected {expected_rows}")
             except Exception:
                 continue
         return None
+
+    def _save_embeddings(self, npy_path: Path, embeddings: np.ndarray, metadata_path: Optional[Path]) -> None:
+        np.save(npy_path, embeddings)
+        self._sidecar_path(npy_path).write_text(json.dumps({
+            "model": self.model_name,
+            "rows": int(embeddings.shape[0]),
+            "dim": int(embeddings.shape[1]),
+            "max_seq_length": self.embedding_max_seq_length,
+            "metadata_file": metadata_path.name if metadata_path else None,
+        }, indent=2), encoding="utf-8")
 
     def load(self) -> None:
         if self._loaded:
@@ -663,11 +731,7 @@ class SOEPRagAdvisorService:
         source_embeddings: List[np.ndarray] = []
         if soep_rows and self.metadata_path is not None:
             soep_embeddings = self._load_cached_embeddings(
-                [
-                    self.metadata_path.parent / "soep_rag_embeddings.npy",
-                    self._cache_dir / "soep_rag_embeddings.npy",
-                ],
-                len(soep_rows),
+                self._cache_candidates(self.metadata_path, "soep_rag_embeddings.npy"), len(soep_rows)
             )
             if soep_embeddings is None:
                 soep_docs = [self._build_doc(row) for row in soep_rows]
@@ -686,11 +750,7 @@ class SOEPRagAdvisorService:
 
         if inkar_rows:
             inkar_embeddings = self._load_cached_embeddings(
-                [
-                    self.inkar_metadata_path.parent / "inkar_rag_embeddings.npy" if self.inkar_metadata_path else Path(""),
-                    self._cache_dir / "inkar_rag_embeddings.npy",
-                ],
-                len(inkar_rows),
+                self._cache_candidates(self.inkar_metadata_path, "inkar_rag_embeddings.npy"), len(inkar_rows)
             )
             if inkar_embeddings is None:
                 inkar_docs = [self._build_doc(row) for row in inkar_rows]
@@ -709,11 +769,7 @@ class SOEPRagAdvisorService:
 
         if geodb_rows:
             geodb_embeddings = self._load_cached_embeddings(
-                [
-                    self.geodb_metadata_path.parent / "geodb_rag_embeddings.npy" if self.geodb_metadata_path else Path(""),
-                    self._cache_dir / "geodb_rag_embeddings.npy",
-                ],
-                len(geodb_rows),
+                self._cache_candidates(self.geodb_metadata_path, "geodb_rag_embeddings.npy"), len(geodb_rows)
             )
             if geodb_embeddings is None:
                 geodb_docs = [self._build_doc(row) for row in geodb_rows]
@@ -758,8 +814,9 @@ class SOEPRagAdvisorService:
                 docs, batch_size=batch_size, convert_to_numpy=True,
                 normalize_embeddings=True, show_progress_bar=True,
             ).astype("float32")
-            out_path = self.metadata_path.parent / "soep_rag_embeddings.npy"
-            np.save(out_path, emb)
+            base = self.metadata_path
+            out_path = base.parent / f"{base.stem}_embeddings.npy"
+            self._save_embeddings(out_path, emb, base)
             summary["soep"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
         if self.load_inkar and self.inkar_metadata_path and self.inkar_metadata_path.exists():
             rows = [self._normalise_inkar_row(r) for r in self._load_json_rows(self.inkar_metadata_path)]
@@ -768,8 +825,9 @@ class SOEPRagAdvisorService:
                 docs, batch_size=batch_size, convert_to_numpy=True,
                 normalize_embeddings=True, show_progress_bar=True,
             ).astype("float32")
-            out_path = self.inkar_metadata_path.parent / "inkar_rag_embeddings.npy"
-            np.save(out_path, emb)
+            base = self.inkar_metadata_path
+            out_path = base.parent / f"{base.stem}_embeddings.npy"
+            self._save_embeddings(out_path, emb, base)
             summary["inkar"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
         if self.load_geodb and self.geodb_metadata_path and self.geodb_metadata_path.exists():
             rows = [self._normalise_geodb_row(r) for r in self._load_json_rows(self.geodb_metadata_path)]
@@ -778,8 +836,9 @@ class SOEPRagAdvisorService:
                 docs, batch_size=batch_size, convert_to_numpy=True,
                 normalize_embeddings=True, show_progress_bar=True,
             ).astype("float32")
-            out_path = self.geodb_metadata_path.parent / "geodb_rag_embeddings.npy"
-            np.save(out_path, emb)
+            base = self.geodb_metadata_path
+            out_path = base.parent / f"{base.stem}_embeddings.npy"
+            self._save_embeddings(out_path, emb, base)
             summary["geodb"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
         return summary
 
@@ -831,7 +890,11 @@ class SOEPRagAdvisorService:
             "scoped_rows": len(scoped),
             "nuts_levels": sorted({level for row in scoped for level in row.get("nuts_levels", [])}),
             "spatial_levels": sorted({level for row in scoped for level in row.get("spatial_levels", [])}),
-            "themes": sorted({row.get("theme", "") for row in scoped if row.get("theme") and row.get("source_key") != "soep"}),
+            "themes": sorted({row.get("theme", "") for row in scoped
+                              if row.get("theme") and row.get("theme") != "SOEP survey variable"}),
+            "conceptual_datasets": sorted({row.get("conceptual_dataset", "") for row in scoped
+                                           if row.get("conceptual_dataset")}),
+            "raw_rows": sum(1 for row in scoped if row.get("is_raw")),
             "datasets": sorted({row.get("dataset_label") or row.get("dataset", "") for row in scoped if row.get("dataset_label") or row.get("dataset")}),
             # Sample/questionnaire groups present among SOEP rows, in display order.
             "sample_groups": [
@@ -860,6 +923,12 @@ class SOEPRagAdvisorService:
 
         # Sample/questionnaire group (SOEP only). Accepts a list (multi-select) or
         # a scalar; INKAR rows have no sample group and are gated by source above.
+        # SOEP v41 publishes 101,641 of its 125,496 variables in the raw questionnaire files.
+        # They are indexed, but hidden unless asked for, through a visible switch rather than a
+        # silent score penalty.
+        if row.get("is_raw") and not filters.get("include_raw"):
+            return False
+
         sample_groups = filters.get("sample_groups")
         if sample_groups:
             if isinstance(sample_groups, str):
