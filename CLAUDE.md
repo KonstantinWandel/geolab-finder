@@ -45,19 +45,24 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-08-25: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 4,119 rows**
-(3,459 GeoDB records + 660 INKAR). By source: Regionalstatistik/GENESIS Merkmale 2,756,
-Regionalatlas 232, Migration & Integration 140, Deutschlandatlas 86, BA Strukturdaten 68,
-Bundestagswahl 2021 49, Bundes-Klinik-Atlas 41, Ländermonitor 17, G-BA Qualitätsberichte 16,
-German Company Data 12, Hochschulkompass 11, Open Data ÖPNV 6, plus 25 portal-level records.
+State as of 2026-08-25: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 5,056 rows**
+(4,396 GeoDB records + 660 INKAR). By source: Regionalstatistik/GENESIS 3,623 (2,757 Merkmale +
+866 Tabellen), Regionalatlas 232, Migration & Integration 140, Deutschlandatlas 86, Open Data ÖPNV
+77, BA Strukturdaten 68, Bundestagswahl 2021 49, Bundes-Klinik-Atlas 41, Ländermonitor 17, G-BA
+Qualitätsberichte 16, German Company Data 12, Hochschulkompass 11, plus 25 portal-level records.
 Adding a source means: a `FETCH_PLAN` entry, a flattener, rebuild, re-embed, redeploy.
+
+**Every record carries `link_level`**, saying how precisely its link lands: `indicator` (232),
+`table` (866), `statistic` (965), `dataset` (511), `portal` (1,822). The UI shows it as a chip, the
+checklist totals it per source, and the honest answer to "how good is the linking" is that number.
+Improving it is the main quality lever: a source whose records are all `portal` is a stub.
 
 **`data_sources/CHECKLIST.md` is the per-source tracker** and is generated, never hand-edited:
 `scripts/build_status_report.py` reads the registry, each `raw/` folder, the built metadata and a
 live link check, then writes both the checklist and a blue-marked `Status_GeoDB` sheet appended to
-`Geospatial_Data_Sources.xlsx` (the untouched original is kept as `Geospatial_Data_Sources_orig.xlsx`).
-Per-source state lives in that script's `OPEN_ITEMS`; candidate sources not yet in the workbook
-live in its `CANDIDATES`. Change the script, re-run it, never edit the outputs.
+`Geospatial_Data_Sources.xlsx` (untouched original kept as `Geospatial_Data_Sources_orig.xlsx`;
+both workbooks are git-ignored, the public facts live in `registry/geo_sources.json` instead).
+Per-source state lives in that script's `OPEN_ITEMS`, candidate new sources in its `CANDIDATES`.
 
 `scripts/eval_geodb_search.py` is the retrieval smoke test: 28 concept queries with an expected hit,
 reporting hit@1/@3/@10. Baseline 2026-08-25 with e5-large-instruct + bge-reranker-base:
@@ -94,7 +99,20 @@ What acquisition turned up (2026-08-25), worth knowing before re-deriving it:
   archives are ~1.7 GB uncompressed per year, one XML per hospital; the flattener reads the section
   structure out of the largest report in the newest archive and never extracts the rest. The same
   logic applies to any register: index what the register *records*, not its rows.
-- **The Regionalstatistik portal cannot be deep-linked by query parameter.** It is a JSF app:
+- **GENESIS tokens are per instance, and `Bearer` silently degrades to guest.** Regionalstatistik
+  (`www.regionalstatistik.de/genesisws/rest/2020/`) and the federal GENESIS
+  (`genesis.destatis.de/genesisWS/rest/2020/`) need separate registrations; a token from one
+  answers `Bitte geben Sie Ihr Passwort ein` on the other. `Authorization: Bearer <token>` returns
+  HTTP 200 from `helloworld/logincheck` on both, but as `"Username":"GAST"`, and every catalogue
+  call then 401s. Only the `username` header with an empty `password` authenticates, and any
+  enumerator must assert `Username != GAST` before writing a file.
+  `scripts/fetch_genesis_catalogue.py` does this. Tokens live in `~/kwandel/.config/secrets/`.
+- **Table code is the finest linkable unit in Regionalstatistik.** `?operation=table&code=<code>`
+  opens exactly that table (verify against a deliberately bogus code: 25 KB vs 8.5 KB). The newer
+  `/datenbank/online/...` SPA paths return a 3 KB shell, so keep the `/genesis/online?operation=`
+  form. The regional depth is written into the table title ("regionale Tiefe: Kreise und krfr.
+  Städte"), which is how the flattener tags spatial levels.
+- **The Regionalstatistik portal cannot be deep-linked by query parameter for anything else.** It is a JSF app:
   `?operation=merkmal&code=BEV001` and every variant of it silently return the homepage. The one
   pattern that works is `/genesis/online/statistic/<5-digit statistic code>`, and the statistic
   code has to be mined out of the Destatis definition text ("Erläuterung für folgende
@@ -147,6 +165,14 @@ the old advisor, the old `inkar_rag_embeddings.npy`, and the old inkar site).
 - Ranking is untouched: `_authority_delta` only applies its SOEP dataset prior to SOEP rows, and
   `_dedup_key` gives non-SOEP sources a `(source_key, code, label)` identity, because codes are
   only unique within a source (`AI0104` exists in both Regionalatlas and the GENESIS catalogue).
+
+## Branding
+
+The site is a Universität Bielefeld / Leibniz-Gemeinschaft project and says so: page title
+"GeoDB Geodata Index", Uni Bielefeld favicon (`frontend/public/brand/`), and both logos in a
+footer strip. The two SVGs were rebuilt with `fill="currentColor"` so they stay legible in the
+dark theme; they are served from the site itself, never hotlinked. Header wording is "GeoDB",
+never "INKAR", since INKAR is now one source among many.
 
 ## Repository layout
 
