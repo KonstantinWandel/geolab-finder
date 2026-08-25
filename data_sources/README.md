@@ -115,10 +115,9 @@ sources worth adding that are not in the workbook at all.
 ## What happens after the files land
 
 `scripts/build_geodb_metadata.py` turns `raw/` into `soep_metadata_output/geodb_metadata.json`,
-the finder's common record schema. As of 2026-08-25 that is **3,298 records**: Regionalatlas 232,
-Regionalstatistik/GENESIS Merkmale 2,756, BA Strukturdaten 68, Bundestagswahl 2021 49,
-Migration & Integration 140, Ländermonitor 17, Hochschulkompass 11, plus 25 portal-level records.
-Every record carries an outward link, and the build fails if one does not.
+the finder's common record schema. As of 2026-08-25 that is **4,396 records** across 13 sources.
+Every record carries an outward link plus a `link_level` saying how precisely it lands
+(indicator, table, statistic, dataset, portal), and the build fails if a link is missing.
 
 Dropping a new file into a `raw/` folder means: re-run the builder, re-embed, redeploy. If the
 source has no flattener yet, add one to `FLATTENERS` in that script (and a `FETCH_PLAN` entry in
