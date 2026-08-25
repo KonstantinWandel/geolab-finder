@@ -19,15 +19,40 @@ function App() {
     const allowed = ['default', 'dark', 'light']
     try {
       const t = localStorage.getItem('geolab_theme')
-      return allowed.includes(t) ? t : 'default'
+      // Light is the default: the finders are read in bright seminar rooms and printed from,
+      // and the dark theme is an explicit opt-in that persists per browser.
+      return allowed.includes(t) ? t : 'light'
     } catch (e) {
-      return 'default'
+      return 'light'
     }
   })
+  useEffect(() => {
+    // index.html carries %VITE_PAGE_TITLE%, substituted at build time per mode. This keeps
+    // the tab correct even when a build forgets to pass it.
+    const pageTitle = TITLES[APP_MODE] ? `${TITLES[APP_MODE]}` : 'GeoLAB metadata finder'
+    if (!document.title || document.title.startsWith('%')) document.title = pageTitle
+  }, [APP_MODE])
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     try { localStorage.setItem('geolab_theme', theme) } catch (e) { /* ignore */ }
   }, [theme])
+  // Institutional marks per deployment. Files live in public/brand/ and are served from the
+  // site itself; the SVGs use fill: currentColor so they work in the dark theme too.
+  const UNI = { file: 'uni-bielefeld.svg', alt: 'Universität Bielefeld',
+                url: 'https://www.uni-bielefeld.de/', shape: 'brand-logo-wide' }
+  const LEIBNIZ = { file: 'leibniz.svg', alt: 'Leibniz-Gemeinschaft',
+                    url: 'https://www.leibniz-gemeinschaft.de/', shape: 'brand-logo-tall' }
+  const DIW = { file: 'diw.svg', alt: 'DIW Berlin', url: 'https://www.diw.de/', shape: 'brand-logo-wide' }
+  const SOEP = { file: 'soep.png', alt: 'Sozio-oekonomisches Panel (SOEP)',
+                 url: 'https://www.diw.de/soep', shape: 'brand-logo-wide' }
+  const BRAND_SETS = {
+    soep: [UNI, DIW, SOEP, LEIBNIZ],
+    inkar: [UNI, LEIBNIZ],
+    all: [UNI, DIW, SOEP, LEIBNIZ],
+  }
+  const BRANDS = BRAND_SETS[APP_MODE] || BRAND_SETS.all
+
   const TITLES = {
     soep: "SOEP Variable Finder",
     inkar: "GeoDB Geodata Index",
@@ -70,14 +95,17 @@ function App() {
         <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} />
       </main>
       <footer className="brand-strip">
-        <a href="https://www.uni-bielefeld.de/" target="_blank" rel="noopener noreferrer"
-           aria-label="Universität Bielefeld">
-          <img src="/brand/uni-bielefeld.svg" alt="Universität Bielefeld" className="brand-logo brand-logo-wide" />
-        </a>
-        <a href="https://www.leibniz-gemeinschaft.de/" target="_blank" rel="noopener noreferrer"
-           aria-label="Leibniz-Gemeinschaft">
-          <img src="/brand/leibniz.svg" alt="Leibniz-Gemeinschaft" className="brand-logo brand-logo-tall" />
-        </a>
+        {BRANDS.map((brand) => (
+          <a key={brand.file} href={brand.url} target="_blank" rel="noopener noreferrer" aria-label={brand.alt}>
+            <img
+              src={`/brand/${brand.file}`}
+              alt={brand.alt}
+              className={`brand-logo ${brand.shape}`}
+              /* A logo file that is not present yet should leave no broken-image icon. */
+              onError={(e) => { e.currentTarget.parentElement.style.display = 'none' }}
+            />
+          </a>
+        ))}
       </footer>
     </div>
   )

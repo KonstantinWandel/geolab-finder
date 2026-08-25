@@ -26,7 +26,7 @@ import json
 import re
 import zipfile
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 
@@ -330,7 +330,7 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
         records.append(
             make_record(
                 source_key="regionalstatistik",
-                source_label="Regionalstatistik / GENESIS (Merkmalskatalog, via Datenguide)",
+                source_label="Regionalstatistik / GENESIS (Regionaldatenbank)",
                 item_type="regional_indicator",
                 item_id=f"genesis:{code}",
                 variable_name=code,
@@ -1194,91 +1194,456 @@ def flatten_german_companies(source: Dict[str, Any]) -> List[Dict[str, Any]]:
         )
     return records
 
-def flatten_genesis_tables(source: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Table-level records for the Regionaldatenbank (regionalstatistik.de), enumerated
-    over the GENESIS REST API by `scripts/fetch_genesis_catalogue.py`.
+# One entry per GENESIS instance whose catalogue scripts/fetch_genesis_catalogue.py wrote.
+# `link_verified` records whether the deep link could be checked from here: regionalstatistik
+# is a server-rendered JSF app (a bogus code returns a visibly smaller error page, so the
+# pattern is proven), while the federal and Zensus portals are client-rendered SPAs that
+# return the same 2 KB shell for every code, valid or not. Those links use the documented
+# route form and are flagged as unverified rather than silently trusted.
+GENESIS_INSTANCES = {
+    "regionalstatistik": {
+        "source_key": "regionalstatistik",
+        "source_label": "Regionalstatistik / GENESIS (Regionaldatenbank)",
+        "dataset_label": "GENESIS-Tabelle (Regionaldatenbank)",
+        "url": "https://www.regionalstatistik.de/genesis/online?operation=table&code={code}",
+        "portal": "https://www.regionalstatistik.de/genesis/online",
+        "link_verified": True,
+        "default_levels": ["Kreise & kreisfreie Städte"],
+        "note": "Abrufbar in der Regionaldatenbank Deutschland; Download als CSV/XLSX nach "
+                "kostenfreier Anmeldung oder über die GENESIS-Webservice-API.",
+    },
+    "destatis": {
+        "source_key": "genesis_bund",
+        "source_label": "GENESIS-Online (Statistisches Bundesamt)",
+        "dataset_label": "GENESIS-Tabelle (Bund)",
+        "url": "https://www-genesis.destatis.de/genesis/online?operation=table&code={code}",
+        "portal": "https://www-genesis.destatis.de/genesis/online",
+        "link_verified": False,
+        "default_levels": ["Bundesland"],
+        "note": "Bundesdatenbank: die meisten Tabellen liegen auf Bundes- oder Länderebene, "
+                "einzelne auch tiefer. Download als CSV/XLSX nach kostenfreier Anmeldung oder "
+                "über die GENESIS-Webservice-API.",
+    },
+    "zensus": {
+        "source_key": "zensus2022",
+        "source_label": "Zensus 2022 (Statistische Ämter des Bundes und der Länder)",
+        "dataset_label": "Zensus-2022-Tabelle",
+        "url": "https://ergebnisse.zensus2022.de/datenbank/online/table/{code}",
+        "portal": "https://ergebnisse.zensus2022.de/",
+        "link_verified": False,
+        # Deliberately empty: in Zensus 2022 the regional level is encoded in the opaque table
+        # code, not in the title, and it ranges from Bundesland to 100 m grid cell. Guessing a
+        # level here would put wrong values behind the spatial filter.
+        "default_levels": [],
+        "note": "Zensus 2022: Gebäude, Wohnungen, Haushalte und Personenmerkmale, je nach "
+                "Merkmal bis auf Gemeinde- oder Gitterzellenebene. Die räumliche Ebene steckt "
+                "im Tabellencode, nicht in einem Parameter.",
+    },
+}
 
-    This is the finest linkable unit the portal offers: `?operation=table&code=<code>`
-    opens exactly that table, and the regional depth is spelled out in the table title
-    ("... regionale Tiefe: Kreise und krfr. Städte")."""
-    path = source["folder"] / "raw" / "genesis_catalogue_regionalstatistik.json"
-    if not path.exists():
-        return []
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    tables = payload.get("tables") or []
+DEPTH_MARKERS = [
+    ("gemeinde", "Gemeinden und Verbandsgemeinden"),
+    ("kreis", "Kreise & kreisfreie Städte"),
+    ("krfr", "Kreise & kreisfreie Städte"),
+    ("regierungsbezirk", "Regierungsbezirke"),
+    ("bundesl", "Bundesland"),
+    ("länder", "Bundesland"),
+    ("laender", "Bundesland"),
+    ("wahlkreis", "weitere räumliche Gliederungen"),
+    ("gitterzelle", "weitere räumliche Gliederungen"),
+    ("raster", "weitere räumliche Gliederungen"),
+]
 
-    depth_map = [
-        ("gemeinde", "Gemeinden und Verbandsgemeinden"),
-        ("kreis", "Kreise & kreisfreie Städte"),
-        ("krfr", "Kreise & kreisfreie Städte"),
-        ("regierungsbezirk", "Regierungsbezirke"),
-        ("bundesl", "Bundesland"),
-        ("länder", "Bundesland"),
-        ("laender", "Bundesland"),
-    ]
 
+def flatten_genesis_tables(source: Dict[str, Any], instances: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    """Table-level records for the GENESIS instance(s) whose catalogue sits in this source folder.
+
+    A table code is the finest linkable unit these portals offer, and the regional depth is
+    usually spelled out in the table title ("... regionale Tiefe: Kreise und krfr. Städte",
+    "Gebietsfläche: Kreise"), which is what tags the spatial level."""
+    raw = source["folder"] / "raw"
     records: List[Dict[str, Any]] = []
-    for table in tables:
-        code = clean(table.get("Code"))
-        # Catalogue titles carry hard line breaks ("... Stichtag 31.12. -\nregionale Tiefe: ...").
-        title = re.sub(r"\s+", " ", clean(table.get("Content")))
-        if not code or not title:
+
+    for instance in (instances or list(GENESIS_INSTANCES)):
+        config = GENESIS_INSTANCES[instance]
+        path = raw / f"genesis_catalogue_{instance}.json"
+        if not path.exists():
             continue
-        statistic_code = clean(table.get("StatistikCode"))
-        statistic_name = clean(table.get("StatistikContent"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        for table in payload.get("tables") or []:
+            code = clean(table.get("Code"))
+            title = re.sub(r"\s+", " ", clean(table.get("Content")))
+            if not code or not title:
+                continue
+            statistic_code = clean(table.get("StatistikCode"))
+            statistic_name = clean(table.get("StatistikContent"))
 
-        depth_text = ""
-        for marker in ("regionale Tiefe", "regionale Ebene"):
-            if marker in title:
-                depth_text = title.split(marker, 1)[1].strip(" :;-")
-                break
-        lowered = (depth_text or title).lower()
-        levels = sorted({level for needle, level in depth_map if needle in lowered})
-        mapped = map_spatial(levels or ["Kreise & kreisfreie Städte"])
+            depth_text = ""
+            for marker in ("regionale Tiefe", "regionale Ebene"):
+                if marker in title:
+                    depth_text = title.split(marker, 1)[1].strip(" :;-")
+                    break
+            lowered = (depth_text or title).lower()
+            levels = sorted({level for needle, level in DEPTH_MARKERS if needle in lowered})
+            mapped = map_spatial(levels or config["default_levels"])
 
-        period = clean(table.get("Time")) or clean(table.get("Zeitraum"))
-        years = [int(y) for y in re.findall(r"\b(?:19|20)\d{2}\b", f"{period} {title}")]
+            period = clean(table.get("Time")) or clean(table.get("Zeitraum"))
+            years = [int(y) for y in re.findall(r"\b(?:19|20)\d{2}\b", f"{period} {title}")]
+            records.append(
+                make_record(
+                    source_key=config["source_key"],
+                    source_label=config["source_label"],
+                    item_type="table",
+                    item_id=f"{instance}_table:{code}",
+                    variable_name=code,
+                    label=title,
+                    dataset_label=config["dataset_label"],
+                    theme=statistic_name or config["source_label"],
+                    description=join_nonempty([
+                        title,
+                        f"Tabelle der Statistik {statistic_code} {statistic_name}." if statistic_name else "",
+                        f"Regionale Tiefe: {depth_text}." if depth_text else "",
+                        f"Zeitraum: {period}." if period else "",
+                        config["note"],
+                        "" if config["link_verified"] else
+                        "Hinweis: Das Portal ist eine JavaScript-Anwendung; der Tabellenlink folgt der "
+                        "dokumentierten Form, konnte aber nicht serverseitig geprüft werden.",
+                    ]),
+                    stats_summary=f"{statistic_code} {statistic_name}".strip(),
+                    spatial_levels=mapped["spatial_levels"],
+                    nuts_levels=mapped["nuts_levels"],
+                    year_start=min(years) if years else None,
+                    year_end=max(years) if years else None,
+                    years_text=period,
+                    source_url=config["portal"],
+                    indicator_url=config["url"].format(code=code),
+                    link_level="table",
+                    access_modes=["machine-readable API", "web UI / search form only", "direct file download"],
+                    update_frequency=source["update_frequency"],
+                    api_hint=(
+                        f"GENESIS-Tabelle {code}"
+                        + (f" (Statistik {statistic_code})" if statistic_code else "")
+                        + ". Abruf über POST /rest/2020/data/tablefile mit dem Token im HTTP-Header "
+                        "`username` (nicht als Parameter, sonst Gastzugang)."
+                    ),
+                )
+            )
+    return records
+
+
+UNFALLATLAS_LABELS = {
+    "UIDENTSTLAE": "Unfall-ID (laufende Nummer je Unfall)",
+    "ID": "Unfall-ID (laufende Nummer je Unfall)",
+    "OBJECTID": "Objekt-ID des Unfalldatensatzes",
+    "ULAND": "Bundesland des Unfallorts",
+    "UREGBEZ": "Regierungsbezirk des Unfallorts",
+    "UKREIS": "Kreis des Unfallorts",
+    "UGEMEINDE": "Gemeinde des Unfallorts",
+    "UJAHR": "Unfalljahr",
+    "UMONAT": "Unfallmonat",
+    "USTUNDE": "Unfallstunde",
+    "UWOCHENTAG": "Wochentag des Unfalls",
+    "UKATEGORIE": "Unfallkategorie (Getötete, Schwerverletzte, Leichtverletzte)",
+    "UART": "Unfallart (Zusammenstoß, Abkommen von der Fahrbahn, ...)",
+    "UTYP1": "Unfalltyp (Fahr-, Abbiege-, Einbiege-, Überschreiten-Unfall, ...)",
+    "ULICHTVERH": "Lichtverhältnisse (Tageslicht, Dämmerung, Dunkelheit)",
+    "IstStrassenzustand": "Straßenzustand (trocken, nass, winterglatt)",
+    "STRZUSTAND": "Straßenzustand (trocken, nass, winterglatt)",
+    "IstRad": "Unfall mit Fahrradbeteiligung",
+    "IstPKW": "Unfall mit Pkw-Beteiligung",
+    "IstFuss": "Unfall mit Fußgängerbeteiligung",
+    "IstKrad": "Unfall mit Kraftradbeteiligung",
+    "IstGkfz": "Unfall mit Güterkraftfahrzeug-Beteiligung",
+    "IstSonstige": "Unfall mit Beteiligung sonstiger Verkehrsmittel",
+    "IstSonstig": "Unfall mit Beteiligung sonstiger Verkehrsmittel",
+    "LINREFX": "X-Koordinate des Unfallorts (EPSG:25832)",
+    "LINREFY": "Y-Koordinate des Unfallorts (EPSG:25832)",
+    "XGCSWGS84": "Längengrad des Unfallorts (WGS84)",
+    "YGCSWGS84": "Breitengrad des Unfallorts (WGS84)",
+    "PLST": "Plausibilitätskennzeichen des Datensatzes",
+}
+
+
+def flatten_unfallatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Unfallatlas: one geocoded record per reported injury accident. Rows are accidents, so
+    the indexable items are the accident attributes, taken from the CSV header of the newest
+    yearly archive and described from the official Datensatzbeschreibung PDF."""
+    import subprocess
+    import tempfile
+    import zipfile
+
+    raw = source["folder"] / "raw"
+    archives = sorted(raw.glob("Unfallorte*_CSV.zip"))
+    if not archives:
+        return []
+    years = sorted({int(m.group(1)) for a in archives if (m := re.search(r"(\d{4})", a.name))})
+
+    with zipfile.ZipFile(archives[-1]) as archive:
+        member = next((n for n in archive.namelist() if n.lower().endswith(".csv")), None)
+        if member is None:
+            return []
+        with archive.open(member) as handle:
+            header_line = handle.readline().decode("latin-1")
+    # The first cell carries a UTF-8 BOM even though the body is Latin-1.
+    columns = [clean(c).lstrip("﻿").lstrip("ï»¿") for c in header_line.strip().split(";")]
+    columns = [c for c in columns if c]
+
+    text = ""
+    pdf_path = next(iter(raw.glob("*Unfallatlas*.pdf")), None)
+    if pdf_path is not None:
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
+            out_path = Path(tmp.name)
+        try:
+            subprocess.run(["pdftotext", "-layout", str(pdf_path), str(out_path)],
+                           check=True, capture_output=True, timeout=120)
+            text = out_path.read_text(encoding="utf-8", errors="replace")
+        except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+            print(f"[warn] unfallatlas: pdftotext failed ({exc}); using column names only")
+        finally:
+            out_path.unlink(missing_ok=True)
+
+    # The PDF is a "Spaltenname | Inhalt" table: each column name starts a block that runs
+    # until the next known column name appears at the start of a line.
+    descriptions: Dict[str, str] = {}
+    if text:
+        lines = text.splitlines()
+        starts: List[Tuple[int, str]] = []
+        for position, line in enumerate(lines):
+            token = line.strip().split(" ")[0] if line.strip() else ""
+            if token and token in columns + ["ID"]:
+                starts.append((position, token))
+        for index, (position, token) in enumerate(starts):
+            stop = starts[index + 1][0] if index + 1 < len(starts) else len(lines)
+            block = " ".join(l.strip() for l in lines[position:stop])
+            block = re.sub(r"https?://\S+", "", block)
+            block = re.sub(r"Seite \d+ von \d+|Datensatzbeschreibung", " ", block)
+            block = re.sub(r"\s+", " ", block).strip()
+            if block and token not in descriptions:
+                descriptions[token] = block[:900]
+
+    mapped = map_spatial(["Bundesland", "Regierungsbezirke", "Kreise & kreisfreie Städte",
+                          "Gemeinden und Verbandsgemeinden", "Adressen / Koordinaten"])
+    records: List[Dict[str, Any]] = []
+    for column in columns:
         records.append(
             make_record(
-                source_key="regionalstatistik",
-                source_label="Regionalstatistik / GENESIS (Merkmalskatalog, via Datenguide)",
-                item_type="table",
-                item_id=f"genesis_table:{code}",
-                variable_name=code,
-                label=title,
-                dataset_label="GENESIS-Tabelle",
-                theme=statistic_name or "Regionalstatistik",
+                source_key="unfallatlas",
+                source_label="Unfallatlas (Statistische Ämter des Bundes und der Länder)",
+                item_type="register_attribute",
+                item_id=f"unfallatlas:{column}",
+                variable_name=column,
+                label=UNFALLATLAS_LABELS.get(column, column),
+                dataset_label="Unfallorte (CSV je Jahr)",
+                theme="Verkehr / Mobilität",
                 description=join_nonempty([
-                    title,
-                    f"Tabelle der Statistik {statistic_code} {statistic_name}." if statistic_name else "",
-                    f"Regionale Tiefe: {depth_text}." if depth_text else "",
-                    f"Zeitraum: {period}." if period else "",
-                    "Abrufbar in der Regionaldatenbank Deutschland; Download als CSV/XLSX nach kostenfreier "
-                    "Anmeldung oder über die GENESIS-Webservice-API.",
+                    descriptions.get(column, "") or f"Merkmal {column} der Unfalldaten.",
+                    f"Merkmal im Unfallatlas: jeder Datensatz ist ein polizeilich erfasster Unfall mit "
+                    f"Personenschaden, punktgenau georeferenziert (EPSG:25832 und WGS84), Unfalljahre "
+                    f"{years[0]}-{years[-1]}. Aggregierbar auf Gemeinde-, Kreis- und Landesebene sowie "
+                    "auf Raster oder Straßenabschnitte.",
+                    "Die Länder treten schrittweise bei, daher ist die Abdeckung in frühen Jahren unvollständig.",
                 ]),
-                stats_summary=f"{statistic_code} {statistic_name}".strip(),
                 spatial_levels=mapped["spatial_levels"],
                 nuts_levels=mapped["nuts_levels"],
-                year_start=min(years) if years else None,
-                year_end=max(years) if years else None,
-                years_text=period,
-                source_url="https://www.regionalstatistik.de/genesis/online",
-                indicator_url=f"https://www.regionalstatistik.de/genesis/online?operation=table&code={code}",
-                link_level="table",
-                access_modes=["machine-readable API", "web UI / search form only", "direct file download"],
-                update_frequency=source["update_frequency"],
+                year_start=years[0],
+                year_end=years[-1],
+                years_text=f"{years[0]}-{years[-1]}",
+                source_url="https://unfallatlas.statistikportal.de/",
+                indicator_url="https://unfallatlas.statistikportal.de/",
+                link_level="dataset",
+                access_modes=["direct file download", "interactive map viewer"],
+                update_frequency=source["update_frequency"] or "jährlich",
                 api_hint=(
-                    f"GENESIS-Tabelle {code} (Statistik {statistic_code}). Über die Regionalstatistik-"
-                    "Webservice-API: POST /genesisws/rest/2020/data/tablefile mit dem Token im HTTP-Header "
-                    "`username` (nicht als Parameter, sonst Gastzugang)."
+                    f"Spalte {column} in Unfallorte<Jahr>_EPSG25832_CSV.zip (Semikolon-getrennt, Latin-1); "
+                    "Koordinaten in XGCSWGS84/YGCSWGS84 bzw. LINREFX/LINREFY (EPSG:25832)."
                 ),
             )
         )
     return records
 
+
+def datenstand_note(hints: List[str]) -> str:
+    """The Breitband sheets carry their reference date in a free cell above the header row."""
+    found = [h for h in hints if "Datenstand" in h or re.match(r"^\d{2}\.\d{4}$", h)]
+    return f"Datenstand: {'; '.join(found)}." if found else ""
+
+
+def flatten_breitband(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Gigabit-Grundbuch workbooks (Breitbandatlas + Mobilfunk-Monitoring). Each sheet is a
+    use case (Privathaushalte, Fläche, Schulen, Autobahnen, ...) and each column after the
+    geography block is an availability class, so a record is the pair of the two. The same
+    bandwidth classes repeat once per technology block, with the block name in a merged cell
+    above the header, so those labels are forward-filled to disambiguate."""
+    raw = source["folder"] / "raw"
+    books = [
+        (raw / "bba_12_2025.xlsx", "Breitbandatlas (Festnetz und Mobilfunk)",
+         "Festnetz- und Mobilfunkverfügbarkeit nach Bandbreitenklasse"),
+        (raw / "Auswertung_Mobilfunkmonitoring.xlsx", "Mobilfunk-Monitoring",
+         "Mobilfunkverfügbarkeit nach Technologie (2G, 4G, 5G, 5G-SA) je Netzbetreiber und über alle Betreiber"),
+    ]
+    geo_columns = {"ags", "name", "verwaltungsebene", "land", "kreis", "raumkategorie"}
+    records: List[Dict[str, Any]] = []
+    for path, book_label, book_gloss in books:
+        if not path.exists():
+            continue
+        workbook = pd.ExcelFile(path)
+        for sheet in workbook.sheet_names:
+            if sheet.lower().startswith("erl"):
+                continue
+            frame = pd.read_excel(path, sheet_name=sheet, header=None, nrows=12)
+            header_row = None
+            for index in range(len(frame)):
+                if "ags" in [clean(v).lower() for v in frame.iloc[index].tolist()]:
+                    header_row = index
+                    break
+            if header_row is None:
+                continue
+            header = [clean(v) for v in frame.iloc[header_row].tolist()]
+            group_of: Dict[int, str] = {}
+            for offset in range(1, 4):
+                index = header_row - offset
+                if index < 0:
+                    continue
+                current = ""
+                for position, value in enumerate(frame.iloc[index].tolist()):
+                    text = clean(value)
+                    if text and not text.lower().startswith(("datenstand", "zurück", "angaben")):
+                        current = text
+                    if current and position not in group_of:
+                        group_of[position] = current
+            measures = [(position, h) for position, h in enumerate(header)
+                        if h and h.lower() not in geo_columns]
+            level_hint = [clean(v) for v in frame.iloc[header_row + 1: header_row + 4].stack().tolist()]
+            mapped = map_spatial(["Bundesland", "Kreise & kreisfreie Städte",
+                                  "Gemeinden und Verbandsgemeinden"])
+            seen_measures: set = set()
+            for position, measure in measures:
+                if measure.lower().startswith(("datenstand", "angaben", "zurück")):
+                    continue
+                group = group_of.get(position, "")
+                if group.lower() in {sheet.lower(), ""} or group.lower().startswith("mobilfunk-monitoring"):
+                    group = ""
+                measure_label = f"{group} {measure}".strip() if group else measure
+                if measure_label in seen_measures:
+                    continue
+                seen_measures.add(measure_label)
+                records.append(
+                    make_record(
+                        source_key="breitband",
+                        source_label="Gigabit-Grundbuch / Breitbandatlas (Bundesnetzagentur, BMDV)",
+                        item_type="regional_indicator",
+                        item_id=f"breitband:{path.stem}:{sheet}:{measure_label}",
+                        variable_name=f"{sheet}|{measure_label}",
+                        label=f"{measure_label} ({sheet})",
+                        dataset_label=book_label,
+                        theme="Digitalisierung",
+                        description=join_nonempty([
+                            f"Verfügbarkeit '{measure_label}' für die Nutzungsart '{sheet}'. {book_gloss}.",
+                            "Ausgewiesen als Versorgungsgrad in Prozent je Gebietseinheit, von Bundes- bis "
+                            "Gemeindeebene (AGS), mit Raumkategorie; zusätzlich liegen Rasterdaten "
+                            "(Gitterzellen, GeoPackage) und Mobilfunk-Geodaten vor.",
+                            datenstand_note(level_hint),
+                        ]),
+                        spatial_levels=mapped["spatial_levels"] + ["Weitere Gliederungen"],
+                        nuts_levels=mapped["nuts_levels"],
+                        year_start=2025,
+                        year_end=2025,
+                        years_text="Stand 12.2025",
+                        source_url="https://gigabitgrundbuch.bund.de/",
+                        indicator_url="https://gigabitgrundbuch.bund.de/",
+                        link_level="dataset",
+                        access_modes=["direct file download", "interactive map viewer"],
+                        update_frequency=source["update_frequency"] or "halbjährlich",
+                        api_hint=f"Spalte '{measure}' (Block '{group or sheet}') im Tabellenblatt '{sheet}' von {path.name}.",
+                    )
+                )
+    return records
+
+
+def flatten_ba_arbeitsmarkt_kommunal(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """'Arbeitsmarkt kommunal': one XLSX per municipality inside a district archive, all with
+    the same indicator set on the 'Daten' sheet. Section headers sit in column A and the
+    breakdowns in column B, so a record is the pair."""
+    import io
+    import zipfile
+
+    archive_path = next(iter((source["folder"] / "raw").glob("amk-*.zip")), None)
+    if archive_path is None:
+        return []
+    with zipfile.ZipFile(archive_path) as archive:
+        member = next((n for n in archive.namelist() if n.lower().endswith(".xlsx")), None)
+        if member is None:
+            return []
+        payload = archive.read(member)
+        municipalities = sum(1 for n in archive.namelist() if n.lower().endswith(".xlsx"))
+
+    frame = pd.read_excel(io.BytesIO(payload), sheet_name="Daten", header=None)
+    years = sorted({int(v) for v in frame.iloc[6].tolist()
+                    if str(v).replace(".0", "").isdigit() and 1990 < float(v) < 2100})
+
+    records: List[Dict[str, Any]] = []
+    section = ""
+    seen: set = set()
+    for _, row in frame.iterrows():
+        first = clean(str(row.get(0))).replace("\n", " ")
+        second = clean(str(row.get(1))).replace("\n", " ")
+        values = [clean(v) for v in row.tolist()[2:]]
+        has_value = any(re.match(r"^-?[\d.,]+$", v) for v in values if v)
+        if first and not has_value and not second:
+            is_place_header = bool(re.match(r"^\d{5,}", first)) or "Gebietsstand" in first
+            if len(first) > 12 and not is_place_header and not first.startswith(("Statistik", "Quelle", "Stand", "©")):
+                section = first
+            continue
+        label_part = second or first
+        if not label_part or label_part in {"dar.", "nan", "Merkmale"} or not has_value:
+            continue
+        label = f"{section}: {label_part}" if section else label_part
+        if label in seen:
+            continue
+        seen.add(label)
+        records.append(
+            make_record(
+                source_key="ba_arbeitsmarkt_kommunal",
+                source_label="Arbeitsmarkt kommunal (Bundesagentur für Arbeit)",
+                item_type="regional_indicator",
+                item_id=f"amk:{len(seen):03d}",
+                variable_name=f"AMK-{len(seen):03d}",
+                label=label[:120],
+                dataset_label=section or "Arbeitsmarkt kommunal",
+                theme="Arbeitsmarkt & Beschäftigung",
+                description=join_nonempty([
+                    f"{label}. Merkmal der BA-Reihe 'Arbeitsmarkt kommunal', die je Kreis ein Archiv mit "
+                    f"einer Tabelle pro Gemeinde liefert (Beispielarchiv: {municipalities} Gemeinden).",
+                    f"Jahresreihe {years[0]}-{years[-1]}." if years else "",
+                    "Gemeindescharfe Arbeitsmarktdaten, die in INKAR und im Regionalatlas nur auf "
+                    "Kreisebene vorliegen.",
+                ]),
+                stats_summary=section,
+                spatial_levels=["Gemeinden", "Kreise"],
+                nuts_levels=["Gemeinden", "LAU", "Kreise", "NUTS3"],
+                year_start=years[0] if years else source["coverage_start_year"],
+                year_end=years[-1] if years else source["coverage_end_year"],
+                years_text=f"{years[0]}-{years[-1]}" if years else "",
+                source_url=source["url"],
+                indicator_url=source["url"],
+                link_level="dataset",
+                access_modes=source["access_modes"],
+                update_frequency=source["update_frequency"],
+                api_hint=(
+                    "Heft 'Arbeitsmarkt kommunal' je Kreis: amk-<Kreisschlüssel>-0-<JJJJMM>-zip.zip, "
+                    "darin eine XLSX pro Gemeinde, Tabellenblatt 'Daten'."
+                ),
+            )
+        )
+    return records
+
+
 FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "regionalatlas-deutschland": flatten_regionalatlas,
-    "datenguide-abgeschaltet": lambda source: flatten_datenguide_genesis(source) + flatten_genesis_tables(source),
+    "datenguide-abgeschaltet": lambda source: (flatten_datenguide_genesis(source)
+                                               + flatten_genesis_tables(source, ["regionalstatistik"])),
+    "genesis-online-bund": lambda source: flatten_genesis_tables(source, ["destatis"]),
+    "zensus-2022": lambda source: flatten_genesis_tables(source, ["zensus"]),
     "strukturdaten-bundestagswahl-2021": flatten_btw21,
     "migration-integration-in-regionen": flatten_migration_regionen,
     "hochschulkompass": flatten_hochschulkompass,
@@ -1289,6 +1654,9 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "bundes-klinik-atlas": flatten_bundes_klinik_atlas,
     "open-data-oepnv": flatten_opendata_oepnv,
     "german-companies": flatten_german_companies,
+    "unfallatlas": flatten_unfallatlas,
+    "breitband-monitor": flatten_breitband,
+    "arbeitsmarkt-kommunal-ba": flatten_ba_arbeitsmarkt_kommunal,
 }
 
 # Portals that INKAR already covers or that must not produce a portal-level record.
