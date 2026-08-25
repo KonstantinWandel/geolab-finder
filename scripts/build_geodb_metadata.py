@@ -2036,6 +2036,140 @@ def flatten_db_isr(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     return records
 
 
+# The NeTEx specification has thousands of XML elements, almost all of them machinery. Indexing
+# it wholesale would bury the German data sources, so these are the concepts a researcher would
+# actually search for, with a German gloss each.
+NETEX_CONCEPTS = [
+    ("StopPlace", "Haltestelle als Ort (Bahnhof, Busbahnhof, Haltestellenbereich) mit Koordinaten und Adresse"),
+    ("Quay", "Bahnsteig oder Steig innerhalb einer Haltestelle, der eigentliche Ein- und Ausstiegspunkt"),
+    ("ScheduledStopPoint", "Fahrplanmäßiger Halt einer Linie, Verknüpfung zwischen Fahrplan und Ort"),
+    ("StopPlaceEntrance", "Zugang zu einer Haltestelle, Grundlage für Wege- und Barrierefreiheitsanalysen"),
+    ("AccessibilityAssessment", "Barrierefreiheit einer Haltestelle oder eines Fahrzeugs, etwa stufenfreier Zugang"),
+    ("AccessibilityLimitation", "Einzelne Einschränkung der Barrierefreiheit, zum Beispiel Rollstuhlzugang, Aufzug, Blindenleitsystem"),
+    ("PathLink", "Fußweg innerhalb einer Haltestelle, für Umsteigezeiten und Erreichbarkeit"),
+    ("Line", "Linie eines Verkehrsunternehmens mit Nummer, Name und Verkehrsmittel"),
+    ("Route", "Geografischer Linienweg als Abfolge von Punkten"),
+    ("JourneyPattern", "Halteabfolge einer Fahrt entlang einer Route"),
+    ("ServiceJourney", "Einzelne Fahrt mit Abfahrts- und Ankunftszeiten"),
+    ("DatedServiceJourney", "Einer konkreten Kalenderlage zugeordnete Fahrt"),
+    ("TimetabledPassingTime", "Planmäßige Durchfahrts-, Ankunfts- oder Abfahrtszeit an einem Halt"),
+    ("DayType", "Verkehrstag, etwa Montag bis Freitag, Schulferien, Feiertag"),
+    ("OperatingPeriod", "Zeitraum, in dem ein Fahrplan gilt"),
+    ("Operator", "Verkehrsunternehmen, das Fahrten durchführt"),
+    ("Authority", "Aufgabenträger oder Verbund, der den Verkehr bestellt"),
+    ("TransportMode", "Verkehrsmittel, etwa Bus, Straßenbahn, S-Bahn, Zug, Fähre"),
+    ("Interchange", "Geplanter Anschluss zwischen zwei Fahrten"),
+    ("SiteFrame", "Rahmen mit allen Ortsdaten, also Haltestellen, Bahnsteige und Zugänge"),
+    ("ServiceFrame", "Rahmen mit Linien, Routen und Halten"),
+    ("TimetableFrame", "Rahmen mit den Fahrten und Fahrzeiten"),
+    ("ResourceFrame", "Rahmen mit Unternehmen, Verkehrsmitteln und weiteren Stammdaten"),
+    ("FareFrame", "Rahmen mit Tarifzonen und Preisen"),
+    ("TariffZone", "Tarifzone, Grundlage für Preis- und Erreichbarkeitsanalysen"),
+    ("PointProjection", "Zuordnung eines Punktes zu einem anderen Bezugssystem"),
+    ("VehicleType", "Fahrzeugtyp mit Kapazität und Ausstattung"),
+    ("Notice", "Hinweistext zu Linie, Fahrt oder Halt"),
+]
+
+
+def flatten_transit_formats(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """GTFS and NeTEx field schemas.
+
+    The ÖPNV datasets in this index are delivered in these two formats, so "which field carries
+    step-free access" or "where is the departure time" is a discovery question this tool should
+    answer. GTFS is small enough to index field by field, straight from the specification. NeTEx
+    is not: its schema has thousands of elements, so only the concepts a researcher would look
+    for are listed, each with a German gloss."""
+    raw = source["folder"] / "raw"
+    records: List[Dict[str, Any]] = []
+    levels = ["Adressen / Koordinaten", "Gemeinden und Verbandsgemeinden", "weitere räumliche Gliederungen"]
+    mapped = map_spatial(levels)
+
+    gtfs_path = raw / "gtfs_reference.md"
+    if gtfs_path.exists():
+        text = gtfs_path.read_text(encoding="utf-8", errors="replace")
+        current_file = ""
+        for line in text.splitlines():
+            heading = re.match(r"^###\s+([a-z_]+\.(?:txt|geojson))\s*$", line.strip())
+            if heading:
+                current_file = heading.group(1)
+                continue
+            row = re.match(r"^\|\s+`([^`]+)`\s*\|\s*([^|]*)\|\s*([^|]*)\|\s*(.*?)\s*\|?$", line)
+            if not row or not current_file:
+                continue
+            field, field_type, presence, description = (clean(part).replace("*", "").replace("`", "")
+                                                        for part in row.groups())
+            if field.lower() in {"field name"}:
+                continue
+            # The spec writes rich markdown in the description; keep it readable as plain text.
+            description = re.sub(r"<br\s*/?>", " ", description)
+            description = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", description)
+            description = re.sub(r"[`*]", "", description)
+            description = re.sub(r"\s+", " ", description).strip()
+            records.append(
+                make_record(
+                    source_key="transit_formats",
+                    source_label="GTFS und NeTEx (Datenformate der ÖPNV-Fahrplandaten)",
+                    item_type="register_attribute",
+                    item_id=f"gtfs:{current_file}:{field}",
+                    variable_name=field,
+                    label=f"{field} ({current_file})",
+                    dataset_label=f"GTFS {current_file}",
+                    theme="Verkehr / Mobilität",
+                    description=join_nonempty([
+                        f"GTFS-Feld {field} in {current_file}. {description}"[:900],
+                        f"Typ: {field_type}. Vorkommen: {presence}." if field_type or presence else "",
+                        "GTFS ist das Format, in dem die deutschlandweiten und verbundbezogenen "
+                        "Soll-Fahrplandaten auf opendata-oepnv.de veröffentlicht werden.",
+                    ]),
+                    unit=field_type,
+                    spatial_levels=mapped["spatial_levels"],
+                    nuts_levels=mapped["nuts_levels"],
+                    source_url="https://gtfs.org/documentation/schedule/reference/",
+                    indicator_url=f"https://gtfs.org/documentation/schedule/reference/#{current_file.replace('.', '')}",
+                    link_level="dataset",
+                    access_modes=["direct file download", "machine-readable API"],
+                    update_frequency="laufend",
+                    api_hint=(
+                        f"Spalte {field} in {current_file} eines GTFS-Feeds, etwa "
+                        "'Deutschlandweite Sollfahrplandaten (GTFS)' auf opendata-oepnv.de."
+                    ),
+                )
+            )
+
+    for element, gloss in NETEX_CONCEPTS:
+        records.append(
+            make_record(
+                source_key="transit_formats",
+                source_label="GTFS und NeTEx (Datenformate der ÖPNV-Fahrplandaten)",
+                item_type="register_attribute",
+                item_id=f"netex:{element}",
+                variable_name=element,
+                label=f"{element} (NeTEx)",
+                dataset_label="NeTEx",
+                theme="Verkehr / Mobilität",
+                description=join_nonempty([
+                    f"NeTEx-Element {element}: {gloss}.",
+                    "NeTEx ist das europäische Austauschformat für Fahrplan-, Halte- und Tarifdaten "
+                    "und wird für die deutschlandweiten Sollfahrplandaten neben GTFS ausgeliefert.",
+                    "Hier sind bewusst nur die inhaltlich relevanten Konzepte aufgeführt, nicht das "
+                    "vollständige XML-Schema.",
+                ]),
+                spatial_levels=mapped["spatial_levels"],
+                nuts_levels=mapped["nuts_levels"],
+                source_url="https://www.opendata-oepnv.de/ht/de/organisation/delfi/startseite",
+                indicator_url="https://www.opendata-oepnv.de/ht/de/organisation/delfi/startseite",
+                link_level="dataset",
+                access_modes=["direct file download", "on request / registration needed"],
+                update_frequency="laufend",
+                api_hint=(
+                    f"NeTEx-Element {element}; Profil siehe prCEN/TS 16614 PI Profile "
+                    "(Dokument im Ordner raw/ dieser Quelle)."
+                ),
+            )
+        )
+    return records
+
+
 FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "regionalatlas-deutschland": flatten_regionalatlas,
     "datenguide-abgeschaltet": lambda source: (flatten_datenguide_genesis(source)
@@ -2050,7 +2184,7 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "deutschlandatlas-erreichbarkeit-von-apotheken": flatten_deutschlandatlas,
     "krankenhausverzeichnis": flatten_gba_qualitaetsbericht,
     "bundes-klinik-atlas": flatten_bundes_klinik_atlas,
-    "open-data-oepnv": flatten_opendata_oepnv,
+    "open-data-oepnv": lambda source: flatten_opendata_oepnv(source) + flatten_transit_formats(source),
     "german-companies": flatten_german_companies,
     "unfallatlas": flatten_unfallatlas,
     "deutsche-bahn-infrastrukturregister": flatten_db_isr,

@@ -197,6 +197,21 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
     "open-data-oepnv": [
         {"name": "portal.html", "url": "https://www.opendata-oepnv.de/ht/de/willkommen", "kind": "portal", "note": "Downloading a dataset needs a free account; the catalogue itself is public."},
         {
+            "name": "gtfs_reference.md",
+            "url": "https://raw.githubusercontent.com/google/transit/master/gtfs/spec/en/reference.md",
+            "kind": "catalogue",
+            "note": "The GTFS specification: every file and field of the format the nationwide and "
+                    "per-Verbund timetable datasets are delivered in. Indexed so that a question "
+                    "like 'which field carries step-free access' finds an answer.",
+        },
+        {
+            "name": "netex_pi_profile.pdf",
+            "url": "https://cms.opendata-oepnv.de/fileadmin/Dokumentationen_etc/DELFI/"
+                   "prCEN_TS_16614-PI_Profile_FV__E_-2019_-_Final_Draft.pdf",
+            "kind": "catalogue",
+            "note": "The NeTEx passenger-information profile that DELFI references, public, 188 pages.",
+        },
+        {
             "name": "datensaetze.html",
             "url": "https://www.opendata-oepnv.de/ht/de/datensaetze",
             "kind": "catalogue",
