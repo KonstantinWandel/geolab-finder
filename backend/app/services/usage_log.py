@@ -1,10 +1,12 @@
 """Anonymous usage log for the finders.
 
-Two things are recorded, both without any personal data: the query that was asked, and a
-thumbs up or down on a single result. No IP address, no user agent, no cookie, no session
-identifier, nothing that could tie two queries to the same person. The `query_id` returned
-with a search exists only so a vote can name which result list it refers to; it is a random
-value that is never stored anywhere else and never reaches a cookie.
+One thing is recorded, without any personal data: the query that was asked and what came back.
+No IP address, no user agent, no cookie, no session identifier, nothing that could tie two
+queries to the same person. The `query_id` on a search is a random value used only to identify
+one entry in the log; it is never stored anywhere else and never reaches a cookie.
+
+A per-result rating was built and then removed: at this traffic level it would not have
+produced enough signal to act on, and it invited the reading that ranking adjusts itself.
 
 Why log at all: without it, ranking work is guided by a hand-written eval instead of real
 demand, and there is no way to notice that a whole class of question returns nothing useful.
@@ -65,19 +67,4 @@ def log_query(query_id: str, app_mode: str, question: str, filters: Dict[str, An
             for position, row in enumerate(results[:5])
         ],
         "seconds": round(seconds, 2),
-    })
-
-
-def log_feedback(query_id: str, item_id: Optional[str], vote: str, question: Optional[str],
-                 comment: Optional[str]) -> None:
-    """One line per vote. Votes are NOT fed back into ranking automatically: see
-    scripts/report_usage.py, which turns them into eval candidates for a human to confirm."""
-    _append("feedback", {
-        "query_id": query_id,
-        "item_id": item_id,
-        # A rating can be taken back, so "clear" is a state of its own rather than a down-vote.
-        "vote": ("up" if str(vote).lower() in {"up", "1", "true", "yes"}
-                 else "clear" if str(vote).lower() in {"clear", "none", "reset"} else "down"),
-        "question": (question or "")[:400],
-        "comment": (comment or "")[:1000],
     })

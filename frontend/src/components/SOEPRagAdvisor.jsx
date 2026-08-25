@@ -79,24 +79,6 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     (filterOptions?.sample_groups || []).find((g) => g.value === key)?.label || null
 
   const [chatHistory, setChatHistory] = useState([])
-  // Thumbs on a single result. Recorded anonymously against the query_id the backend
-  // returns; nothing is applied to ranking automatically, the votes become eval candidates.
-  const [votes, setVotes] = useState({})
-
-  const sendVote = async (queryId, row, vote, question) => {
-    const key = `${queryId}:${row.item_id || row.variable_name}`
-    setVotes((current) => ({ ...current, [key]: vote === 'clear' ? undefined : vote }))
-    try {
-      await fetch(`${apiUrl}/soep/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query_id: queryId, item_id: row.item_id || row.variable_name,
-                               vote, question }),
-      })
-    } catch (e) {
-      console.error(e)
-    }
-  }
   const [selectedRows, setSelectedRows] = useState({})
   const messagesEndRef = useRef(null)
   const latestMsgRef = useRef(null)
@@ -356,7 +338,6 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                   <th>Coverage</th>
                   <th>Why useful</th>
                   <th>Get it from</th>
-                  <th>Helpful?</th>
                 </tr>
               </thead>
               <tbody>
@@ -412,34 +393,6 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                       </details>
                     </td>
                     <td>{renderSourceLink(row)}</td>
-                    <td>
-                      {/* Its own column with a header, so it reads as feedback rather than as a
-                          reordering control. Clicking the active choice again clears it. */}
-                      <div className="vote-row">
-                        {['up', 'down'].map((vote) => {
-                          const key = `${result.query_id}:${row.item_id || row.variable_name}`
-                          const active = votes[key] === vote
-                          return (
-                            <button
-                              key={vote}
-                              type="button"
-                              className={`vote-button${active ? ' vote-active' : ''}`}
-                              title={vote === 'up'
-                                ? 'This result answered my question'
-                                : 'This result is not what I meant'}
-                              aria-pressed={active}
-                              aria-label={vote === 'up' ? 'Helpful result' : 'Unhelpful result'}
-                              disabled={!result.query_id}
-                              onClick={() => sendVote(result.query_id, row,
-                                                      active ? 'clear' : vote,
-                                                      chatHistory[i - 1]?.content || '')}
-                            >
-                              {vote === 'up' ? '\uD83D\uDC4D' : '\uD83D\uDC4E'}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>

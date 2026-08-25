@@ -477,10 +477,21 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 /* Results table flows inside the one scroll region; only a horizontal
    scrollbar appears, and only when a table is genuinely too wide. */
 .table-scroll.metadata-table {
-  max-height: none;
-  overflow-x: auto;
-  overflow-y: visible;
+  /* A bounded box, so the horizontal scrollbar sits at the bottom of what you are looking at
+     instead of at the bottom of a very tall table: with an unbounded height you had to scroll
+     the whole page down to reach it. Rows scroll vertically inside the box, and the header
+     row stays put. */
+  max-height: 70vh;
+  overflow: auto;
   max-width: 100%;
+  overscroll-behavior: contain;
+}
+
+.results-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel, var(--bg, #ffffff));
 }
 
 /* Results table: natural column sizing with a floor on the total width, so no column can be
@@ -490,7 +501,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .results-table {
   table-layout: auto;
   width: 100%;
-  min-width: 1180px;
+  min-width: 1040px;
 }
 
 .results-table th {
@@ -521,7 +532,6 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 /* Make the horizontal scrollbar of the results table visible rather than overlay-thin. */
 .table-scroll.metadata-table {
   scrollbar-width: auto;
-  padding-bottom: 0.3rem;
 }
 
 @media (max-width: 900px) {
@@ -923,29 +933,7 @@ button, input, select, textarea,
   .brand-soep { height: 32px; }
 }
 
-/* Result feedback: two small arrows per row. A vote is anonymous, is tied only to the
-   query_id the backend returned, and disables itself once cast. */
-.vote-row {
-  display: flex;
-  gap: 0.3rem;
-  margin-top: 0.4rem;
-}
 
-.vote-button {
-  border: 1px solid var(--border, rgba(128, 128, 128, 0.35));
-  background: transparent;
-  color: inherit;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  line-height: 1;
-  padding: 0.15rem 0.4rem;
-  opacity: 0.65;
-}
-
-.vote-button:hover:enabled { opacity: 1; }
-.vote-button:disabled { cursor: default; }
-.vote-button.vote-active { opacity: 1; font-weight: 700; }
 
 /* Legal and attribution links: required on a public service, kept quiet visually. */
 .legal-links {
