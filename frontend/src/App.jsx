@@ -51,9 +51,10 @@ function App() {
                 url: 'https://www.diw.de/', shape: 'brand-diw' }
   const SOEP = { file: 'soep.png', alt: 'Sozio-oekonomisches Panel (SOEP)', kind: 'img',
                  url: 'https://www.diw.de/soep', shape: 'brand-soep' }
+  // Both finders are the same project, so both carry the same four marks.
   const BRAND_SETS = {
     soep: [UNI, DIW, SOEP, LEIBNIZ],
-    inkar: [UNI, LEIBNIZ],
+    inkar: [UNI, DIW, SOEP, LEIBNIZ],
     all: [UNI, DIW, SOEP, LEIBNIZ],
   }
   const BRANDS = BRAND_SETS[APP_MODE] || BRAND_SETS.all

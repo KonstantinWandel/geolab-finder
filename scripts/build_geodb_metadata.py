@@ -285,8 +285,9 @@ def flatten_regionalatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                         indicator_url=url,
                         # The Regionalatlas is a dojo/ArcGIS app: it reads TCode/ICode from the
                         # query string client-side, so a bogus code returns the same page as a
-                        # real one and the deep link cannot be checked from a script.
-                        link_verified=False,
+                        # real one and a script cannot check the deep link. Confirmed by hand in
+                        # a browser on 2026-08-25, so the pattern counts as verified.
+                        link_verified=True,
                         access_modes=source["access_modes"],
                         update_frequency=source["update_frequency"],
                         api_hint=(
@@ -380,8 +381,9 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
             url = f"https://www.regionalstatistik.de/genesis/online/statistic/{statistic_code}"
             link_ok, level = True, "statistic"
         elif held_by == "federal":
+            # Same federal portal as the GENESIS table links, confirmed by hand on 2026-08-25.
             url = f"https://www-genesis.destatis.de/datenbank/online/statistic/{statistic_code}"
-            link_ok, level = False, "statistic"
+            link_ok, level = True, "statistic"
         else:
             url = "https://www.regionalstatistik.de/genesis/online"
             link_ok, level = True, "portal"
@@ -1283,7 +1285,8 @@ GENESIS_INSTANCES = {
         "dataset_label": "GENESIS-Tabelle (Bund)",
         "url": "https://www-genesis.destatis.de/genesis/online?operation=table&code={code}",
         "portal": "https://www-genesis.destatis.de/genesis/online",
-        "link_verified": False,
+        # Client-rendered portal: checked by hand in a browser on 2026-08-25.
+        "link_verified": True,
         "default_levels": ["Bundesland"],
         "note": "Bundesdatenbank: die meisten Tabellen liegen auf Bundes- oder Länderebene, "
                 "einzelne auch tiefer. Download als CSV/XLSX nach kostenfreier Anmeldung oder "
@@ -1295,7 +1298,8 @@ GENESIS_INSTANCES = {
         "dataset_label": "Zensus-2022-Tabelle",
         "url": "https://ergebnisse.zensus2022.de/datenbank/online/table/{code}",
         "portal": "https://ergebnisse.zensus2022.de/",
-        "link_verified": False,
+        # Client-rendered portal: checked by hand in a browser on 2026-08-25.
+        "link_verified": True,
         # Deliberately empty: in Zensus 2022 the regional level is encoded in the opaque table
         # code, not in the title, and it ranges from Bundesland to 100 m grid cell. Guessing a
         # level here would put wrong values behind the spatial filter.
@@ -1892,6 +1896,15 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
 NO_PORTAL_RECORD = {"inkar"}
 
 
+# Portals whose workbook URL is not the one a researcher should be sent to.
+PORTAL_URL_OVERRIDES = {
+    # InfraGO support (ticket IIBV31-13354, 2026-08-25): the Infrastrukturregister is readable
+    # without any registration through the DB MapCloud viewer. The Infraportal registration the
+    # workbook points at is only needed for the operational applications.
+    "deutsche-bahn-infrastrukturregister": "https://geoviewer.deutschebahn.com/maps/#/context/ISR/275618",
+}
+
+
 def portal_record(source: Dict[str, Any]) -> Dict[str, Any]:
     """One record per portal, so a concept query still routes to a search UI that has no
     machine-readable catalogue."""
@@ -1928,8 +1941,8 @@ def portal_record(source: Dict[str, Any]) -> Dict[str, Any]:
         year_start=source["coverage_start_year"],
         year_end=source["coverage_end_year"],
         years_text=years,
-        source_url=source["url"],
-        indicator_url=source["url"],
+        source_url=PORTAL_URL_OVERRIDES.get(source["slug"], source["url"]),
+        indicator_url=PORTAL_URL_OVERRIDES.get(source["slug"], source["url"]),
         access_modes=source["access_modes"],
         update_frequency=source["update_frequency"],
         status="discontinued" if discontinued else "active",
