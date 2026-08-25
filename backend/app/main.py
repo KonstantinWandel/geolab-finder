@@ -165,22 +165,6 @@ async def search_soep(q: str):
     return soep_search_service.search(q)
 
 
-class FeedbackRequest(BaseModel):
-    query_id: str
-    vote: str
-    item_id: Optional[str] = None
-    question: Optional[str] = None
-    comment: Optional[str] = None
-
-
-@app.post("/api/soep/feedback")
-def soep_feedback(req: FeedbackRequest):
-    """A thumbs up or down on one result. Stored anonymously and never applied to ranking
-    automatically: votes become eval candidates that a human confirms."""
-    usage_log.log_feedback(req.query_id, req.item_id, req.vote, req.question, req.comment)
-    return {"status": "recorded"}
-
-
 @app.post("/api/soep/advice")
 def soep_advice(req: SOEPAdviceRequest):
     # Sync (not async) on purpose: the body does blocking CPU model inference. As a sync
