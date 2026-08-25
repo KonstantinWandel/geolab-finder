@@ -8,21 +8,29 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
   const showSoepFilters = isSoep || isAll
   const STORAGE_KEY = `geolab_history_${mode}`
   const headerTitle = isInkar
-    ? 'INKAR Regional Indicator Finder'
+    ? 'GeoDB Regional Data Finder'
     : isSoep
     ? 'SOEP Variable Finder'
     : 'GeoLAB Metadata Advisor'
   const headerBlurb = isInkar
-    ? 'Semantic search over INKAR 2025 regional indicators — filter by spatial level, theme and year.'
+    ? 'Semantic search across German georeferenced data sources. Describe the concept you need data on; every hit links out to the source that holds it, and says how precisely that link lands.'
     : isSoep
     ? 'Multilingual semantic search over SOEP-Core variable metadata.'
     : 'Semantic search over SOEP variables and INKAR regional indicators.'
 
-  // INKAR spatial levels: one concept, shown with its German name + NUTS/LAU alias.
+  // Spatial levels: one concept, shown with its German name + NUTS/LAU alias.
   const SPATIAL_LEVEL_LABELS = {
     Gemeinden: 'Municipality (Gemeinde / LAU)',
     Kreise: 'District (Kreis / NUTS3)',
     NUTS2: 'NUTS2 region',
+    'Bundesländer': 'Federal state (Bundesland / NUTS1)',
+    Regierungsbezirke: 'Government region (Regierungsbezirk)',
+    Bezirke: 'Borough (Bezirk)',
+    Ortsteile: 'Locality (Ortsteil / Bezirksregion)',
+    PLZ: 'Postcode (PLZ)',
+    'Adressen/Koordinaten': 'Address / coordinates',
+    Bundestagswahlkreise: 'Federal constituency (Wahlkreis)',
+    'Weitere Gliederungen': 'Other spatial breakdowns',
   }
 
   // Per-finder citation (each deployment is archived on Zenodo under its own DOI).
@@ -38,7 +46,9 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
   const [error, setError] = useState(null)
   const [filterOptions, setFilterOptions] = useState(null)
   const [filters, setFilters] = useState({
-    dataset_scope: isAll ? 'all' : mode,
+    // The regional finder serves many sources now, so only the SOEP deployment
+    // pre-selects its own source; everywhere else the default is every source.
+    dataset_scope: isSoep ? 'soep' : 'all',
     dataset_label: 'All datasets',
     nuts_level: 'Any',
     spatial_level: 'Any',
@@ -49,6 +59,16 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     sample_group: 'Any',
     top_k: 12,
   })
+
+  // How precisely a result's link lands on the thing it describes. Shown as a chip so a
+  // user can tell "this opens the exact indicator" from "this opens a portal to search in".
+  const LINK_LEVEL = {
+    indicator: { label: 'opens the indicator', short: 'indicator link' },
+    table: { label: 'opens the exact table', short: 'table link' },
+    statistic: { label: 'opens the statistic that contains it', short: 'statistic link' },
+    dataset: { label: 'opens the dataset that contains it', short: 'dataset link' },
+    portal: { label: 'opens the portal; search from there', short: 'portal link' },
+  }
 
   // Human label for a SOEP sample/questionnaire group key (from the fetched facet).
   const sampleGroupLabel = (key) =>
@@ -188,6 +208,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     nuts_levels: (row.nuts_levels || []).join('; '),
     years: row.available_years_text || '',
     url: row.source_url || row.selector_url || row.indicator_url || '',
+    link_level: row.link_level || '',
     description: row.rich_description || row.search_description || row.stats_summary || '',
   })
 
@@ -302,7 +323,12 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                     <td>
                       <div style={{ fontWeight: 'bold' }}>{row.variable_name}</div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{row.label}</div>
-                      {row.source_key === 'inkar' && row.theme && <div className="mini-chip">{row.theme}</div>}
+                      {row.source_key !== 'soep' && row.theme && <div className="mini-chip">{row.theme}</div>}
+                      {row.link_level && LINK_LEVEL[row.link_level] && (
+                        <div className="mini-chip" title={LINK_LEVEL[row.link_level].label}>
+                          {LINK_LEVEL[row.link_level].short}
+                        </div>
+                      )}
                       {row.source_key === 'soep' && sampleGroupLabel(row.sample_group) && (
                         <div className="mini-chip">{sampleGroupLabel(row.sample_group)}</div>
                       )}
@@ -362,7 +388,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
       <div className="two-col-body">
         <div className="left-col">
           <div className="filter-panel glass-panel">
-        {isAll && (
+        {(filterOptions?.sources || []).length > 1 && (
           <div>
             <label>Search source</label>
             <select value={filters.dataset_scope} onChange={(e) => updateFilter('dataset_scope', e.target.value)}>
@@ -373,9 +399,9 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
           </div>
         )}
         <div>
-          <label>{isInkar ? 'INKAR sheet' : 'SOEP dataset'}</label>
+          <label>{isInkar ? 'Dataset / sheet' : 'SOEP dataset'}</label>
           <select value={filters.dataset_label} onChange={(e) => updateFilter('dataset_label', e.target.value)}>
-            <option value="All datasets">{isInkar ? 'All sheets' : 'All datasets'}</option>
+            <option value="All datasets">All datasets</option>
             {(filterOptions?.datasets || []).map((dataset) => (
               <option key={dataset} value={dataset}>{dataset}</option>
             ))}
@@ -404,7 +430,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
               </select>
             </div>
             <div>
-              <label>INKAR theme</label>
+              <label>Theme</label>
               <select value={filters.theme} onChange={(e) => updateFilter('theme', e.target.value)}>
                 <option>Any</option>
                 {(filterOptions?.themes || []).map((theme) => (

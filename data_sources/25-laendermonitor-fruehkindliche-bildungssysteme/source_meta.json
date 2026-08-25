@@ -1,0 +1,69 @@
+{
+  "name": "Ländermonitor Frühkindliche Bildungssysteme",
+  "slug": "laendermonitor-fruehkindliche-bildungssysteme",
+  "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+  "excel_row": 26,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte"
+  ],
+  "topic_groups": [
+    "Bevölkerung",
+    "Bildung",
+    "Gender",
+    "Kinder und Jugend",
+    "Migration"
+  ],
+  "topics": [
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Gender",
+      "topic": "Gender"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinder und Jugend"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinderbetreuung"
+    },
+    {
+      "group": "Migration",
+      "topic": "Migration"
+    }
+  ],
+  "topic_labels": [
+    "Bevölkerung",
+    "Bildung",
+    "Gender",
+    "Kinder und Jugend",
+    "Kinderbetreuung",
+    "Migration"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2016,
+  "coverage_end_month": null,
+  "coverage_end_year": 2022,
+  "update_frequency": "jährlich",
+  "note": "abhängig von Variable"
+}

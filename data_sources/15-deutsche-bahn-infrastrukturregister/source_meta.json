@@ -1,0 +1,45 @@
+{
+  "name": "Deutsche Bahn - Infrastrukturregister",
+  "slug": "deutsche-bahn-infrastrukturregister",
+  "url": "https://geovdbn.deutschebahn.com/isr",
+  "excel_row": 16,
+  "provider": "",
+  "access_modes": [
+    "interactive map viewer",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Gemeinden und Verbandsgemeinden",
+    "Adressen / Koordinaten"
+  ],
+  "topic_groups": [
+    "Verkehr / Mobilität"
+  ],
+  "topics": [
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Distanz zum nächsten Flughafen/Bahnhof/Autobahnauffahrt"
+    }
+  ],
+  "topic_labels": [
+    "Verkehr / Mobilität",
+    "Distanz zum nächsten Flughafen/Bahnhof/Autobahnauffahrt"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2024,
+  "coverage_end_month": null,
+  "coverage_end_year": 2025,
+  "update_frequency": "n/a",
+  "note": "Stand 2024, vermutlich jährlich"
+}

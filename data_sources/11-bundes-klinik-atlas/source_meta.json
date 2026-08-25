@@ -1,0 +1,52 @@
+{
+  "name": "Bundes-Klinik-Atlas (vormals Fachärztesuche - Weisse Liste)",
+  "slug": "bundes-klinik-atlas",
+  "url": "https://bundes-klinik-atlas.de/open-data/",
+  "excel_row": 12,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Gemeinden und Verbandsgemeinden",
+    "Bezirke",
+    "Bezirksregionen / Ortsteile",
+    "PLZ"
+  ],
+  "topic_groups": [
+    "Gesundheit"
+  ],
+  "topics": [
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Anzahl (Fach-)Ärzte im Umkreis"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Distanz zum nächsten (Fach-)Arzt"
+    }
+  ],
+  "topic_labels": [
+    "Gesundheit",
+    "Anzahl (Fach-)Ärzte im Umkreis",
+    "Distanz zum nächsten (Fach-)Arzt"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2021,
+  "coverage_end_month": null,
+  "coverage_end_year": 2021,
+  "update_frequency": "laufend",
+  "note": "Weisse Liste eingestellt; ersetzt durch den Bundes-Klinik-Atlas (IQTIG, Open Data), Stand 2026"
+}

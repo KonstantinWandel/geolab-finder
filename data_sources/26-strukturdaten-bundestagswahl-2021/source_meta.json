@@ -1,0 +1,146 @@
+{
+  "name": "Strukturdaten Bundestagswahl 2021",
+  "slug": "strukturdaten-bundestagswahl-2021",
+  "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+  "excel_row": 27,
+  "provider": "",
+  "access_modes": [
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": false,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Bevölkerung",
+    "Bildung",
+    "Flächennutzung",
+    "Kinder und Jugend",
+    "Soziales",
+    "Verkehr / Mobilität",
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigte"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigte nach Wirtschaftsbereichen"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitslose (-nquote)"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerungsstand"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung nach Geschlecht / Alter"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Geburten und Sterbefälle"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Abschlüsse"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Schulabgänger*innen"
+    },
+    {
+      "group": "Flächennutzung",
+      "topic": "Flächennutzung"
+    },
+    {
+      "group": "Flächennutzung",
+      "topic": "Bodennutzung"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinder und Jugend"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinderbetreuung"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Soziales"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Sozialleistungen"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "PKW-Dichte"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Unternehmen"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Beschäftigte",
+    "Beschäftigte nach Wirtschaftsbereichen",
+    "Arbeitslose (-nquote)",
+    "Bevölkerung",
+    "Bevölkerungsstand",
+    "Bevölkerung nach Geschlecht / Alter",
+    "Geburten und Sterbefälle",
+    "Bildung",
+    "Abschlüsse",
+    "Schulabgänger*innen",
+    "Flächennutzung",
+    "Bodennutzung",
+    "Kinder und Jugend",
+    "Kinderbetreuung",
+    "Soziales",
+    "Sozialleistungen",
+    "Verkehr / Mobilität",
+    "PKW-Dichte",
+    "Wirtschaft und Unternehmen",
+    "Unternehmen"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2018,
+  "coverage_end_month": null,
+  "coverage_end_year": 2021,
+  "update_frequency": "vierjährig",
+  "note": "abhängig von Variable"
+}

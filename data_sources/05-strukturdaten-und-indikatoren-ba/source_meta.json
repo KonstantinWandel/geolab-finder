@@ -1,0 +1,113 @@
+{
+  "name": "Strukturdaten und -indikatoren - BA",
+  "slug": "strukturdaten-und-indikatoren-ba",
+  "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+  "excel_row": 6,
+  "provider": "",
+  "access_modes": [
+    "direct file download"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": false,
+    "API": false,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Bevölkerung",
+    "Bildung",
+    "Soziales",
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigte nach Wirtschaftsbereichen"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitslose (-nquote)"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Unterbeschäftigungsquote"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerungsstand"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung nach Geschlecht / Alter"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Wanderungen"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Berufsausbildungsstellen"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Bewerber Berufsausbildungsstellen"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Soziales"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Sozialleistungen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "BIP"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Beschäftigte nach Wirtschaftsbereichen",
+    "Arbeitslose (-nquote)",
+    "Unterbeschäftigungsquote",
+    "Bevölkerung",
+    "Bevölkerungsstand",
+    "Bevölkerung nach Geschlecht / Alter",
+    "Wanderungen",
+    "Bildung",
+    "Berufsausbildungsstellen",
+    "Bewerber Berufsausbildungsstellen",
+    "Soziales",
+    "Sozialleistungen",
+    "Wirtschaft und Unternehmen",
+    "BIP"
+  ],
+  "coverage_start_month": 6,
+  "coverage_start_year": 2010,
+  "coverage_end_month": 6,
+  "coverage_end_year": 2021,
+  "update_frequency": "halbjährlich",
+  "note": ""
+}

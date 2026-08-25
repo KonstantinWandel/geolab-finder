@@ -1,0 +1,27 @@
+{
+  "name": "Open Data Handelsregister",
+  "slug": "open-data-handelsregister",
+  "url": "https://offeneregister.de/",
+  "excel_row": 25,
+  "provider": "",
+  "access_modes": [
+    "machine-readable API"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": true,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [],
+  "topic_groups": [],
+  "topics": [],
+  "topic_labels": [],
+  "coverage_start_month": 6,
+  "coverage_start_year": 2017,
+  "coverage_end_month": 1,
+  "coverage_end_year": 2019,
+  "update_frequency": "n/a",
+  "note": ""
+}

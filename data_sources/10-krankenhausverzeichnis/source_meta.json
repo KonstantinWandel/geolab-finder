@@ -1,0 +1,49 @@
+{
+  "name": "Krankenhausverzeichnis",
+  "slug": "krankenhausverzeichnis",
+  "url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+  "excel_row": 11,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "PLZ"
+  ],
+  "topic_groups": [
+    "Gesundheit"
+  ],
+  "topics": [
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Krankenhäuser (Bettendichte)"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Fachabteilungen Krankenhaus"
+    }
+  ],
+  "topic_labels": [
+    "Gesundheit",
+    "Krankenhäuser (Bettendichte)",
+    "Fachabteilungen Krankenhaus"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": null,
+  "coverage_end_month": null,
+  "coverage_end_year": null,
+  "update_frequency": "n/a",
+  "note": "Stand 2024"
+}

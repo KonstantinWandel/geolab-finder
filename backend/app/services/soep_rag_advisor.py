@@ -164,10 +164,15 @@ class SOEPRagAdvisorService:
             self.app_mode = "all"
         self.load_soep = self.app_mode in {"all", "soep"}
         self.load_inkar = self.app_mode in {"all", "inkar"}
+        # The GeoDB sources (Regionalatlas, Regionalstatistik/GENESIS, BA, Bundeswahlleiter,
+        # portal-level records, ...) ride along with the INKAR deployment: geodb.geolab...
+        # is one regional-data finder, with the source as a filter rather than a separate site.
+        self.load_geodb = self.load_inkar and os.getenv("GEOLAB_ENABLE_GEODB", "1").strip().lower() not in {"0", "false", "no"}
 
         self.metadata_path = self._resolve_soep_metadata_path() if self.load_soep else None
         self.inkar_metadata_path = self._resolve_inkar_metadata_path() if self.load_inkar else None
         self.bbsr_reference_path = self._resolve_bbsr_reference_path() if self.load_inkar else None
+        self.geodb_metadata_path = self._resolve_geodb_metadata_path() if self.load_geodb else None
         # Default bi-encoder: multilingual-e5-large-instruct. An A/B over the corpus
         # (bge-m3, e5-instruct, Qwen3-Embedding-4B, arctic-embed-l-v2.0) showed e5 is the
         # only model that surfaces terse German concept queries (e.g. "Geschlechterrollen"
@@ -250,6 +255,15 @@ class SOEPRagAdvisorService:
 
         metadata_root = os.getenv("INKAR_METADATA_ROOT", os.getenv("SOEP_METADATA_ROOT", "/app/data/soep"))
         candidate = Path(metadata_root) / "inkar_metadata_2025.json"
+        return candidate if candidate.exists() else None
+
+    def _resolve_geodb_metadata_path(self) -> Optional[Path]:
+        explicit_path = os.getenv("GEODB_RAG_METADATA_PATH")
+        if explicit_path and os.path.exists(explicit_path):
+            return Path(explicit_path)
+
+        metadata_root = os.getenv("INKAR_METADATA_ROOT", os.getenv("SOEP_METADATA_ROOT", "/app/data/soep"))
+        candidate = Path(metadata_root) / "geodb_metadata.json"
         return candidate if candidate.exists() else None
 
     def _resolve_bbsr_reference_path(self) -> Optional[Path]:
@@ -547,6 +561,29 @@ class SOEPRagAdvisorService:
             "embedding_context": row.get("embedding_context", ""),
         }
 
+    def _normalise_geodb_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
+        """GeoDB rows are already written in this schema by
+        `scripts/build_geodb_metadata.py`, so this only fills defaults and guarantees the
+        fields the ranker and the UI read. Keep the builder and this method in step."""
+        normalised = dict(row)
+        normalised.setdefault("source_key", "geodb")
+        normalised.setdefault("source_label", "GeoDB source")
+        normalised.setdefault("item_type", "regional_indicator")
+        normalised["score"] = 0.0
+        for key in ("spatial_levels", "nuts_levels"):
+            value = normalised.get(key)
+            normalised[key] = list(value) if isinstance(value, list) else []
+        for key in (
+            "variable_name", "label", "dataset", "dataset_label", "theme", "stats_summary",
+            "rich_description", "search_description", "source_url", "indicator_url",
+            "selector_url", "api_hint", "available_years_text", "embedding_context",
+        ):
+            normalised[key] = self._as_text(normalised.get(key))
+        normalised.setdefault("value_labels", "")
+        if not normalised.get("item_id"):
+            normalised["item_id"] = f"{normalised['source_key']}:{normalised.get('variable_name', '')}"
+        return normalised
+
     def _build_doc(self, row: Dict[str, Any]) -> str:
         return "\n".join(
             part
@@ -605,6 +642,12 @@ class SOEPRagAdvisorService:
             inkar_rows = [self._normalise_inkar_row(row) for row in raw_inkar_rows]
             print(f"Loaded {len(inkar_rows)} INKAR metadata rows from {self.inkar_metadata_path}")
 
+        geodb_rows: List[Dict[str, Any]] = []
+        if self.load_geodb and self.geodb_metadata_path and self.geodb_metadata_path.exists():
+            raw_geodb_rows = self._load_json_rows(self.geodb_metadata_path)
+            geodb_rows = [self._normalise_geodb_row(row) for row in raw_geodb_rows]
+            print(f"Loaded {len(geodb_rows)} GeoDB metadata rows from {self.geodb_metadata_path}")
+
         if self.bbsr_reference_path and self.bbsr_reference_path.exists():
             try:
                 with self.bbsr_reference_path.open("r", encoding="utf-8") as handle:
@@ -612,7 +655,7 @@ class SOEPRagAdvisorService:
             except Exception:
                 self._bbsr_reference = {}
 
-        self._rows = soep_rows + inkar_rows
+        self._rows = soep_rows + inkar_rows + geodb_rows
         self._docs = [self._build_doc(row) for row in self._rows]
         self._embedder = self._new_embedder()
         self._cache_dir.mkdir(parents=True, exist_ok=True)
@@ -664,6 +707,29 @@ class SOEPRagAdvisorService:
                     pass
             source_embeddings.append(inkar_embeddings)
 
+        if geodb_rows:
+            geodb_embeddings = self._load_cached_embeddings(
+                [
+                    self.geodb_metadata_path.parent / "geodb_rag_embeddings.npy" if self.geodb_metadata_path else Path(""),
+                    self._cache_dir / "geodb_rag_embeddings.npy",
+                ],
+                len(geodb_rows),
+            )
+            if geodb_embeddings is None:
+                geodb_docs = [self._build_doc(row) for row in geodb_rows]
+                geodb_embeddings = self._embedder.encode(
+                    geodb_docs,
+                    batch_size=8,
+                    convert_to_numpy=True,
+                    normalize_embeddings=True,
+                    show_progress_bar=False,
+                ).astype("float32")
+                try:
+                    np.save(self._cache_dir / "geodb_rag_embeddings.npy", geodb_embeddings)
+                except OSError:
+                    pass
+            source_embeddings.append(geodb_embeddings)
+
         self._embeddings = np.vstack(source_embeddings).astype("float32")
         if faiss is not None:
             index = faiss.IndexFlatIP(self._embeddings.shape[1])
@@ -705,19 +771,48 @@ class SOEPRagAdvisorService:
             out_path = self.inkar_metadata_path.parent / "inkar_rag_embeddings.npy"
             np.save(out_path, emb)
             summary["inkar"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
+        if self.load_geodb and self.geodb_metadata_path and self.geodb_metadata_path.exists():
+            rows = [self._normalise_geodb_row(r) for r in self._load_json_rows(self.geodb_metadata_path)]
+            docs = [self._build_doc(r) for r in rows]
+            emb = self._embedder.encode(
+                docs, batch_size=batch_size, convert_to_numpy=True,
+                normalize_embeddings=True, show_progress_bar=True,
+            ).astype("float32")
+            out_path = self.geodb_metadata_path.parent / "geodb_rag_embeddings.npy"
+            np.save(out_path, emb)
+            summary["geodb"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
         return summary
 
     def get_filter_options(self) -> Dict[str, Any]:
         self.load()
-        all_sources = [
-            {"value": "all", "label": "All metadata sources"},
-            {"value": "soep", "label": "SOEP-Core variables"},
-            {"value": "inkar", "label": "INKAR regional indicators"},
+        # Source list is derived from what is actually loaded, so a new GeoDB source
+        # appears in the dropdown as soon as its records are in the metadata file.
+        known_labels = {
+            "soep": "SOEP-Core variables",
+            "inkar": "INKAR regional indicators",
+            # Portal-level records keep the portal's own name in source_label (the UI shows
+            # it per row), so this key needs a fixed dropdown label of its own.
+            "geoportal": "Data portals (link only)",
+        }
+        labels_seen: Dict[str, set] = {}
+        for row in self._rows:
+            key = row.get("source_key")
+            if not key:
+                continue
+            labels_seen.setdefault(key, set()).add(self._as_text(row.get("source_label")))
+        present: Dict[str, str] = {}
+        for key, labels in labels_seen.items():
+            if key in known_labels:
+                present[key] = known_labels[key]
+            elif len(labels) == 1:
+                present[key] = next(iter(labels)) or key
+            else:
+                present[key] = key.replace("_", " ").title()
+        sources = [{"value": "all", "label": "All metadata sources"}] + [
+            {"value": key, "label": label} for key, label in sorted(present.items(), key=lambda kv: kv[1].lower())
         ]
-        if self.app_mode in {"soep", "inkar"}:
-            sources = [s for s in all_sources if s["value"] == self.app_mode]
-        else:
-            sources = all_sources
+        if len(present) == 1:
+            sources = [entry for entry in sources if entry["value"] != "all"]
         years = [
             year
             for row in self._rows
@@ -729,7 +824,7 @@ class SOEPRagAdvisorService:
             "sources": sources,
             "nuts_levels": sorted({level for row in self._rows for level in row.get("nuts_levels", [])}),
             "spatial_levels": sorted({level for row in self._rows for level in row.get("spatial_levels", [])}),
-            "themes": sorted({row.get("theme", "") for row in self._rows if row.get("theme") and row.get("source_key") == "inkar"}),
+            "themes": sorted({row.get("theme", "") for row in self._rows if row.get("theme") and row.get("source_key") != "soep"}),
             "datasets": sorted({row.get("dataset_label", row.get("dataset", "")) for row in self._rows if row.get("dataset_label") or row.get("dataset")}),
             # Sample/questionnaire groups present among SOEP rows, in display order.
             "sample_groups": [
@@ -971,6 +1066,11 @@ class SOEPRagAdvisorService:
         if cand.get("source_key") == "inkar":
             return ("inkar", (cand.get("variable_name") or "").lower())
         variable = (cand.get("variable_name") or "").lower()
+        if cand.get("source_key") not in {"soep", "inkar"}:
+            # GeoDB sources: one slot per (source, code, label). Codes are only unique
+            # within a source (AI0106 in Regionalatlas, BEV001 in GENESIS), so the
+            # source key has to be part of the identity.
+            return (cand.get("source_key"), variable, (cand.get("label") or "").strip().lower())
         if SOEP_DEDUP_MODE == "item_id":
             return cand.get("item_id")
         if SOEP_DEDUP_MODE == "name":

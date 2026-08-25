@@ -1,0 +1,209 @@
+{
+  "name": "Datenguide (abgeschaltet)",
+  "slug": "datenguide-abgeschaltet",
+  "url": "https://datengui.de/statistiken",
+  "excel_row": 22,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only",
+    "machine-readable API"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": true,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Bevölkerung",
+    "Finanzen",
+    "Gesundheit",
+    "Kinder und Jugend",
+    "Migration",
+    "Politik",
+    "Soziales",
+    "Verkehr / Mobilität",
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigte"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitslose (-nquote)"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Ein-/Auspendler"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerungsstand"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung nach Geschlecht / Alter"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Wanderungen"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Geburten und Sterbefälle"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Durchschnittsalter"
+    },
+    {
+      "group": "Finanzen",
+      "topic": "Finanzen"
+    },
+    {
+      "group": "Finanzen",
+      "topic": "Insolvenzen"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Krankenhäuser (Bettendichte)"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Pflege und Personal"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinder und Jugend"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinderbetreuung"
+    },
+    {
+      "group": "Migration",
+      "topic": "Migration"
+    },
+    {
+      "group": "Migration",
+      "topic": "nach Alter"
+    },
+    {
+      "group": "Migration",
+      "topic": "nach Staatsangehörigkeit"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Soziales"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Sozialleistungen"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Straßenverkehrsunfälle"
+    },
+    {
+      "group": "Politik",
+      "topic": "Politik"
+    },
+    {
+      "group": "Politik",
+      "topic": "Bundestagswahl"
+    },
+    {
+      "group": "Politik",
+      "topic": "Europawahl"
+    },
+    {
+      "group": "Politik",
+      "topic": "Landtagswahl"
+    },
+    {
+      "group": "Politik",
+      "topic": "Wahlberechtigte"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "landwirtschaftl. Betriebe"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Gewerbean-/ abmeldungen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Unternehmensinsolvenzen"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Beschäftigte",
+    "Arbeitslose (-nquote)",
+    "Ein-/Auspendler",
+    "Bevölkerung",
+    "Bevölkerungsstand",
+    "Bevölkerung nach Geschlecht / Alter",
+    "Wanderungen",
+    "Geburten und Sterbefälle",
+    "Durchschnittsalter",
+    "Finanzen",
+    "Insolvenzen",
+    "Gesundheit",
+    "Krankenhäuser (Bettendichte)",
+    "Pflege und Personal",
+    "Kinder und Jugend",
+    "Kinderbetreuung",
+    "Migration",
+    "nach Alter",
+    "nach Staatsangehörigkeit",
+    "Soziales",
+    "Sozialleistungen",
+    "Verkehr / Mobilität",
+    "Straßenverkehrsunfälle",
+    "Politik",
+    "Bundestagswahl",
+    "Europawahl",
+    "Landtagswahl",
+    "Wahlberechtigte",
+    "Wirtschaft und Unternehmen",
+    "landwirtschaftl. Betriebe",
+    "Gewerbean-/ abmeldungen",
+    "Unternehmensinsolvenzen"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 1995,
+  "coverage_end_month": null,
+  "coverage_end_year": 2022,
+  "update_frequency": "n/a",
+  "note": "abhängig von Variable"
+}

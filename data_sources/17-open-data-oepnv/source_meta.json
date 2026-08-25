@@ -1,0 +1,44 @@
+{
+  "name": "Open Data - ÖPNV",
+  "slug": "open-data-oepnv",
+  "url": "https://www.opendata-oepnv.de/ht/de/willkommen",
+  "excel_row": 18,
+  "provider": "",
+  "access_modes": [
+    "machine-readable API"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": true,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Verkehr / Mobilität"
+  ],
+  "topics": [
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "ÖPNV"
+    }
+  ],
+  "topic_labels": [
+    "Verkehr / Mobilität",
+    "ÖPNV"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2017,
+  "coverage_end_month": null,
+  "coverage_end_year": 2024,
+  "update_frequency": "n/a",
+  "note": "abhängig von Variable"
+}

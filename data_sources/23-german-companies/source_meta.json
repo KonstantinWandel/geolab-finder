@@ -1,0 +1,42 @@
+{
+  "name": "German Companies",
+  "slug": "german-companies",
+  "url": "https://rapidapi.com/Implisense/api/german-company-data",
+  "excel_row": 24,
+  "provider": "",
+  "access_modes": [
+    "machine-readable API",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": true,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [],
+  "topic_groups": [
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Unternehmen"
+    }
+  ],
+  "topic_labels": [
+    "Wirtschaft und Unternehmen",
+    "Unternehmen"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": null,
+  "coverage_end_month": null,
+  "coverage_end_year": null,
+  "update_frequency": "laufend",
+  "note": ""
+}

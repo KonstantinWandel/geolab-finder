@@ -1,0 +1,42 @@
+{
+  "name": "Hochschulkompass",
+  "slug": "hochschulkompass",
+  "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
+  "excel_row": 15,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [],
+  "topic_groups": [
+    "Bildung"
+  ],
+  "topics": [
+    {
+      "group": "Bildung",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Distanz nächste Schule/Hochschule/VHS"
+    }
+  ],
+  "topic_labels": [
+    "Bildung",
+    "Distanz nächste Schule/Hochschule/VHS"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": null,
+  "coverage_end_month": null,
+  "coverage_end_year": null,
+  "update_frequency": "n/a",
+  "note": "keine Angabe , vermutlich laufend"
+}

@@ -1,0 +1,51 @@
+{
+  "name": "Krankenhausatlas Deutschland",
+  "slug": "krankenhausatlas-deutschland",
+  "url": "https://krankenhausatlas.statistikportal.de/",
+  "excel_row": 10,
+  "provider": "",
+  "access_modes": [
+    "interactive map viewer",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Gemeinden und Verbandsgemeinden",
+    "PLZ"
+  ],
+  "topic_groups": [
+    "Gesundheit"
+  ],
+  "topics": [
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Erreichbarkeit / Distanz zum nächsten Krankenhaus"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Fachabteilungen Krankenhaus"
+    }
+  ],
+  "topic_labels": [
+    "Gesundheit",
+    "Erreichbarkeit / Distanz zum nächsten Krankenhaus",
+    "Fachabteilungen Krankenhaus"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2016,
+  "coverage_end_month": null,
+  "coverage_end_year": 2016,
+  "update_frequency": "n/a",
+  "note": "Stand 2016"
+}

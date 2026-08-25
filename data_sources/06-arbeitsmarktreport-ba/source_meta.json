@@ -1,0 +1,54 @@
+{
+  "name": "Arbeitsmarktreport BA",
+  "slug": "arbeitsmarktreport-ba",
+  "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+  "excel_row": 7,
+  "provider": "",
+  "access_modes": [
+    "direct file download"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": false,
+    "API": false,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitslose (-nquote)"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Unterbeschäftigungsquote"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Freie Stellen"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Arbeitslose (-nquote)",
+    "Unterbeschäftigungsquote",
+    "Freie Stellen"
+  ],
+  "coverage_start_month": 10,
+  "coverage_start_year": 2009,
+  "coverage_end_month": 2,
+  "coverage_end_year": 2024,
+  "update_frequency": "monatlich",
+  "note": ""
+}
