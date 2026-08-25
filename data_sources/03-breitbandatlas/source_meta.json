@@ -1,0 +1,55 @@
+{
+  "name": "Breitbandatlas",
+  "slug": "breitbandatlas",
+  "url": "https://www.bmvi.de/SharedDocs/DE/Artikel/DG/breitbandatlas/breitbandatlas.html",
+  "excel_row": 4,
+  "provider": "",
+  "access_modes": [
+    "interactive map viewer",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "Bezirke",
+    "Bezirksregionen / Ortsteile",
+    "PLZ",
+    "Adressen / Koordinaten"
+  ],
+  "topic_groups": [
+    "Digitalisierung"
+  ],
+  "topics": [
+    {
+      "group": "Digitalisierung",
+      "topic": "Digitalisierung"
+    },
+    {
+      "group": "Digitalisierung",
+      "topic": "Netzabdeckung"
+    },
+    {
+      "group": "Digitalisierung",
+      "topic": "Internetausbau"
+    }
+  ],
+  "topic_labels": [
+    "Digitalisierung",
+    "Netzabdeckung",
+    "Internetausbau"
+  ],
+  "coverage_start_month": 8,
+  "coverage_start_year": 2021,
+  "coverage_end_month": 8,
+  "coverage_end_year": 2021,
+  "update_frequency": "laufend",
+  "note": "Zertifikat abgelaufen, Stand 2021"
+}

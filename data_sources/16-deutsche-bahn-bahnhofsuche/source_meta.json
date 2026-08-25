@@ -1,0 +1,47 @@
+{
+  "name": "Deutsche Bahn - Bahnhofsuche",
+  "slug": "deutsche-bahn-bahnhofsuche",
+  "url": "https://www.bahnhof.de/bahnhof-de",
+  "excel_row": 17,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Gemeinden und Verbandsgemeinden",
+    "Bezirke",
+    "Bezirksregionen / Ortsteile",
+    "Adressen / Koordinaten"
+  ],
+  "topic_groups": [
+    "Verkehr / Mobilität"
+  ],
+  "topics": [
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Distanz zum nächsten Flughafen/Bahnhof/Autobahnauffahrt"
+    }
+  ],
+  "topic_labels": [
+    "Verkehr / Mobilität",
+    "Distanz zum nächsten Flughafen/Bahnhof/Autobahnauffahrt"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": null,
+  "coverage_end_month": null,
+  "coverage_end_year": null,
+  "update_frequency": "n/a",
+  "note": "Copyright 2024, sonst keine Angabe"
+}

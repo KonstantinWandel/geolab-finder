@@ -47,3 +47,14 @@ dist/
 **/build_log*.txt
 **/analysis_log.txt
 README_SOEP_RAG.md
+
+# --- GeoDB source drop folder ---
+# Keep SOURCE.md / source_meta.json / registry (small, describe the sources);
+# ignore the downloaded catalogue files themselves (licence-bound, regenerable).
+data_sources/*/raw/*
+!data_sources/*/raw/.gitkeep
+
+# The source workbook and its pre-annotation copy are working data, not code. The public
+# facts they hold (source names, URLs, coverage, status) are published through
+# data_sources/registry/geo_sources.json and data_sources/CHECKLIST.md instead.
+Geospatial_Data_Sources*.xlsx

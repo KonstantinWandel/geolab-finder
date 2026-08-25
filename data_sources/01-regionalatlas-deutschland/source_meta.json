@@ -1,0 +1,356 @@
+{
+  "name": "Regionalatlas Deutschland",
+  "slug": "regionalatlas-deutschland",
+  "url": "https://regionalatlas.statistikportal.de/",
+  "excel_row": 2,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Regierungsbezirke",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Bauen / Wohnen",
+    "Bevölkerung",
+    "Bildung",
+    "Flächennutzung",
+    "Gender",
+    "Gesundheit",
+    "Kinder und Jugend",
+    "Migration",
+    "Nachhaltigkeit",
+    "Politik",
+    "Soziales",
+    "Tourismus",
+    "Verkehr / Mobilität",
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigte nach Wirtschaftsbereichen"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigtenquote"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitslose (-nquote)"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigte im öffentlichen Bereich"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Einkünfte"
+    },
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Bauen / Wohnen"
+    },
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Bautätigkeit und Wohnen"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerungsstand"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung nach Geschlecht / Alter"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Wanderungen"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Durchschnittsalter"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Schulabgänger*innen"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Betreuungsquote"
+    },
+    {
+      "group": "Flächennutzung",
+      "topic": "Flächennutzung"
+    },
+    {
+      "group": "Flächennutzung",
+      "topic": "nach ALKIS"
+    },
+    {
+      "group": "Flächennutzung",
+      "topic": "nach ALB"
+    },
+    {
+      "group": "Gender",
+      "topic": "Gender"
+    },
+    {
+      "group": "Gender",
+      "topic": "Elterngeldbezug"
+    },
+    {
+      "group": "Gender",
+      "topic": "männliche Schulabgänger"
+    },
+    {
+      "group": "Gender",
+      "topic": "Erwerbstätigkeit"
+    },
+    {
+      "group": "Gender",
+      "topic": "Arbeitslosigkeit"
+    },
+    {
+      "group": "Gender",
+      "topic": "Grundsicherung"
+    },
+    {
+      "group": "Gender",
+      "topic": "männliches pädag. Personal"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Krankenhäuser (Bettendichte)"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Pflege und Personal"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinder und Jugend"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinderbetreuung"
+    },
+    {
+      "group": "Migration",
+      "topic": "Migration"
+    },
+    {
+      "group": "Migration",
+      "topic": "AusländerInnen am Arbeitsmarkt"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Nachhaltigkeit"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Landbewirtschaftung"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Arbeitslosigkeit junger Menschen"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Straßenverkehr"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "wirtschaftl. Leistungsfähigkeit"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Umwelt"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Soziales"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Verfügbares Einkommen je EW"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Einkünfte"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Armutsgefährdung"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Sozialleistungen"
+    },
+    {
+      "group": "Tourismus",
+      "topic": "Tourismus"
+    },
+    {
+      "group": "Tourismus",
+      "topic": "Beherbung"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "PKW-Dichte"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Straßenverkehrsunfälle"
+    },
+    {
+      "group": "Politik",
+      "topic": "Politik"
+    },
+    {
+      "group": "Politik",
+      "topic": "Bundestagswahl"
+    },
+    {
+      "group": "Politik",
+      "topic": "Europawahl"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Investitionen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Bruttoentgelte"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "landwirtschaftl. Betriebe"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Gewerbean-/ abmeldungen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Unternehmensinsolvenzen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "BIP"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "BWS"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Beschäftigte nach Wirtschaftsbereichen",
+    "Beschäftigtenquote",
+    "Arbeitslose (-nquote)",
+    "Beschäftigte im öffentlichen Bereich",
+    "Einkünfte",
+    "Bauen / Wohnen",
+    "Bautätigkeit und Wohnen",
+    "Bevölkerung",
+    "Bevölkerungsstand",
+    "Bevölkerung nach Geschlecht / Alter",
+    "Wanderungen",
+    "Durchschnittsalter",
+    "Bildung",
+    "Schulabgänger*innen",
+    "Betreuungsquote",
+    "Flächennutzung",
+    "nach ALKIS",
+    "nach ALB",
+    "Gender",
+    "Elterngeldbezug",
+    "männliche Schulabgänger",
+    "Erwerbstätigkeit",
+    "Arbeitslosigkeit",
+    "Grundsicherung",
+    "männliches pädag. Personal",
+    "Gesundheit",
+    "Krankenhäuser (Bettendichte)",
+    "Pflege und Personal",
+    "Kinder und Jugend",
+    "Kinderbetreuung",
+    "Migration",
+    "AusländerInnen am Arbeitsmarkt",
+    "Nachhaltigkeit",
+    "Landbewirtschaftung",
+    "Bildung",
+    "Arbeitslosigkeit junger Menschen",
+    "Straßenverkehr",
+    "wirtschaftl. Leistungsfähigkeit",
+    "Umwelt",
+    "Soziales",
+    "Verfügbares Einkommen je EW",
+    "Einkünfte",
+    "Armutsgefährdung",
+    "Sozialleistungen",
+    "Tourismus",
+    "Beherbung",
+    "Verkehr / Mobilität",
+    "PKW-Dichte",
+    "Straßenverkehrsunfälle",
+    "Politik",
+    "Bundestagswahl",
+    "Europawahl",
+    "Wirtschaft und Unternehmen",
+    "Investitionen",
+    "Bruttoentgelte",
+    "landwirtschaftl. Betriebe",
+    "Gewerbean-/ abmeldungen",
+    "Unternehmensinsolvenzen",
+    "BIP",
+    "BWS"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 1998,
+  "coverage_end_month": null,
+  "coverage_end_year": 2023,
+  "update_frequency": "jährlich",
+  "note": "abhängig von Variable"
+}

@@ -30,7 +30,7 @@ function App() {
   }, [theme])
   const TITLES = {
     soep: "SOEP Variable Finder",
-    inkar: "INKAR Regional Indicators",
+    inkar: "GeoDB Geodata Index",
     all: "Data Platform",
   }
 
@@ -69,6 +69,16 @@ function App() {
       <main className="main-content">
         <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} />
       </main>
+      <footer className="brand-strip">
+        <a href="https://www.uni-bielefeld.de/" target="_blank" rel="noopener noreferrer"
+           aria-label="Universität Bielefeld">
+          <img src="/brand/uni-bielefeld.svg" alt="Universität Bielefeld" className="brand-logo brand-logo-wide" />
+        </a>
+        <a href="https://www.leibniz-gemeinschaft.de/" target="_blank" rel="noopener noreferrer"
+           aria-label="Leibniz-Gemeinschaft">
+          <img src="/brand/leibniz.svg" alt="Leibniz-Gemeinschaft" className="brand-logo brand-logo-tall" />
+        </a>
+      </footer>
     </div>
   )
 }

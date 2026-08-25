@@ -1,0 +1,54 @@
+{
+  "name": "Arztsuche - Bundesärztekammer",
+  "slug": "arztsuche-bundesaerztekammer",
+  "url": "https://www.bundesaerztekammer.de/service/arztsuche/",
+  "excel_row": 13,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "Bezirke",
+    "Bezirksregionen / Ortsteile",
+    "PLZ",
+    "Adressen / Koordinaten"
+  ],
+  "topic_groups": [
+    "Gesundheit"
+  ],
+  "topics": [
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Anzahl (Fach-)Ärzte im Umkreis"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Distanz zum nächsten (Fach-)Arzt"
+    }
+  ],
+  "topic_labels": [
+    "Gesundheit",
+    "Anzahl (Fach-)Ärzte im Umkreis",
+    "Distanz zum nächsten (Fach-)Arzt"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": null,
+  "coverage_end_month": null,
+  "coverage_end_year": null,
+  "update_frequency": "laufend",
+  "note": "abhängig vom Bundesland"
+}

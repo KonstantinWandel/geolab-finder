@@ -1,0 +1,55 @@
+{
+  "name": "Arbeitsmarktstatistik BA - Karte",
+  "slug": "arbeitsmarktstatistik-ba-karte",
+  "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Statistiken/Statistiken-nach-Regionen/Politische-Gebietsstruktur-Nav.html",
+  "excel_row": 5,
+  "provider": "",
+  "access_modes": [
+    "interactive map viewer",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitslose (-nquote)"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Unterbeschäftigungsquote"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Freie Stellen"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Arbeitslose (-nquote)",
+    "Unterbeschäftigungsquote",
+    "Freie Stellen"
+  ],
+  "coverage_start_month": 9,
+  "coverage_start_year": 2018,
+  "coverage_end_month": 2,
+  "coverage_end_year": 2024,
+  "update_frequency": "monatlich",
+  "note": ""
+}

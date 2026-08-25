@@ -1,0 +1,49 @@
+{
+  "name": "Spielplatzkarte",
+  "slug": "spielplatzkarte",
+  "url": "https://spielplatznet.de/karte.htm",
+  "excel_row": 20,
+  "provider": "",
+  "access_modes": [
+    "interactive map viewer",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Adressen / Koordinaten"
+  ],
+  "topic_groups": [
+    "Kinder und Jugend"
+  ],
+  "topics": [
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinder und Jugend"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Distanz nächster Spielplatz"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Bewertung nächster Spielplatz"
+    }
+  ],
+  "topic_labels": [
+    "Kinder und Jugend",
+    "Distanz nächster Spielplatz",
+    "Bewertung nächster Spielplatz"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": null,
+  "coverage_end_month": null,
+  "coverage_end_year": null,
+  "update_frequency": "n/a",
+  "note": "keine Angabe , vermutlich laufend"
+}

@@ -1,0 +1,54 @@
+{
+  "name": "Arbeitsmarkt kommunal - BA",
+  "slug": "arbeitsmarkt-kommunal-ba",
+  "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+  "excel_row": 8,
+  "provider": "",
+  "access_modes": [
+    "direct file download"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": false,
+    "API": false,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigte"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigte nach Wirtschaftsbereichen"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitslose (-nquote)"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Beschäftigte",
+    "Beschäftigte nach Wirtschaftsbereichen",
+    "Arbeitslose (-nquote)"
+  ],
+  "coverage_start_month": 12,
+  "coverage_start_year": 2011,
+  "coverage_end_month": 12,
+  "coverage_end_year": 2023,
+  "update_frequency": "jährlich",
+  "note": ""
+}

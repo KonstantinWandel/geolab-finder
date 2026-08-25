@@ -1,0 +1,55 @@
+{
+  "name": "Breitband-Monitor",
+  "slug": "breitband-monitor",
+  "url": "https://www.breitband-monitor.de/",
+  "excel_row": 3,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "Bezirke",
+    "Bezirksregionen / Ortsteile",
+    "PLZ",
+    "Adressen / Koordinaten"
+  ],
+  "topic_groups": [
+    "Digitalisierung"
+  ],
+  "topics": [
+    {
+      "group": "Digitalisierung",
+      "topic": "Digitalisierung"
+    },
+    {
+      "group": "Digitalisierung",
+      "topic": "Netzabdeckung"
+    },
+    {
+      "group": "Digitalisierung",
+      "topic": "Internetausbau"
+    }
+  ],
+  "topic_labels": [
+    "Digitalisierung",
+    "Netzabdeckung",
+    "Internetausbau"
+  ],
+  "coverage_start_month": 10,
+  "coverage_start_year": 2019,
+  "coverage_end_month": 9,
+  "coverage_end_year": 2020,
+  "update_frequency": "jährlich",
+  "note": "SSL certificate error"
+}

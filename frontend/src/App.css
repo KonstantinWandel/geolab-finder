@@ -789,3 +789,48 @@ button, input, select, textarea,
 .app-header h1, .analysis-header h2 { letter-spacing: -0.01em; }
 .result-card h3 { font-weight: 650; letter-spacing: -0.004em; }
 .result-meta, table, .similarity-score { font-variant-numeric: tabular-nums; }
+
+/* Institutional footer: the page is a Universität Bielefeld / Leibniz-Gemeinschaft
+   project, so both marks sit at the foot of every view. The SVGs inherit the page
+   text colour (fill: currentColor), which keeps them legible in the dark theme. */
+.brand-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  padding: 1.5rem 1rem 2rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.25));
+  opacity: 0.75;
+}
+
+.brand-strip a {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-strip a:hover {
+  opacity: 1;
+}
+
+.brand-logo {
+  display: block;
+  width: auto;
+}
+
+.brand-logo-wide {
+  height: 34px;
+}
+
+.brand-logo-tall {
+  height: 52px;
+}
+
+@media (max-width: 480px) {
+  .brand-strip { gap: 1.5rem; }
+  .brand-logo-wide { height: 26px; }
+  .brand-logo-tall { height: 40px; }
+}

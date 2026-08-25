@@ -1,0 +1,49 @@
+{
+  "name": "Deutschlandatlas - Erreichbarkeit von Apotheken",
+  "slug": "deutschlandatlas-erreichbarkeit-von-apotheken",
+  "url": "https://www.deutschlandatlas.bund.de/DE/Karten/Unsere-Gesundheitsversorgung/132-PKW-Apotheken.html",
+  "excel_row": 14,
+  "provider": "",
+  "access_modes": [
+    "interactive map viewer",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "Bezirke",
+    "Bezirksregionen / Ortsteile",
+    "PLZ",
+    "Adressen / Koordinaten"
+  ],
+  "topic_groups": [
+    "Gesundheit"
+  ],
+  "topics": [
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Distanz zum nächsten (Fach-)Arzt"
+    }
+  ],
+  "topic_labels": [
+    "Gesundheit",
+    "Distanz zum nächsten (Fach-)Arzt"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": null,
+  "coverage_end_month": null,
+  "coverage_end_year": null,
+  "update_frequency": "n/a",
+  "note": "Stand 2021"
+}

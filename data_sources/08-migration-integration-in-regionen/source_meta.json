@@ -1,0 +1,69 @@
+{
+  "name": "Migration & Integration in Regionen",
+  "slug": "migration-integration-in-regionen",
+  "url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+  "excel_row": 9,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": false,
+    "API": false,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Kreise & kreisfreie Städte"
+  ],
+  "topic_groups": [
+    "Migration"
+  ],
+  "topics": [
+    {
+      "group": "Migration",
+      "topic": "Migration"
+    },
+    {
+      "group": "Migration",
+      "topic": "nach Alter"
+    },
+    {
+      "group": "Migration",
+      "topic": "nach Geschlecht"
+    },
+    {
+      "group": "Migration",
+      "topic": "nach Staatsangehörigkeit"
+    },
+    {
+      "group": "Migration",
+      "topic": "Schutzsuchende"
+    },
+    {
+      "group": "Migration",
+      "topic": "Integrationskurse"
+    },
+    {
+      "group": "Migration",
+      "topic": "AusländerInnen am Arbeitsmarkt"
+    }
+  ],
+  "topic_labels": [
+    "Migration",
+    "nach Alter",
+    "nach Geschlecht",
+    "nach Staatsangehörigkeit",
+    "Schutzsuchende",
+    "Integrationskurse",
+    "AusländerInnen am Arbeitsmarkt"
+  ],
+  "coverage_start_month": 12,
+  "coverage_start_year": 2022,
+  "coverage_end_month": 12,
+  "coverage_end_year": 2022,
+  "update_frequency": "n/a",
+  "note": "Stand 31.12.2022"
+}
