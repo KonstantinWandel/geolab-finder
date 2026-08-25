@@ -184,8 +184,10 @@ def soep_advice(req: SOEPAdviceRequest):
 
 
 @app.get("/api/soep/filter-options")
-async def soep_filter_options():
-    return soep_rag_advisor.get_filter_options()
+async def soep_filter_options(source: Optional[str] = None):
+    # `source` narrows the dependent facets (datasets, themes, levels, years) to that
+    # source, so the dropdowns cannot offer a combination that matches nothing.
+    return soep_rag_advisor.get_filter_options(source)
 
 @app.get("/health")
 def health_check():

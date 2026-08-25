@@ -116,6 +116,7 @@ def make_record(
     status: str = "active",
     api_hint: str = "",
     link_level: str = "portal",
+    link_verified: bool = True,
 ) -> Dict[str, Any]:
     spatial_levels = spatial_levels or []
     nuts_levels = nuts_levels or []
@@ -154,6 +155,11 @@ def make_record(
         #   dataset    the file/dataset containing it (the record names the column)
         #   portal     the portal's entry page; the user searches from there
         "link_level": link_level,
+        # Whether the link pattern was actually probed and shown to return content that
+        # differs from the host's not-found page. False means the portal is a client-rendered
+        # app (or refuses scripted requests), so the link follows the documented form but
+        # cannot be verified from here. scripts/check_geodb_links.py audits this.
+        "link_verified": link_verified,
     }
     record["search_description"] = join_nonempty(
         [
@@ -182,7 +188,10 @@ def make_record(
              "table": "Der Link öffnet genau diese Tabelle.",
              "statistic": "Der Link öffnet die zugehörige Statistik.",
              "dataset": "Der Link öffnet den Datensatz, der dieses Merkmal enthält.",
-             "portal": "Der Link öffnet das Portal; dort muss weitergesucht werden."}.get(link_level, ""),
+             "portal": "Der Link öffnet das Portal, dort muss weitergesucht werden."}.get(link_level, ""),
+            "" if link_verified else
+            "Hinweis: Das Zielportal ist eine JavaScript-Anwendung, der Link folgt der dokumentierten "
+            "Form, ist aber nicht serverseitig geprüft.",
             f"URL: {indicator_url or source_url}",
         ]
     )
@@ -274,6 +283,10 @@ def flatten_regionalatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                         years_text=f"{years[0]}-{years[-1]}" if years else "",
                         source_url="https://regionalatlas.statistikportal.de/",
                         indicator_url=url,
+                        # The Regionalatlas is a dojo/ArcGIS app: it reads TCode/ICode from the
+                        # query string client-side, so a bogus code returns the same page as a
+                        # real one and the deep link cannot be checked from a script.
+                        link_verified=False,
                         access_modes=source["access_modes"],
                         update_frequency=source["update_frequency"],
                         api_hint=(
@@ -289,6 +302,21 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     keys_dir = source["folder"] / "raw" / "genesapi-data" / "keys"
     if not keys_dir.exists():
         return []
+
+    # The statistic codes in the Destatis definition text are not all carried by the
+    # REGIONAL database: an audit found only 429 of 965 exist there, 468 are federal-only.
+    # Linking all of them to regionalstatistik sent half the records to a not-found page,
+    # so each code is resolved against the catalogues that were actually enumerated.
+    def statistic_codes(path: Path) -> set:
+        if not path.exists():
+            return set()
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return {clean(entry.get("Code")) for entry in payload.get("statistics") or []}
+
+    regio_codes = statistic_codes(DATA_SOURCES / "21-datenguide-abgeschaltet" / "raw"
+                                 / "genesis_catalogue_regionalstatistik.json")
+    bund_codes = statistic_codes(DATA_SOURCES / "28-genesis-online-bund" / "raw"
+                                / "genesis_catalogue_destatis.json")
 
     german: Dict[str, Dict[str, Any]] = {}
     english: Dict[str, Dict[str, Any]] = {}
@@ -320,13 +348,23 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
         # ("Erläuterung für folgende Statistik(en): 12612 Statistik der Geburten").
         statistics = re.findall(r"(\d{5})\s+([^\n]{4,80})", description.split("Statistik(en):", 1)[1]) \
             if "Statistik(en):" in description else []
-        statistic_code = statistics[0][0] if statistics else ""
         statistic_names = "; ".join(f"{c} {n.strip()}" for c, n in statistics[:4])
-        url = (
-            f"https://www.regionalstatistik.de/genesis/online/statistic/{statistic_code}"
-            if statistic_code
-            else "https://www.regionalstatistik.de/genesis/online"
-        )
+        # Prefer a statistic that the regional database really carries; fall back to the
+        # federal one; only then to the portal entry.
+        statistic_code = next((c for c, _ in statistics if c in regio_codes), "")
+        held_by = "regional"
+        if not statistic_code:
+            statistic_code = next((c for c, _ in statistics if c in bund_codes), "")
+            held_by = "federal" if statistic_code else "unknown"
+        if held_by == "regional":
+            url = f"https://www.regionalstatistik.de/genesis/online/statistic/{statistic_code}"
+            link_ok, level = True, "statistic"
+        elif held_by == "federal":
+            url = f"https://www-genesis.destatis.de/datenbank/online/statistic/{statistic_code}"
+            link_ok, level = False, "statistic"
+        else:
+            url = "https://www.regionalstatistik.de/genesis/online"
+            link_ok, level = True, "portal"
         records.append(
             make_record(
                 source_key="regionalstatistik",
@@ -344,12 +382,16 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 nuts_levels=["Bundesländer", "NUTS1", "Kreise", "NUTS3", "Gemeinden", "LAU"],
                 source_url="https://www.regionalstatistik.de/genesis/online",
                 indicator_url=url,
-                link_level="statistic" if statistic_code else "portal",
+                link_level=level,
+                link_verified=link_ok,
                 access_modes=["machine-readable API", "web UI / search form only"],
                 update_frequency=source["update_frequency"],
                 api_hint=(
                     f"GENESIS-Merkmal {code}"
-                    + (f"; erhoben in Statistik {statistic_names}." if statistic_names else ".")
+                    + (f", erhoben in Statistik {statistic_names}." if statistic_names else ".")
+                    + (" Diese Statistik führt die Regionaldatenbank." if held_by == "regional"
+                       else " Diese Statistik liegt in der Bundesdatenbank, nicht in der Regionaldatenbank."
+                       if held_by == "federal" else "")
                     + " Tabellen im Portal über die Merkmalssuche finden oder per "
                     "Regionalstatistik-Webservice-API abrufen (Token nötig)."
                 ),
@@ -799,6 +841,9 @@ def flatten_deutschlandatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 years_text=(f"{years[0]}-{years[-1]}" if len(years) > 1 else (str(years[0]) if years else "")),
                 source_url="https://www.deutschlandatlas.bund.de/",
                 indicator_url="https://www.deutschlandatlas.bund.de/DE/Karten/karten_node.html",
+                # deutschlandatlas.bund.de answers 400 to every scripted request, so its links
+                # are documented but unverifiable from here.
+                link_verified=False,
                 access_modes=source["access_modes"] or ["direct file download", "interactive map viewer"],
                 update_frequency=source["update_frequency"],
                 api_hint=(
@@ -1318,6 +1363,7 @@ def flatten_genesis_tables(source: Dict[str, Any], instances: Optional[List[str]
                     source_url=config["portal"],
                     indicator_url=config["url"].format(code=code),
                     link_level="table",
+                    link_verified=config["link_verified"],
                     access_modes=["machine-readable API", "web UI / search form only", "direct file download"],
                     update_frequency=source["update_frequency"],
                     api_hint=(
@@ -1638,6 +1684,168 @@ def flatten_ba_arbeitsmarkt_kommunal(source: Dict[str, Any]) -> List[Dict[str, A
     return records
 
 
+# Breitbandatlas raster column vocabulary. The columns follow the scheme
+# <richtung>_<netz>_<nutzung>_<technologie>_<bandbreite>, documented only by the column
+# names themselves, so the expansions are spelled out here.
+RASTER_TOKENS = {
+    "down": "Downstream", "up": "Upstream",
+    "fn": "Festnetz", "mf": "Mobilfunk",
+    "hh": "Haushalte", "gew": "Gewerbe (Unternehmen)", "gwg": "Gewerbegebiete",
+    "alle": "alle Technologien", "ftthb": "FTTB/H", "ftth": "FTTH", "fttb": "FTTB",
+    "fttc": "FTTC", "hfc": "HFC (Kabel)", "sonst": "sonstige Technologien",
+}
+
+
+def flatten_breitband_raster(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Grid-cell level broadband coverage. The GeoPackages are 0.3 to 1.8 GB, so only their
+    schema is read (see scripts/extract_gpkg_schema.py) and one record per attribute is
+    emitted: that is what a researcher needs in order to know the raster exists and what it
+    measures."""
+    raw = source["folder"] / "raw"
+    records: List[Dict[str, Any]] = []
+    skip = {"id", "geom", "raster_id", "raster_rowid", "ags", "bl"}
+
+    for schema_path in sorted(raw.glob("*_schema.json")):
+        payload = json.loads(schema_path.read_text(encoding="utf-8"))
+        readme = " ".join(payload.get("readme", {}).values())
+        readme = re.sub(r"\s+", " ", readme)[:400]
+        for layer in payload.get("layers", []):
+            cells = layer.get("rows")
+            for column in layer.get("columns", []):
+                name = clean(column.get("name"))
+                if not name or name.lower() in skip:
+                    continue
+                parts = name.split("_")
+                bandwidth = parts[-1] if parts[-1].isdigit() else ""
+                words = [RASTER_TOKENS.get(part.lower(), part) for part in parts if not part.isdigit()]
+                label = ", ".join(words) + (f", mindestens {bandwidth} Mbit/s" if bandwidth else "")
+                records.append(
+                    make_record(
+                        source_key="breitband",
+                        source_label="Gigabit-Grundbuch / Breitbandatlas (Bundesnetzagentur, BMDV)",
+                        item_type="regional_indicator",
+                        item_id=f"breitband_raster:{layer.get('table')}:{name}",
+                        variable_name=name,
+                        label=f"{label} (Gitterzelle)",
+                        dataset_label="Versorgungsdaten je Gitterzelle (GeoPackage)",
+                        theme="Digitalisierung",
+                        description=join_nonempty([
+                            f"{label}. Versorgungsgrad in Prozent je Gitterzelle des geographischen "
+                            f"Gitters für Deutschland (BKG, UTM)"
+                            + (f", {cells:,} Zellen".replace(",", ".") if isinstance(cells, int) else "") + ".",
+                            "Feinste räumliche Auflösung im Datenangebot des Finders: unterhalb der "
+                            "Gemeindeebene und damit für Erreichbarkeits- und Ungleichheitsanalysen "
+                            "innerhalb von Gemeinden nutzbar. Jede Zelle trägt zusätzlich den AGS.",
+                            f"Nutzungshinweis der Quelle: {readme}" if readme else "",
+                        ]),
+                        unit="Prozent" if bandwidth else "",
+                        spatial_levels=["Weitere Gliederungen", "Gemeinden", "Kreise"],
+                        nuts_levels=["Weitere Gliederungen", "Gemeinden", "LAU", "Kreise", "NUTS3"],
+                        year_start=2025,
+                        year_end=2025,
+                        years_text="Stand 31.12.2025",
+                        source_url="https://gigabitgrundbuch.bund.de/",
+                        indicator_url="https://gigabitgrundbuch.bund.de/",
+                        link_level="dataset",
+                        access_modes=["direct file download", "interactive map viewer"],
+                        update_frequency=source["update_frequency"] or "halbjährlich",
+                        api_hint=(
+                            f"Spalte {name} in Tabelle {layer.get('table')} des GeoPackage "
+                            f"({payload.get('archive')}); lesbar mit GDAL/OGR, geopandas oder SQLite."
+                        ),
+                    )
+                )
+    return records
+
+
+def flatten_ba_arbeitsmarktreport(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """'Arbeitsmarktreport': a monthly booklet per region whose 22 sheets carry the BA's
+    headline labour-market indicators. Labels sit in the first two columns (indented for
+    breakdowns) and the values further right, so a row counts as an indicator when it has a
+    label and at least one numeric value."""
+    path = next((p for p in (source["folder"] / "raw").glob("amr-*.xlsx")), None)
+    if path is None:
+        return []
+    workbook = pd.ExcelFile(path)
+    skip_sheets = {"deckblatt", "impressum", "hinweise", "inhaltsverzeichnis", "statistik-infoseite"}
+
+    records: List[Dict[str, Any]] = []
+    seen: set = set()
+    for sheet in workbook.sheet_names:
+        if sheet.lower() in skip_sheets:
+            continue
+        frame = pd.read_excel(path, sheet_name=sheet, header=None)
+        section = ""
+        for _, row in frame.iterrows():
+            values = row.tolist()
+            first = clean(str(values[0])).replace("\n", " ") if values else ""
+            second = clean(str(values[1])).replace("\n", " ") if len(values) > 1 else ""
+            # Column A doubles as a share column in some sheets, so a numeric "label" is data.
+            if re.match(r"^-?[\d.,]+$", first):
+                first = ""
+            numeric = [v for v in values[2:] if re.match(r"^-?[\d.,]+$", clean(str(v)))]
+            label_part = second or first
+            if not label_part or label_part in {"dar.", "nan", "Merkmale", "insgesamt"}:
+                continue
+            if re.match(r"^(Quelle|Stand|Erstellt|Impressum|©|Statistik der)", label_part):
+                continue
+            if not numeric:
+                if len(label_part) > 10 and not second:
+                    section = label_part
+                continue
+            label = f"{section}: {label_part}".strip(": ") if section and section != label_part else label_part
+            key = (sheet, label.lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            records.append(
+                make_record(
+                    source_key="ba_arbeitsmarktreport",
+                    source_label="Arbeitsmarktreport (Bundesagentur für Arbeit)",
+                    item_type="regional_indicator",
+                    item_id=f"amr:{sheet}:{len(seen):04d}",
+                    variable_name=f"AMR-{len(seen):04d}",
+                    label=label[:130],
+                    dataset_label=sheet,
+                    theme="Arbeitsmarkt & Beschäftigung",
+                    description=join_nonempty([
+                        f"{label}. Merkmal im Tabellenblatt '{sheet}' des monatlichen "
+                        "BA-Arbeitsmarktreports, veröffentlicht je Land, Agenturbezirk und Kreis.",
+                        "Monatliche Fortschreibung, damit deutlich aktueller und feiner in der Zeit "
+                        "als die jährlichen Indikatoren in INKAR oder im Regionalatlas.",
+                    ]),
+                    stats_summary=section,
+                    spatial_levels=["Bundesländer", "Kreise", "Weitere Gliederungen"],
+                    nuts_levels=["Bundesländer", "NUTS1", "Kreise", "NUTS3"],
+                    year_start=source["coverage_start_year"],
+                    year_end=source["coverage_end_year"],
+                    years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}, monatlich",
+                    source_url=source["url"],
+                    indicator_url=source["url"],
+                    link_level="dataset",
+                    access_modes=source["access_modes"],
+                    update_frequency=source["update_frequency"] or "monatlich",
+                    api_hint=(
+                        "Heft 'Arbeitsmarktreport' je Region: /Statistikdaten/Detail/<JJJJMM>/ama/amr-amr/"
+                        "amr-<Region>-0-<JJJJMM>-xlsx.xlsx, Tabellenblatt "
+                        f"'{sheet}'."
+                    ),
+                )
+            )
+
+    # The same headline label recurs across sheets with a different meaning ("Bestand an
+    # Arbeitslosen: Insgesamt" in Eckwerte vs Eckwerte SGB II vs SGB III), so a label that
+    # is not unique gets its sheet appended. Otherwise the result list shows three
+    # indistinguishable rows.
+    counts: Dict[str, int] = {}
+    for record in records:
+        counts[record["label"]] = counts.get(record["label"], 0) + 1
+    for record in records:
+        if counts.get(record["label"], 0) > 1:
+            record["label"] = f"{record['label']} [{record['dataset_label']}]"
+    return records
+
+
 FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "regionalatlas-deutschland": flatten_regionalatlas,
     "datenguide-abgeschaltet": lambda source: (flatten_datenguide_genesis(source)
@@ -1655,7 +1863,8 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "open-data-oepnv": flatten_opendata_oepnv,
     "german-companies": flatten_german_companies,
     "unfallatlas": flatten_unfallatlas,
-    "breitband-monitor": flatten_breitband,
+    "breitband-monitor": lambda source: flatten_breitband(source) + flatten_breitband_raster(source),
+    "arbeitsmarktreport-ba": flatten_ba_arbeitsmarktreport,
     "arbeitsmarkt-kommunal-ba": flatten_ba_arbeitsmarkt_kommunal,
 }
 

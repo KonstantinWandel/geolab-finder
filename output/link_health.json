@@ -1,0 +1,676 @@
+{
+  "shells": {
+    "regionalstatistik.de/genesis/online?operation=table": "8551",
+    "www-genesis.destatis.de/genesis/online?operation=table": "2506",
+    "ergebnisse.zensus2022.de/datenbank/online/table": "1728",
+    "regionalatlas.statistikportal.de/?BL=DE": "23902",
+    "regionalstatistik.de/genesis/online/statistic": "8927"
+  },
+  "results": [
+    {
+      "source_key": "ba_arbeitsmarkt_kommunal",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+      "bytes": 155702,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_arbeitsmarkt_kommunal",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+      "bytes": 155702,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_arbeitsmarkt_kommunal",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+      "bytes": 155702,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_arbeitsmarkt_kommunal",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+      "bytes": 155702,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_arbeitsmarkt_kommunal",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+      "bytes": 155702,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_arbeitsmarktreport",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+      "bytes": 183141,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_arbeitsmarktreport",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+      "bytes": 183141,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_arbeitsmarktreport",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+      "bytes": 183141,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_arbeitsmarktreport",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+      "bytes": 183141,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_arbeitsmarktreport",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+      "bytes": 183141,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+      "bytes": 111117,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+      "bytes": 111117,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+      "bytes": 111117,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+      "bytes": 111117,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "ba_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+      "bytes": 111117,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "breitband",
+      "link_level": "dataset",
+      "url": "https://gigabitgrundbuch.bund.de/",
+      "bytes": 19657,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "breitband",
+      "link_level": "dataset",
+      "url": "https://gigabitgrundbuch.bund.de/",
+      "bytes": 19657,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "breitband",
+      "link_level": "dataset",
+      "url": "https://gigabitgrundbuch.bund.de/",
+      "bytes": 19657,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "breitband",
+      "link_level": "dataset",
+      "url": "https://gigabitgrundbuch.bund.de/",
+      "bytes": 19657,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "breitband",
+      "link_level": "dataset",
+      "url": "https://gigabitgrundbuch.bund.de/",
+      "bytes": 19657,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "btw21_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/beschreibung.html",
+      "bytes": 51762,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "btw21_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/beschreibung.html",
+      "bytes": 51762,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "btw21_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/beschreibung.html",
+      "bytes": 51762,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "btw21_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/beschreibung.html",
+      "bytes": 51762,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "btw21_strukturdaten",
+      "link_level": "dataset",
+      "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/beschreibung.html",
+      "bytes": 51762,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "bundes_klinik_atlas",
+      "link_level": "dataset",
+      "url": "https://bundes-klinik-atlas.de/open-data/",
+      "bytes": 17768,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "bundes_klinik_atlas",
+      "link_level": "dataset",
+      "url": "https://bundes-klinik-atlas.de/open-data/",
+      "bytes": 17768,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "bundes_klinik_atlas",
+      "link_level": "dataset",
+      "url": "https://bundes-klinik-atlas.de/open-data/",
+      "bytes": 17768,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "bundes_klinik_atlas",
+      "link_level": "dataset",
+      "url": "https://bundes-klinik-atlas.de/open-data/",
+      "bytes": 17768,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "bundes_klinik_atlas",
+      "link_level": "dataset",
+      "url": "https://bundes-klinik-atlas.de/open-data/",
+      "bytes": 17768,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "deutschlandatlas",
+      "link_level": "dataset",
+      "url": "https://www.deutschlandatlas.bund.de/DE/Karten/karten_node.html",
+      "bytes": "http-400",
+      "verdict": "http-400"
+    },
+    {
+      "source_key": "deutschlandatlas",
+      "link_level": "dataset",
+      "url": "https://www.deutschlandatlas.bund.de/DE/Karten/karten_node.html",
+      "bytes": "http-400",
+      "verdict": "http-400"
+    },
+    {
+      "source_key": "deutschlandatlas",
+      "link_level": "dataset",
+      "url": "https://www.deutschlandatlas.bund.de/DE/Karten/karten_node.html",
+      "bytes": "http-400",
+      "verdict": "http-400"
+    },
+    {
+      "source_key": "deutschlandatlas",
+      "link_level": "dataset",
+      "url": "https://www.deutschlandatlas.bund.de/DE/Karten/karten_node.html",
+      "bytes": "http-400",
+      "verdict": "http-400"
+    },
+    {
+      "source_key": "deutschlandatlas",
+      "link_level": "dataset",
+      "url": "https://www.deutschlandatlas.bund.de/DE/Karten/karten_node.html",
+      "bytes": "http-400",
+      "verdict": "http-400"
+    },
+    {
+      "source_key": "gba_qualitaetsbericht",
+      "link_level": "dataset",
+      "url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+      "bytes": 68633,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "gba_qualitaetsbericht",
+      "link_level": "dataset",
+      "url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+      "bytes": 68633,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "gba_qualitaetsbericht",
+      "link_level": "dataset",
+      "url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+      "bytes": 68633,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "gba_qualitaetsbericht",
+      "link_level": "dataset",
+      "url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+      "bytes": 68633,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "gba_qualitaetsbericht",
+      "link_level": "dataset",
+      "url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+      "bytes": 68633,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "genesis_bund",
+      "link_level": "table",
+      "url": "https://www-genesis.destatis.de/genesis/online?operation=table&code=13111-0004",
+      "bytes": 2506,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "genesis_bund",
+      "link_level": "table",
+      "url": "https://www-genesis.destatis.de/genesis/online?operation=table&code=41231-0003",
+      "bytes": 2506,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "genesis_bund",
+      "link_level": "table",
+      "url": "https://www-genesis.destatis.de/genesis/online?operation=table&code=31141-0006",
+      "bytes": 2506,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "genesis_bund",
+      "link_level": "table",
+      "url": "https://www-genesis.destatis.de/genesis/online?operation=table&code=81000-0302",
+      "bytes": 2506,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "genesis_bund",
+      "link_level": "table",
+      "url": "https://www-genesis.destatis.de/genesis/online?operation=table&code=41145-0002",
+      "bytes": 2506,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "geoportal",
+      "link_level": "portal",
+      "url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+      "bytes": 68633,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "geoportal",
+      "link_level": "portal",
+      "url": "https://www.bundesaerztekammer.de/service/arztsuche/",
+      "bytes": 66417,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "geoportal",
+      "link_level": "portal",
+      "url": "https://geovdbn.deutschebahn.com/isr",
+      "bytes": 23087,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "geoportal",
+      "link_level": "portal",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+      "bytes": 155702,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "geoportal",
+      "link_level": "portal",
+      "url": "https://regionalatlas.statistikportal.de/",
+      "bytes": 23902,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "german_companies",
+      "link_level": "dataset",
+      "url": "https://rapidapi.com/Implisense/api/german-company-data",
+      "bytes": 290910,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "german_companies",
+      "link_level": "dataset",
+      "url": "https://rapidapi.com/Implisense/api/german-company-data",
+      "bytes": 290974,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "german_companies",
+      "link_level": "dataset",
+      "url": "https://rapidapi.com/Implisense/api/german-company-data",
+      "bytes": 290043,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "german_companies",
+      "link_level": "dataset",
+      "url": "https://rapidapi.com/Implisense/api/german-company-data",
+      "bytes": 290958,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "german_companies",
+      "link_level": "dataset",
+      "url": "https://rapidapi.com/Implisense/api/german-company-data",
+      "bytes": 290910,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "hochschulkompass",
+      "link_level": "dataset",
+      "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
+      "bytes": 81612,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "hochschulkompass",
+      "link_level": "dataset",
+      "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
+      "bytes": 81612,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "hochschulkompass",
+      "link_level": "dataset",
+      "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
+      "bytes": 81612,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "hochschulkompass",
+      "link_level": "dataset",
+      "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
+      "bytes": 81612,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "hochschulkompass",
+      "link_level": "dataset",
+      "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
+      "bytes": 81612,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "laendermonitor",
+      "link_level": "dataset",
+      "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+      "bytes": 49880,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "laendermonitor",
+      "link_level": "dataset",
+      "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+      "bytes": 49880,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "laendermonitor",
+      "link_level": "dataset",
+      "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+      "bytes": 49880,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "laendermonitor",
+      "link_level": "dataset",
+      "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+      "bytes": 49880,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "laendermonitor",
+      "link_level": "dataset",
+      "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+      "bytes": 49880,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "migration_integration",
+      "link_level": "dataset",
+      "url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+      "bytes": 73226,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "migration_integration",
+      "link_level": "dataset",
+      "url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+      "bytes": 73226,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "migration_integration",
+      "link_level": "dataset",
+      "url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+      "bytes": 73226,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "migration_integration",
+      "link_level": "dataset",
+      "url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+      "bytes": 73226,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "migration_integration",
+      "link_level": "dataset",
+      "url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+      "bytes": 73226,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "opendata_oepnv",
+      "link_level": "dataset",
+      "url": "https://www.opendata-oepnv.de/ht/de/organisation/verkehrsverbuende/vvs/startseite?tx_vrrkit_view%5Baction%5D=details&tx_vrrkit_view%5Bcontroller%5D=View&tx_vrrkit_view%5Bdataset_name%5D=soll-fahrplandaten-vvs&cHash=faeb747a867e7942c85451d06273d267",
+      "bytes": 42260,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "opendata_oepnv",
+      "link_level": "dataset",
+      "url": "https://www.opendata-oepnv.de/ht/de/organisation/bundeslaender/nrw/startseite?tx_vrrkit_view%5Baction%5D=details&tx_vrrkit_view%5Bcontroller%5D=View&tx_vrrkit_view%5Bdataset_name%5D=car-ridesharing-community-eg&cHash=e9db09d51edbe7b0295d62c64a92bf1c",
+      "bytes": 43424,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "opendata_oepnv",
+      "link_level": "dataset",
+      "url": "https://www.opendata-oepnv.de/ht/de/organisation/verkehrsverbuende/vbb/startseite?tx_vrrkit_view%5Baction%5D=details&tx_vrrkit_view%5Bcontroller%5D=View&tx_vrrkit_view%5Bdataset_name%5D=haltestellen-vbb&cHash=70a6a3650768c791c6db83362324c838",
+      "bytes": 39442,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "opendata_oepnv",
+      "link_level": "dataset",
+      "url": "https://www.opendata-oepnv.de/ht/de/organisation/verkehrsverbuende/avv/startseite?tx_vrrkit_view%5Baction%5D=details&tx_vrrkit_view%5Bcontroller%5D=View&tx_vrrkit_view%5Bdataset_name%5D=haltestellen-avv&cHash=c0384f3ebb7734703be7623593e5b424",
+      "bytes": 41368,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "opendata_oepnv",
+      "link_level": "dataset",
+      "url": "https://www.opendata-oepnv.de/ht/de/organisation/bundeslaender/nrw/startseite?tx_vrrkit_view%5Baction%5D=details&tx_vrrkit_view%5Bcontroller%5D=View&tx_vrrkit_view%5Bdataset_name%5D=miles&cHash=951ab32357d376bb848c6bc0468f082c",
+      "bytes": 43669,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "regionalatlas",
+      "link_level": "indicator",
+      "url": "https://regionalatlas.statistikportal.de/?BL=DE&TCode=AI-N-10&ICode=AI1703V&Jhr=2023",
+      "bytes": 23902,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "regionalatlas",
+      "link_level": "indicator",
+      "url": "https://regionalatlas.statistikportal.de/?BL=DE&TCode=AI-Z4-2011&ICode=AI-Z19&Jhr=2011",
+      "bytes": 23902,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "regionalatlas",
+      "link_level": "indicator",
+      "url": "https://regionalatlas.statistikportal.de/?BL=DE&TCode=AI001-5&ICode=AI0105&Jhr=2015",
+      "bytes": 23902,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "regionalatlas",
+      "link_level": "indicator",
+      "url": "https://regionalatlas.statistikportal.de/?BL=DE&TCode=AI-S-02&ICode=AI2302&Jhr=2023",
+      "bytes": 23902,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "regionalatlas",
+      "link_level": "indicator",
+      "url": "https://regionalatlas.statistikportal.de/?BL=DE&TCode=AI008-2&ICode=AI0803&Jhr=2025",
+      "bytes": 23902,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "regionalstatistik",
+      "link_level": "statistic",
+      "url": "https://www-genesis.destatis.de/datenbank/online/statistic/42251",
+      "bytes": 2506,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "regionalstatistik",
+      "link_level": "portal",
+      "url": "https://www.regionalstatistik.de/genesis/online",
+      "bytes": 21142,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "regionalstatistik",
+      "link_level": "statistic",
+      "url": "https://www.regionalstatistik.de/genesis/online/statistic/52311",
+      "bytes": 11277,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "regionalstatistik",
+      "link_level": "table",
+      "url": "https://www.regionalstatistik.de/genesis/online?operation=table&code=22543-01-02-4",
+      "bytes": 32087,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "regionalstatistik",
+      "link_level": "table",
+      "url": "https://www.regionalstatistik.de/genesis/online?operation=table&code=12612-06-01-4",
+      "bytes": 26038,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "unfallatlas",
+      "link_level": "dataset",
+      "url": "https://unfallatlas.statistikportal.de/",
+      "bytes": 2012,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "unfallatlas",
+      "link_level": "dataset",
+      "url": "https://unfallatlas.statistikportal.de/",
+      "bytes": 2012,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "unfallatlas",
+      "link_level": "dataset",
+      "url": "https://unfallatlas.statistikportal.de/",
+      "bytes": 2012,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "unfallatlas",
+      "link_level": "dataset",
+      "url": "https://unfallatlas.statistikportal.de/",
+      "bytes": 2012,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "unfallatlas",
+      "link_level": "dataset",
+      "url": "https://unfallatlas.statistikportal.de/",
+      "bytes": 2012,
+      "verdict": "ok"
+    },
+    {
+      "source_key": "zensus2022",
+      "link_level": "table",
+      "url": "https://ergebnisse.zensus2022.de/datenbank/online/table/2000S-3008",
+      "bytes": 1728,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "zensus2022",
+      "link_level": "table",
+      "url": "https://ergebnisse.zensus2022.de/datenbank/online/table/2000S-3099",
+      "bytes": 1728,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "zensus2022",
+      "link_level": "table",
+      "url": "https://ergebnisse.zensus2022.de/datenbank/online/table/4000W-1W05",
+      "bytes": 1728,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "zensus2022",
+      "link_level": "table",
+      "url": "https://ergebnisse.zensus2022.de/datenbank/online/table/4000W-3005",
+      "bytes": 1728,
+      "verdict": "shell"
+    },
+    {
+      "source_key": "zensus2022",
+      "link_level": "table",
+      "url": "https://ergebnisse.zensus2022.de/datenbank/online/table/2000S-2091",
+      "bytes": 1728,
+      "verdict": "shell"
+    }
+  ]
+}

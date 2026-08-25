@@ -60,6 +60,7 @@ SOURCE_KEYS: Dict[str, List[str]] = {
     "open-data-oepnv": ["opendata_oepnv"],
     "german-companies": ["german_companies"],
     "unfallatlas": ["unfallatlas"],
+    "arbeitsmarktreport-ba": ["ba_arbeitsmarktreport"],
     "genesis-online-bund": ["genesis_bund"],
     "zensus-2022": ["zensus2022"],
     "breitband-monitor": ["breitband"],
@@ -74,11 +75,11 @@ SOURCE_KEYS: Dict[str, List[str]] = {
 # that goes into the German handoff table.
 OPEN_ITEMS: Dict[str, Dict[str, str]] = {
     "regionalatlas-deutschland": {"de": "Nichts offen; Katalog bei Aktualisierung neu ziehen", "state": "done", "next": "Nothing outstanding. Re-fetch services.json when the atlas updates (it carries a timestamp per theme)."},
-    "breitband-monitor": {"de": "Eingebunden: Breitbandatlas + Mobilfunk-Monitoring; Rasterdaten noch nicht ausgewertet", "state": "partial", "next": "Breitbandatlas (bba_12_2025.xlsx) and Mobilfunk-Monitoring flattened into 463 availability indicators (use case x technology/bandwidth class, Bund to Gemeinde). Still unused: the 307 MB Gitterzellen GeoPackage and the mobile-coverage geodata, which would add raster-level coverage."},
+    "breitband-monitor": {"de": "Eingebunden: Breitbandatlas, Mobilfunk-Monitoring und Rasterdaten (Gitterzellen)", "state": "done", "next": "632 indicators: the Breitbandatlas and Mobilfunk-Monitoring workbooks (use case x technology/bandwidth, Bund to Gemeinde) plus the two GeoPackages read at schema level (3.59 million grid cells x 168 coverage attributes, and 599,515 cells of mobile-operator counts). The GeoPackages themselves are never unpacked into the repo; scripts/extract_gpkg_schema.py writes a small schema JSON instead."},
     "breitbandatlas": {"de": "Nachfolger Gigabitgrundbuch; Indikatorliste fehlt noch", "state": "open", "next": "The bmvi.de link in the workbook is dead; Gigabitgrundbuch is the successor. Needs the indicator/download page saved from a browser."},
     "arbeitsmarktstatistik-ba-karte": {"de": "Glossar eingebunden; Karten-Indikatorliste nicht maschinenlesbar", "state": "partial", "next": "Glossary and portal saved. The map's own indicator list is not machine-readable; BA's API page may expose a catalogue worth crawling."},
     "strukturdaten-und-indikatoren-ba": {"de": "Nichts offen; neueres Heft bei Bedarf", "state": "done", "next": "One booklet defines the series. Refresh with a newer heft when the BA publishes one."},
-    "arbeitsmarktreport-ba": {"de": "Heft vorhanden, noch nicht ausgewertet (22 Blätter)", "state": "partial", "next": "Booklet downloaded but not yet flattened: its 22 sheets (Eckwerte, Unterbeschäftigung, Alo_Bestand, ...) would add a second BA indicator set."},
+    "arbeitsmarktreport-ba": {"de": "288 Merkmale aus 17 Blättern eingebunden, monatliche Reihe", "state": "done", "next": "288 indicators flattened from the 17 data sheets (Eckwerte, SGB II/III, Unterbeschäftigung, Alo_Bestand/Bewegungen, Arbeitsstellen, Berufe, Ausbildung, Beschäftigung, Grundsicherung). Labels that recur across sheets carry their sheet in brackets, since 'Bestand an Arbeitslosen: Insgesamt' means something different in Eckwerte and in Eckwerte SGB II."},
     "arbeitsmarkt-kommunal-ba": {"de": "Gemeindescharfe Merkmale eingebunden; weitere Kreis-Hefte optional", "state": "done", "next": "33 indicators flattened from one district archive (one XLSX per municipality, sheet 'Daten'). The indicator set is identical across districts, so more archives add regions, not concepts."},
     "migration-integration-in-regionen": {"de": "Nichts offen", "state": "done", "next": "Nothing outstanding."},
     "krankenhausatlas-deutschland": {"de": "Stand 2016; praktisch ersetzt durch G-BA und Klinik-Atlas", "state": "open", "next": "Portal page only, and the atlas is at 2016. Superseded in practice by the G-BA Qualitätsberichte and the Bundes-Klinik-Atlas, both indexed."},
@@ -179,12 +180,15 @@ def gather(link_check: bool) -> List[Dict[str, Any]]:
         records = json.loads(METADATA.read_text(encoding="utf-8"))
     counts: Dict[str, int] = {}
     link_levels: Dict[str, Dict[str, int]] = {}
+    unverified: Dict[str, int] = {}
     for record in records:
         key = record["source_key"]
         counts[key] = counts.get(key, 0) + 1
         level = record.get("link_level", "portal")
         link_levels.setdefault(key, {})
         link_levels[key][level] = link_levels[key].get(level, 0) + 1
+        if record.get("link_verified") is False:
+            unverified[key] = unverified.get(key, 0) + 1
 
     rows: List[Dict[str, Any]] = []
     for position, source in enumerate(registry, start=1):
@@ -199,9 +203,11 @@ def gather(link_check: bool) -> List[Dict[str, Any]]:
         log = json.loads(log_path.read_text(encoding="utf-8")) if log_path.exists() else {"artifacts": {}}
         indexed = sum(counts.get(key, 0) for key in SOURCE_KEYS.get(source["slug"], []))
         levels: Dict[str, int] = {}
+        unverified_count = 0
         for key in SOURCE_KEYS.get(source["slug"], []):
             for level, count in link_levels.get(key, {}).items():
                 levels[level] = levels.get(level, 0) + count
+            unverified_count += unverified.get(key, 0)
         item = OPEN_ITEMS.get(source["slug"], {"state": "open", "next": "not reviewed yet", "de": "noch nicht geprüft"})
         rows.append({
             "position": position,
@@ -215,6 +221,7 @@ def gather(link_check: bool) -> List[Dict[str, Any]]:
             "indexed": indexed,
             "portal_record": 1 if source["slug"] != "inkar" else 0,
             "link_levels": levels,
+            "unverified_links": unverified_count,
             "state": item["state"],
             "next": item["next"],
             "next_de": item.get("de", item["next"]),
@@ -287,6 +294,9 @@ def write_checklist(rows: List[Dict[str, Any]], stamp: str) -> None:
         if row["link_levels"]:
             spelled = ", ".join(f"{count} x {LINK_LEVEL_WORD.get(level, level)}"
                                 for level, count in sorted(row["link_levels"].items(), key=lambda kv: -kv[1]))
+            if row["unverified_links"]:
+                spelled += (f" ({row['unverified_links']} of them not verifiable from here: the target "
+                            "portal is a client-rendered app or refuses scripted requests)")
             lines.append(f"- **Link precision:** {spelled}")
         lines.append(f"- **Next step:** {row['next']}")
         lines.append("")
@@ -382,6 +392,8 @@ def write_progress_table(rows: List[Dict[str, Any]], stamp: str) -> Optional[Pat
         for row in rows:
             levels = sorted(row["link_levels"].items(), key=lambda kv: -kv[1])
             spelled = ", ".join(f"{LINK_LEVEL_DE.get(level, level)} {count}" for level, count in levels) or "Portal 1"
+            if row["unverified_links"]:
+                spelled += " (ungeprueft)"
             step = row["next_de"]
             writer.writerow([
                 row["position"], plain(row["name"]), STATE_DE[row["state"]],

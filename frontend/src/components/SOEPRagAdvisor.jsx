@@ -90,14 +90,36 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     }
   }, [])
 
+  // Facets are re-fetched whenever the source changes, scoped to that source, so the
+  // dataset/theme/level lists only ever offer values that exist within it. Any dependent
+  // value that no longer exists is reset, otherwise a stale selection silently filters
+  // every result away.
   useEffect(() => {
     let cancelled = false
     async function loadFilterOptions() {
       try {
-        const res = await fetch(`${apiUrl}/soep/filter-options`)
+        const scope = filters.dataset_scope && filters.dataset_scope !== 'all'
+          ? `?source=${encodeURIComponent(filters.dataset_scope)}`
+          : ''
+        const res = await fetch(`${apiUrl}/soep/filter-options${scope}`)
         if (!res.ok) return
         const data = await res.json()
-        if (!cancelled) setFilterOptions(data)
+        if (cancelled) return
+        setFilterOptions(data)
+        setFilters((current) => {
+          const next = { ...current }
+          if (next.dataset_label !== 'All datasets' && !(data.datasets || []).includes(next.dataset_label)) {
+            next.dataset_label = 'All datasets'
+          }
+          if (next.theme !== 'Any' && !(data.themes || []).includes(next.theme)) next.theme = 'Any'
+          if (next.spatial_level !== 'Any' && !(data.spatial_levels || []).includes(next.spatial_level)) {
+            next.spatial_level = 'Any'
+          }
+          if (next.nuts_level !== 'Any' && !(data.nuts_levels || []).includes(next.nuts_level)) {
+            next.nuts_level = 'Any'
+          }
+          return next
+        })
       } catch (e) {
         console.error(e)
       }
@@ -106,7 +128,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     return () => {
       cancelled = true
     }
-  }, [apiUrl])
+  }, [apiUrl, filters.dataset_scope])
 
   useEffect(() => {
     // Keep the TOP of the newest answer (the most relevant results) in view,
@@ -142,7 +164,10 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
         body: JSON.stringify({
           question: userQ,
           top_k: Number(filterSnapshot.top_k) || 12,
-          dataset_scope: isAll ? filterSnapshot.dataset_scope : mode,
+          // Send the SELECTED source, never the deployment mode. Sending `mode` here hard
+          // filtered every GeoDB query to source_key "inkar" no matter what the dropdown said,
+          // which made 18 of 19 sources unreachable through the UI while the API was fine.
+          dataset_scope: filterSnapshot.dataset_scope || 'all',
           dataset_label: filterSnapshot.dataset_label === 'All datasets' ? null : filterSnapshot.dataset_label,
           nuts_level: filterSnapshot.nuts_level === 'Any' ? null : filterSnapshot.nuts_level,
           spatial_level: filterSnapshot.spatial_level === 'Any' ? null : filterSnapshot.spatial_level,
@@ -209,6 +234,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     years: row.available_years_text || '',
     url: row.source_url || row.selector_url || row.indicator_url || '',
     link_level: row.link_level || '',
+    link_verified: row.link_verified === false ? 'no' : 'yes',
     description: row.rich_description || row.search_description || row.stats_summary || '',
   })
 
@@ -297,7 +323,18 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
           </p>
 
           <div className="table-scroll metadata-table">
-            <table>
+            <table className="results-table">
+              {/* Fixed column widths: with auto layout an opened "Why useful" description
+                  stretched the table past the container and pushed "Get it from" out of view. */}
+              <colgroup>
+                <col style={{ width: '3%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '6%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '26%' }} />
+                <col style={{ width: '14%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Select</th>
@@ -325,8 +362,13 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                       <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{row.label}</div>
                       {row.source_key !== 'soep' && row.theme && <div className="mini-chip">{row.theme}</div>}
                       {row.link_level && LINK_LEVEL[row.link_level] && (
-                        <div className="mini-chip" title={LINK_LEVEL[row.link_level].label}>
-                          {LINK_LEVEL[row.link_level].short}
+                        <div
+                          className="mini-chip"
+                          title={row.link_verified === false
+                            ? `${LINK_LEVEL[row.link_level].label} (documented form; the target portal is a JavaScript app, so the link could not be verified server-side)`
+                            : LINK_LEVEL[row.link_level].label}
+                        >
+                          {LINK_LEVEL[row.link_level].short}{row.link_verified === false ? '*' : ''}
                         </div>
                       )}
                       {row.source_key === 'soep' && sampleGroupLabel(row.sample_group) && (
@@ -348,7 +390,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                       <div className="text-muted">{(row.nuts_levels || []).join(', ') || (row.spatial_levels || []).join(', ') || 'No spatial level'}</div>
                     </td>
                     <td>
-                      <details style={{ maxWidth: '420px', cursor: 'pointer' }}>
+                      <details className="why-useful" style={{ cursor: 'pointer' }}>
                         <summary style={{ fontWeight: 'bold', color: 'var(--accent)', outline: 'none' }}>View extracted context</summary>
                         <div style={{ marginTop: '0.5rem', lineHeight: '1.4', fontSize: '0.9rem', color: 'var(--text-soft)' }}>
                           {row.rich_description || row.stats_summary || row.label || 'No description found.'}
