@@ -38,6 +38,7 @@ OUTPUT = REPO_ROOT / "soep_metadata_output" / "geodb_metadata.json"
 # Workbook spatial-level wording -> the finder's canonical levels + NUTS aliases, so a
 # filter on "Kreise" hits INKAR and the new sources alike.
 SPATIAL_MAP: Dict[str, Dict[str, List[str]]] = {
+    "Bund": {"spatial": ["Bund"], "nuts": ["Bund", "NUTS0"]},
     "Bundesland": {"spatial": ["Bundesländer"], "nuts": ["Bundesländer", "NUTS1"]},
     "Regierungsbezirke": {"spatial": ["Regierungsbezirke"], "nuts": ["Regierungsbezirke", "NUTS2"]},
     "Kreise & kreisfreie Städte": {"spatial": ["Kreise"], "nuts": ["Kreise", "NUTS3"]},
@@ -1310,6 +1311,21 @@ GENESIS_INSTANCES = {
     },
 }
 
+# Zensus 2022 encodes the regional level in the opaque table code, so scripts/resolve_zensus_levels.py
+# resolves it per table through metadata/table. GEO variable -> our canonical level vocabulary.
+ZENSUS_GEO_LEVELS = {
+    "GEODL": "Bund",
+    "GEOBL": "Bundesland",
+    "GEORB": "Regierungsbezirke",
+    "GEOLK": "Kreise & kreisfreie Städte",
+    "GEOGM": "Gemeinden und Verbandsgemeinden",
+    "GEOVB": "Gemeinden und Verbandsgemeinden",
+    "GEOBZ": "Bezirke",
+    "GEOWK": "weitere räumliche Gliederungen",
+    "GEOEV": "weitere räumliche Gliederungen",
+    "GEORK": "weitere räumliche Gliederungen",
+}
+
 DEPTH_MARKERS = [
     ("gemeinde", "Gemeinden und Verbandsgemeinden"),
     ("kreis", "Kreise & kreisfreie Städte"),
@@ -1333,6 +1349,12 @@ def flatten_genesis_tables(source: Dict[str, Any], instances: Optional[List[str]
     raw = source["folder"] / "raw"
     records: List[Dict[str, Any]] = []
 
+    resolved_levels: Dict[str, List[List[Any]]] = {}
+    levels_path = raw / "zensus_table_levels.json"
+    if levels_path.exists():
+        resolved_levels = {code: entry.get("geo") or []
+                           for code, entry in json.loads(levels_path.read_text(encoding="utf-8")).items()}
+
     for instance in (instances or list(GENESIS_INSTANCES)):
         config = GENESIS_INSTANCES[instance]
         path = raw / f"genesis_catalogue_{instance}.json"
@@ -1354,6 +1376,16 @@ def flatten_genesis_tables(source: Dict[str, Any], instances: Optional[List[str]
                     break
             lowered = (depth_text or title).lower()
             levels = sorted({level for needle, level in DEPTH_MARKERS if needle in lowered})
+
+            # A resolved Zensus level beats anything guessed from the title.
+            geo_labels: List[str] = []
+            for geo_code, geo_label, _values in resolved_levels.get(code, []):
+                canonical = ZENSUS_GEO_LEVELS.get(str(geo_code)[:5])
+                if canonical:
+                    levels.append(canonical)
+                if geo_label:
+                    geo_labels.append(clean(geo_label))
+            levels = sorted(set(levels))
             mapped = map_spatial(levels or config["default_levels"])
 
             period = clean(table.get("Time")) or clean(table.get("Zeitraum"))
@@ -1365,7 +1397,7 @@ def flatten_genesis_tables(source: Dict[str, Any], instances: Optional[List[str]
                     item_type="table",
                     item_id=f"{instance}_table:{code}",
                     variable_name=code,
-                    label=title,
+                    label=(f"{title} [{geo_labels[-1]}]" if geo_labels and instance == "zensus" else title),
                     dataset_label=config["dataset_label"],
                     theme=statistic_name or config["source_label"],
                     description=join_nonempty([

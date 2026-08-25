@@ -167,6 +167,24 @@ Design decisions already taken:
   comes from `scripts/build_source_registry.py`, which asserts the expected source count so a
   changed workbook fails loudly rather than producing a partial registry.
 
+## Unattended follow-up work
+
+Long jobs run detached and finish themselves. Two conventions make that safe:
+
+- **The crawler is resumable and asserts its auth** (`scripts/resolve_zensus_levels.py`,
+  `scripts/fetch_genesis_catalogue.py`): an existing output file is loaded first and only the
+  missing keys are fetched, and a run that authenticated as GAST refuses to write anything.
+- **The follow-up is gated, backed up and reversible** (`scripts/autopilot_zensus_followup.py`):
+  it waits for the crawler to exit, measures retrieval on the current index, rebuilds and
+  re-embeds, measures again, and **refuses to deploy if hit@1 dropped by more than 2** or if the
+  record count moved by more than a quarter. It copies what it overwrites into
+  `/opt/geolab/backups/autopilot_<stamp>/` and rolls back if the health check fails. Outcome in
+  `logs/autopilot_result.json`, narrative in `logs/autopilot.log`.
+
+Start them with `setsid ... </dev/null >>logs/<name>.log 2>&1 &` and verify with
+`ps -o pid,ppid,sid,tty -p <pid>`: own SID, no TTY, ancestor chain reaching pid 1. A job whose
+parent is the agent dies when the session does.
+
 ## Deploying a metadata update
 
 ```bash
