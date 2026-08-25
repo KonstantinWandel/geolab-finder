@@ -783,8 +783,13 @@ class SOEPRagAdvisorService:
             summary["geodb"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
         return summary
 
-    def get_filter_options(self) -> Dict[str, Any]:
+    def get_filter_options(self, source: Optional[str] = None) -> Dict[str, Any]:
         self.load()
+        # The source list always covers everything loaded; the dependent facets below are
+        # narrowed when a source is selected, so picking "Zensus 2022" cannot leave a
+        # dataset or theme selected that only exists in another source.
+        scope = self._as_text(source).lower()
+        scoped = [row for row in self._rows if row.get("source_key") == scope] if scope and scope != "all" else self._rows
         # Source list is derived from what is actually loaded, so a new GeoDB source
         # appears in the dropdown as soon as its records are in the metadata file.
         known_labels = {
@@ -815,22 +820,24 @@ class SOEPRagAdvisorService:
             sources = [entry for entry in sources if entry["value"] != "all"]
         years = [
             year
-            for row in self._rows
+            for row in scoped
             for year in [row.get("year_start"), row.get("year_end")]
             if isinstance(year, int)
         ]
         return {
             "app_mode": self.app_mode,
             "sources": sources,
-            "nuts_levels": sorted({level for row in self._rows for level in row.get("nuts_levels", [])}),
-            "spatial_levels": sorted({level for row in self._rows for level in row.get("spatial_levels", [])}),
-            "themes": sorted({row.get("theme", "") for row in self._rows if row.get("theme") and row.get("source_key") != "soep"}),
-            "datasets": sorted({row.get("dataset_label", row.get("dataset", "")) for row in self._rows if row.get("dataset_label") or row.get("dataset")}),
+            "scoped_source": scope or "all",
+            "scoped_rows": len(scoped),
+            "nuts_levels": sorted({level for row in scoped for level in row.get("nuts_levels", [])}),
+            "spatial_levels": sorted({level for row in scoped for level in row.get("spatial_levels", [])}),
+            "themes": sorted({row.get("theme", "") for row in scoped if row.get("theme") and row.get("source_key") != "soep"}),
+            "datasets": sorted({row.get("dataset_label") or row.get("dataset", "") for row in scoped if row.get("dataset_label") or row.get("dataset")}),
             # Sample/questionnaire groups present among SOEP rows, in display order.
             "sample_groups": [
                 {"value": key, "label": label}
                 for key, label in SAMPLE_GROUP_LABELS
-                if key in {row.get("sample_group") for row in self._rows if row.get("source_key") == "soep"}
+                if key in {row.get("sample_group") for row in scoped if row.get("source_key") == "soep"}
             ],
             "year_min": min(years) if years else None,
             "year_max": max(years) if years else None,

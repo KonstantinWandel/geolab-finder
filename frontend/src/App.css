@@ -480,6 +480,32 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   max-height: none;
   overflow-x: auto;
   overflow-y: visible;
+  max-width: 100%;
+}
+
+/* Results table: fixed layout so no single cell can widen the table past its container,
+   and long values (GENESIS table titles, URLs) wrap instead of pushing columns out of view.
+   A long opened description scrolls inside its own cell rather than stretching the row. */
+.results-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.results-table th,
+.results-table td {
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.why-useful > div {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+}
+
+.why-useful summary {
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
@@ -821,16 +847,62 @@ button, input, select, textarea,
   width: auto;
 }
 
-.brand-logo-wide {
-  height: 34px;
+/* Monochrome marks: the SVG is a mask, the ink is the page text colour, so they stay
+   legible on the light and the dark themes without a second asset per logo. */
+.brand-mark {
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
-.brand-logo-tall {
+.brand-uni {
+  height: 34px;
+  aspect-ratio: 190 / 45;
+  -webkit-mask-image: url('/brand/uni-bielefeld.svg');
+  mask-image: url('/brand/uni-bielefeld.svg');
+}
+
+.brand-diw {
+  height: 40px;
+  aspect-ratio: 209 / 90;
+  -webkit-mask-image: url('/brand/diw.svg');
+  mask-image: url('/brand/diw.svg');
+}
+
+.brand-leibniz {
   height: 52px;
+  aspect-ratio: 100 / 79;
+  -webkit-mask-image: url('/brand/leibniz.svg');
+  mask-image: url('/brand/leibniz.svg');
+}
+
+/* Multi-colour raster mark: never recoloured, given a light plate on dark backgrounds. */
+.brand-soep {
+  height: 42px;
+  border-radius: 4px;
+}
+
+:root[data-theme="dark"] .brand-soep,
+:root[data-theme="default"] .brand-soep {
+  background: #ffffff;
+  padding: 4px 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand-soep {
+    background: #ffffff;
+    padding: 4px 8px;
+  }
 }
 
 @media (max-width: 480px) {
   .brand-strip { gap: 1.5rem; }
-  .brand-logo-wide { height: 26px; }
-  .brand-logo-tall { height: 40px; }
+  .brand-uni { height: 26px; }
+  .brand-diw { height: 30px; }
+  .brand-leibniz { height: 40px; }
+  .brand-soep { height: 32px; }
 }

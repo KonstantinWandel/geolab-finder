@@ -45,22 +45,36 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-08-25: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 10,046 rows**
-(9,386 GeoDB records + 660 INKAR) from **19 sources**. Largest: Regionalstatistik/GENESIS 3,622
-(2,757 Merkmale + 866 Tabellen), GENESIS-Online Bund 3,026 tables, Zensus 2022 1,440 tables,
-Gigabit-Grundbuch/Breitbandatlas 463, Regionalatlas 232, Migration & Integration 140,
-Deutschlandatlas 86, Open Data ÖPNV 77, BA Strukturdaten 68, Bundestagswahl 2021 49,
-Bundes-Klinik-Atlas 41, Arbeitsmarkt kommunal 33, Unfallatlas 25, Ländermonitor 17, G-BA 16,
-German Company Data 12, Hochschulkompass 11, plus 26 portal-level records.
+State as of 2026-08-25: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 10,503 rows**
+(9,843 GeoDB records + 660 INKAR) from **21 sources**. Largest: Regionalstatistik/GENESIS 3,622,
+GENESIS-Online Bund 3,026, Zensus 2022 1,440, Gigabit-Grundbuch 632 (workbooks plus the raster
+schema), BA Arbeitsmarktreport 288, Regionalatlas 232, Migration & Integration 140,
+Deutschlandatlas 86, Open Data ÖPNV 77, BA Strukturdaten 68, Bundestagswahl 49,
+Bundes-Klinik-Atlas 41, Arbeitsmarkt kommunal 33, Unfallatlas 25, plus 26 portal records.
 
-**Every record carries `link_level`**, saying how precisely its link lands: `table` (5,332),
-`portal` (1,823), `dataset` (1,032), `statistic` (965), `indicator` (232). The UI shows it as a
-chip, the checklist totals it per source, and the honest answer to "how good is the linking" is
-that number. Improving it is the main quality lever; a source whose records are all `portal` is a
-stub. Two caveats are recorded in the records themselves: the federal GENESIS and Zensus portals
-are client-rendered SPAs, so their table links follow the documented form but could not be
-verified server-side from here, and Zensus leaves `spatial_levels` empty where the title does not
-name a level (the level is encoded in the opaque table code).
+**Two bugs worth remembering, both invisible to API-level testing.**
+
+1. *The UI sent the deployment mode as the source filter.* `dataset_scope: isAll ? snapshot : mode`
+   in the request builder hard-filtered every GeoDB query to `source_key="inkar"`, so 20 of 21
+   sources were unreachable through the browser while every API call I made by hand worked. Test
+   the payload the UI actually sends, not just the endpoint.
+2. *Half the statistic-level links pointed at the wrong database.* The statistic codes mined from
+   the Destatis definition text are not all carried by the REGIONAL database: of 965, only 429
+   exist there, 468 are federal-only and 68 in neither. They are now resolved against the
+   enumerated catalogues and linked to whichever instance holds them.
+
+**Link health is audited, not assumed.** `scripts/check_geodb_links.py` samples records per source,
+fetches the outward link, and compares the response against what that host returns for a
+deliberately invalid code. That is what separates "the table opened" from "the portal home page
+opened". Current result: **no broken links**; the only non-ok verdicts are the client-rendered
+portals (Regionalatlas, federal GENESIS, Zensus) plus deutschlandatlas.bund.de, which refuses
+scripted requests. Those records carry `link_verified: false`, the UI marks them with an asterisk,
+and the checklist counts them. Note that Regionalatlas belongs in that group too: it is a
+dojo/ArcGIS app that reads TCode/ICode client-side, so its "indicator" links cannot be verified
+from here either, and an earlier claim that they were is wrong.
+
+**Every record carries `link_level`** (how precisely the link lands) and `link_verified` (whether
+that was probed). Improving the portal share and the unverified share is the quality lever.
 
 **Crawl instances in parallel, never within one instance.** Regionalstatistik, federal GENESIS and
 Zensus are separate hosts with separate tokens and separate rate limits, so three concurrent
