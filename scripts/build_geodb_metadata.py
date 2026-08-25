@@ -330,6 +330,16 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
             continue
         (german if payload.get("lang") == "de" else english)[code] = payload
 
+    # Some Merkmale are classification keys that recur verbatim across statistics
+    # ("Tierarten" 9x, "Bodennutzungsarten" 7x). They are identical in meaning, so only the
+    # best-linked one is kept: a statistic-level link beats a portal-level one, and after that
+    # the lowest code wins for a stable, reproducible choice.
+    by_label: Dict[str, List[str]] = {}
+    for code, payload in german.items():
+        label = clean(payload.get("name"))
+        if label:
+            by_label.setdefault(label.lower(), []).append(code)
+
     records: List[Dict[str, Any]] = []
     for code, payload in sorted(german.items()):
         name = clean(payload.get("name"))
@@ -339,6 +349,16 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
         # The Destatis definition text repeats the term and a copyright line; keep the
         # substance, drop the trailing copyright.
         description = re.sub(r"©\s*Statistisches Bundesamt[^\n]*", "", description).strip()
+        # Skip a duplicate classification Merkmal unless this code is the chosen winner.
+        siblings = by_label.get(name.lower(), [])
+        if len(siblings) > 1:
+            def rank(candidate: str) -> tuple:
+                text = clean(german.get(candidate, {}).get("description"))
+                has_statistic = "Statistik(en):" in text
+                return (0 if has_statistic else 1, candidate)
+            if code != min(siblings, key=rank):
+                continue
+
         english_name = clean(english.get(code, {}).get("name"))
 
         # The Regionalstatistik portal is a JSF app: query parameters like

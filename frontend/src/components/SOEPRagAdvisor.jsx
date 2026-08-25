@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+// The project site carries the imprint, the privacy statement and the attribution list.
+const GEOLAB_SITE = 'https://lwc-soep-regiohub.pages.ub.uni-bielefeld.de/geolab'
+
 function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
   const isInkar = mode === 'inkar'
   const isSoep = mode === 'soep'
@@ -56,6 +59,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     year_start: '',
     year_end: '',
     regional_only: false,
+    include_raw: false,
     sample_group: 'Any',
     top_k: 12,
   })
@@ -75,6 +79,24 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     (filterOptions?.sample_groups || []).find((g) => g.value === key)?.label || null
 
   const [chatHistory, setChatHistory] = useState([])
+  // Thumbs on a single result. Recorded anonymously against the query_id the backend
+  // returns; nothing is applied to ranking automatically, the votes become eval candidates.
+  const [votes, setVotes] = useState({})
+
+  const sendVote = async (queryId, row, vote, question) => {
+    const key = `${queryId}:${row.item_id || row.variable_name}`
+    setVotes((current) => ({ ...current, [key]: vote }))
+    try {
+      await fetch(`${apiUrl}/soep/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query_id: queryId, item_id: row.item_id || row.variable_name,
+                               vote, question }),
+      })
+    } catch (e) {
+      console.error(e)
+    }
+  }
   const [selectedRows, setSelectedRows] = useState({})
   const messagesEndRef = useRef(null)
   const latestMsgRef = useRef(null)
@@ -175,6 +197,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
           year_start: filterSnapshot.year_start ? Number(filterSnapshot.year_start) : null,
           year_end: filterSnapshot.year_end ? Number(filterSnapshot.year_end) : null,
           regional_only: Boolean(filterSnapshot.regional_only),
+          include_raw: Boolean(filterSnapshot.include_raw),
           sample_groups: filterSnapshot.sample_group === 'Any' ? null : [filterSnapshot.sample_group],
         }),
       })
@@ -398,7 +421,28 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                         </div>
                       </details>
                     </td>
-                    <td>{renderSourceLink(row)}</td>
+                    <td>
+                      {renderSourceLink(row)}
+                      <div className="vote-row">
+                        {['up', 'down'].map((vote) => {
+                          const key = `${result.query_id}:${row.item_id || row.variable_name}`
+                          const active = votes[key] === vote
+                          return (
+                            <button
+                              key={vote}
+                              type="button"
+                              className={`vote-button${active ? ' vote-active' : ''}`}
+                              title={vote === 'up' ? 'Useful hit' : 'Not what I meant'}
+                              aria-label={vote === 'up' ? 'Useful hit' : 'Not what I meant'}
+                              disabled={!result.query_id || Boolean(votes[key])}
+                              onClick={() => sendVote(result.query_id, row, vote, chatHistory[i - 1]?.content || '')}
+                            >
+                              {vote === 'up' ? '\u2191' : '\u2193'}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -471,16 +515,20 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                 ))}
               </select>
             </div>
-            <div>
-              <label>Theme</label>
-              <select value={filters.theme} onChange={(e) => updateFilter('theme', e.target.value)}>
-                <option>Any</option>
-                {(filterOptions?.themes || []).map((theme) => (
-                  <option key={theme} value={theme}>{theme}</option>
-                ))}
-              </select>
-            </div>
           </>
+        )}
+        {/* Theme is no longer INKAR-only: SOEP v41 brings the official topic hierarchy, so the
+            facet is shown whenever the loaded sources actually offer themes. */}
+        {(filterOptions?.themes || []).length > 0 && (
+          <div>
+            <label>Theme</label>
+            <select value={filters.theme} onChange={(e) => updateFilter('theme', e.target.value)}>
+              <option>Any</option>
+              {(filterOptions?.themes || []).map((theme) => (
+                <option key={theme} value={theme}>{theme}</option>
+              ))}
+            </select>
+          </div>
         )}
         <div>
           <label>Start year</label>
@@ -522,6 +570,19 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
               onChange={(e) => updateFilter('regional_only', e.target.checked)}
             />
             Regionalized only
+          </label>
+        )}
+        {/* SOEP v41 publishes most of its variables in the raw questionnaire files. They are
+            indexed but hidden by default, as a switch the user can see and undo rather than a
+            silent penalty in the ranking. */}
+        {showSoepFilters && (filterOptions?.raw_rows || 0) > 0 && (
+          <label className="checkbox-row" title="soepdata/raw: the raw questionnaire files behind the analysis datasets">
+            <input
+              type="checkbox"
+              checked={filters.include_raw}
+              onChange={(e) => updateFilter('include_raw', e.target.checked)}
+            />
+            Include raw questionnaire files ({filterOptions.raw_rows.toLocaleString()})
           </label>
         )}
           <div className="filter-note">
@@ -575,6 +636,14 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
       <div className="cite-footer text-muted">
         Please cite: Wandel, K. (2026). {cite.title}. Zenodo.{' '}
         <a href={`https://doi.org/${cite.doi}`} target="_blank" rel="noreferrer">doi.org/{cite.doi}</a>
+        {/* The service is public, so the imprint, the privacy statement and the attribution
+            list of every indexed source have to be reachable from every page. */}
+        <div className="legal-links">
+          <a href={`${GEOLAB_SITE}/imprint.html`} target="_blank" rel="noreferrer">Imprint</a>
+          <a href={`${GEOLAB_SITE}/privacy.html`} target="_blank" rel="noreferrer">Privacy</a>
+          <a href={`${GEOLAB_SITE}/data-sources.html`} target="_blank" rel="noreferrer">Data sources and attribution</a>
+          <a href={GEOLAB_SITE} target="_blank" rel="noreferrer">GeoLAB</a>
+        </div>
       </div>
     </div>
   )
