@@ -1902,6 +1902,140 @@ def flatten_ba_arbeitsmarktreport(source: Dict[str, Any]) -> List[Dict[str, Any]
     return records
 
 
+def flatten_db_isr(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Deutsche Bahn Infrastrukturregister, from its own open GeoServer.
+
+    The viewer is a MapStore2 app in front of a public GeoServer, so no registration is needed
+    (InfraGO support confirmed this, ticket IIBV31-13354): WMS GetCapabilities lists the map
+    themes and WFS DescribeFeatureType lists the attributes per feature type. Both are indexed,
+    because "which layers exist" and "does anything record platform height" are different
+    questions.
+
+    ISR publishes each feature type twice, German and English (`..._EN`). The pair is matched
+    positionally so the English attribute name becomes the alias of the German one instead of a
+    duplicate record."""
+    import xml.etree.ElementTree as ET
+
+    raw = source["folder"] / "raw"
+    viewer = "https://geoviewer.deutschebahn.com/maps/#/context/ISR/275618"
+    ows = "https://geoviewer.deutschebahn.com/geoviewer-geoserver/ows"
+    records: List[Dict[str, Any]] = []
+    mapped = map_spatial(["Adressen / Koordinaten", "Gemeinden und Verbandsgemeinden",
+                          "Kreise & kreisfreie Städte", "Bundesland"])
+
+    # --- map themes from the WMS capabilities -----------------------------------------
+    wms_path = raw / "isr_wms_capabilities.xml"
+    if wms_path.exists():
+        text = wms_path.read_text(encoding="utf-8", errors="replace")
+        blocks = re.findall(r"<Layer[^>]*>(.*?)</Layer>", text, re.S)
+        seen: set = set()
+        for block in blocks:
+            name = re.search(r"<Name>(ISR:[^<]+)</Name>", block)
+            title = re.search(r"<Title>([^<]*)</Title>", block)
+            abstract = re.search(r"<Abstract>([^<]*)</Abstract>", block)
+            if not name:
+                continue
+            layer = clean(name.group(1))
+            heading = clean(title.group(1)) if title else layer
+            key = (layer, heading.lower())
+            if key in seen or heading.lower().endswith("_en"):
+                continue
+            seen.add(key)
+            records.append(
+                make_record(
+                    source_key="db_isr",
+                    source_label="Infrastrukturregister der DB InfraGO (ISR)",
+                    item_type="regional_indicator",
+                    item_id=f"db_isr:wms:{layer}:{heading[:40]}",
+                    variable_name=layer.split(":")[-1],
+                    label=f"{heading} (ISR-Kartenebene)",
+                    dataset_label="ISR Kartenebenen (WMS)",
+                    theme="Verkehr / Mobilität",
+                    description=join_nonempty([
+                        f"Kartenebene '{heading}' im Infrastrukturregister der DB InfraGO, "
+                        f"GeoServer-Layer {layer}.",
+                        clean(abstract.group(1)) if abstract else "",
+                        "Merkmale des deutschen Schienennetzes streckenscharf bzw. punktgenau: "
+                        "Strecken, Betriebsstellen, Bahnsteige, Tunnel, Brücken und Bahnübergänge, "
+                        "jeweils mit Koordinaten und damit auf Gemeinde-, Kreis- oder Landesebene "
+                        "aggregierbar.",
+                        "Ohne Registrierung nutzbar: der Kartenviewer ist frei zugänglich und der "
+                        "GeoServer liefert WMS und WFS offen aus.",
+                    ]),
+                    spatial_levels=mapped["spatial_levels"],
+                    nuts_levels=mapped["nuts_levels"],
+                    year_start=source["coverage_start_year"],
+                    year_end=source["coverage_end_year"],
+                    years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
+                    source_url=viewer,
+                    indicator_url=viewer,
+                    link_level="dataset",
+                    access_modes=["interactive map viewer", "machine-readable API", "direct file download"],
+                    update_frequency=source["update_frequency"] or "laufend",
+                    api_hint=(
+                        f"WMS-Layer {layer} unter {ows} (GetCapabilities/GetMap). "
+                        "Keine Anmeldung nötig."
+                    ),
+                )
+            )
+
+    # --- attributes from DescribeFeatureType -------------------------------------------
+    attributes_path = raw / "isr_wfs_attributes.json"
+    if attributes_path.exists():
+        payload = json.loads(attributes_path.read_text(encoding="utf-8"))
+        layers = payload.get("layers", {})
+        english = {name[:-3]: entry for name, entry in layers.items() if name.endswith("_EN")}
+        skip_fields = {"geom", "the_geom", "geometry", "shape", "id", "lade_id", "objectid"}
+        for name, entry in sorted(layers.items()):
+            if name.endswith("_EN"):
+                continue
+            fields = entry.get("fields") or []
+            english_fields = (english.get(name, {}) or {}).get("fields") or []
+            short = name.split(":")[-1].replace("ISR_V_", "").replace("GEO_", "").replace("_", " ").title()
+            for position, field in enumerate(fields):
+                field_name = clean(field.get("name"))
+                normalised = field_name.lower().replace("_", "")
+                if (not field_name or field_name.lower() in skip_fields
+                        or normalised == name.split(":")[-1].lower().replace("_", "")):
+                    continue
+                english_name = clean(english_fields[position]["name"]) if position < len(english_fields) else ""
+                readable = re.sub(r"_+", " ", field_name).strip().title()
+                records.append(
+                    make_record(
+                        source_key="db_isr",
+                        source_label="Infrastrukturregister der DB InfraGO (ISR)",
+                        item_type="register_attribute",
+                        item_id=f"db_isr:field:{name}:{field_name}",
+                        variable_name=field_name,
+                        label=f"{readable} ({short})",
+                        dataset_label=f"ISR {short} (WFS)",
+                        theme="Verkehr / Mobilität",
+                        description=join_nonempty([
+                            f"Merkmal {field_name} der ISR-Objektart {short} ({name}).",
+                            f"English field name: {english_name}." if english_name else "",
+                            "Attribut im Infrastrukturregister der DB InfraGO, über WFS ohne "
+                            "Anmeldung abrufbar und punktgenau bzw. streckenscharf georeferenziert.",
+                        ]),
+                        aliases=english_name,
+                        spatial_levels=mapped["spatial_levels"],
+                        nuts_levels=mapped["nuts_levels"],
+                        year_start=source["coverage_start_year"],
+                        year_end=source["coverage_end_year"],
+                        years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
+                        source_url=viewer,
+                        indicator_url=viewer,
+                        link_level="dataset",
+                        access_modes=["machine-readable API", "interactive map viewer", "direct file download"],
+                        update_frequency=source["update_frequency"] or "laufend",
+                        api_hint=(
+                            f"WFS: {ows}?service=WFS&version=2.0.0&request=GetFeature"
+                            f"&typeNames={name}&outputFormat=application/json ; Merkmal {field_name}."
+                        ),
+                    )
+                )
+    return records
+
+
 FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "regionalatlas-deutschland": flatten_regionalatlas,
     "datenguide-abgeschaltet": lambda source: (flatten_datenguide_genesis(source)
@@ -1919,6 +2053,7 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "open-data-oepnv": flatten_opendata_oepnv,
     "german-companies": flatten_german_companies,
     "unfallatlas": flatten_unfallatlas,
+    "deutsche-bahn-infrastrukturregister": flatten_db_isr,
     "breitband-monitor": lambda source: flatten_breitband(source) + flatten_breitband_raster(source),
     "arbeitsmarktreport-ba": flatten_ba_arbeitsmarktreport,
     "arbeitsmarkt-kommunal-ba": flatten_ba_arbeitsmarkt_kommunal,
