@@ -1326,6 +1326,12 @@ ZENSUS_GEO_LEVELS = {
     "GEORK": "weitere räumliche Gliederungen",
 }
 
+# Coarse to fine, so a table that carries several geo columns can be described by its finest.
+LEVEL_GRANULARITY = [
+    "Bund", "Bundesland", "Regierungsbezirke", "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden", "Adressen / Koordinaten",
+]
+
 DEPTH_MARKERS = [
     ("gemeinde", "Gemeinden und Verbandsgemeinden"),
     ("kreis", "Kreise & kreisfreie Städte"),
@@ -1361,6 +1367,13 @@ def flatten_genesis_tables(source: Dict[str, Any], instances: Optional[List[str]
         if not path.exists():
             continue
         payload = json.loads(path.read_text(encoding="utf-8"))
+        # Nearly every Zensus table has a "Deutschland" column, so naming the level in the label
+        # is only useful when it is finer than national or when the title itself repeats.
+        title_counts: Dict[str, int] = {}
+        for table in payload.get("tables") or []:
+            key = re.sub(r"\s+", " ", clean(table.get("Content"))).lower()
+            title_counts[key] = title_counts.get(key, 0) + 1
+
         for table in payload.get("tables") or []:
             code = clean(table.get("Code"))
             title = re.sub(r"\s+", " ", clean(table.get("Content")))
@@ -1379,13 +1392,30 @@ def flatten_genesis_tables(source: Dict[str, Any], instances: Optional[List[str]
 
             # A resolved Zensus level beats anything guessed from the title.
             geo_labels: List[str] = []
+            resolved_canonical: List[str] = []
             for geo_code, geo_label, _values in resolved_levels.get(code, []):
                 canonical = ZENSUS_GEO_LEVELS.get(str(geo_code)[:5])
                 if canonical:
                     levels.append(canonical)
+                    resolved_canonical.append(canonical)
                 if geo_label:
                     geo_labels.append(clean(geo_label))
             levels = sorted(set(levels))
+
+            # The finest resolved level, and the label of that level, for the suffix below.
+            finest = ""
+            finest_label = ""
+            for candidate, label_text in zip(resolved_canonical, geo_labels):
+                if (candidate in LEVEL_GRANULARITY and
+                        (not finest or LEVEL_GRANULARITY.index(candidate) > LEVEL_GRANULARITY.index(finest))):
+                    finest, finest_label = candidate, label_text
+            title_repeats = title_counts.get(re.sub(r"\s+", " ", title).lower(), 0) > 1 if instance == "zensus" else False
+            # Church units and constituencies are not on the granularity ladder, but they are
+            # exactly what tells the repeated "Personen: Religion" tables apart.
+            if not finest_label and title_repeats:
+                finest_label = next((label for label in reversed(geo_labels)
+                                     if label and label != "Deutschland"), "")
+            name_the_level = instance == "zensus" and finest_label and (finest not in {"", "Bund"} or title_repeats)
             mapped = map_spatial(levels or config["default_levels"])
 
             period = clean(table.get("Time")) or clean(table.get("Zeitraum"))
@@ -1397,7 +1427,7 @@ def flatten_genesis_tables(source: Dict[str, Any], instances: Optional[List[str]
                     item_type="table",
                     item_id=f"{instance}_table:{code}",
                     variable_name=code,
-                    label=(f"{title} [{geo_labels[-1]}]" if geo_labels and instance == "zensus" else title),
+                    label=(f"{title} [{finest_label}]" if name_the_level else title),
                     dataset_label=config["dataset_label"],
                     theme=statistic_name or config["source_label"],
                     description=join_nonempty([

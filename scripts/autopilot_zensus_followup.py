@@ -13,6 +13,12 @@ mechanical, so it runs here instead of waiting for someone to come back:
 
 Everything it does is written to logs/autopilot.log, and the outcome to logs/autopilot_result.json.
 
+**It logs a heartbeat while waiting.** The first version logged nothing until the wait ended, so
+when it died mid-wait on 2026-08-25 there was no trace at all: no last-seen time, no traceback,
+nothing to distinguish "killed" from "still sleeping". A silent long-running process is an
+undiagnosable one. It also writes logs/autopilot_alive.json each poll, so a later session can see
+when it was last breathing and whether its PID is still around.
+
 Run detached:
   setsid python scripts/autopilot_zensus_followup.py </dev/null >>logs/autopilot.log 2>&1 &
 """
@@ -35,6 +41,7 @@ NODE_BIN = "/home/researcher/miniconda3/envs/nodejs/bin"
 OUT_DIR = REPO / "soep_metadata_output"
 LEVELS = REPO / "data_sources" / "29-zensus-2022" / "raw" / "zensus_table_levels.json"
 RESULT = REPO / "logs" / "autopilot_result.json"
+ALIVE = REPO / "logs" / "autopilot_alive.json"
 TOLERANCE = 2          # allowed drop in hit@1 before the deploy is refused
 POLL_SECONDS = 120
 MAX_WAIT_HOURS = 12
@@ -82,8 +89,18 @@ def main() -> None:
     started = time.time()
     say("autopilot start")
 
-    # 1. wait for the resolver
+    # 1. wait for the resolver, leaving a trace on every poll
+    polls = 0
     while resolver_running():
+        polls += 1
+        ALIVE.write_text(json.dumps({
+            "pid": os.getpid(),
+            "phase": "waiting-for-resolver",
+            "polls": polls,
+            "last_seen": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        }, indent=2), encoding="utf-8")
+        if polls % 5 == 1:  # every ~10 minutes, so the log stays readable
+            say(f"waiting for the resolver (poll {polls})")
         if time.time() - started > MAX_WAIT_HOURS * 3600:
             say("resolver still running after the maximum wait; giving up without deploying")
             RESULT.write_text(json.dumps({"status": "timeout"}, indent=2), encoding="utf-8")
