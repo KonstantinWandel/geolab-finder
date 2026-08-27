@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import html
 import json
 import ssl
 import time
@@ -28,7 +29,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_SOURCES = REPO_ROOT / "data_sources"
@@ -199,8 +200,68 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
             "note": "DescribeFeatureType per ISR feature type, i.e. the attribute list per layer.",
         },
     ],
+    "openstreetmap-poi-layer-overpass": [
+        {"name": "map_features.html", "url": "https://wiki.openstreetmap.org/wiki/Map_features",
+         "kind": "documentation", "note": "The tag reference the POI layers are defined against."},
+        {"name": "taginfo_counts.json",
+         "url": "https://taginfo.geofabrik.de/europe:germany/api/4/tag/stats",
+         "kind": "catalogue", "handler": "taginfo_counts",
+         "note": "Germany-only object count per POI layer, so each record states a measured "
+                 "magnitude. Overpass would answer the same question but every mirror is refused "
+                 "at the network level from this host (connection refused, not a timeout)."},
+    ],
+    "wegweiser-kommune-bertelsmann-stiftung": [
+        {"name": "portal.html", "url": "https://www.wegweiser-kommune.de/", "kind": "portal", "note": ""},
+        {"name": "statistik.html", "url": "https://www.wegweiser-kommune.de/statistik", "kind": "catalogue",
+         "note": "Liferay app: the indicator tree is loaded client-side, so only the theme level is "
+                 "readable from the HTML."},
+    ],
+    "dwd-climate-data-center-cdc": [
+        {"name": "cdc_tree.json", "url": "https://opendata.dwd.de/climate_environment/CDC",
+         "kind": "catalogue", "handler": "dwd_tree",
+         "note": "The Apache directory tree IS the DWD catalogue: aggregation level by variable, "
+                 "each with a directory link that can be verified."},
+    ],
+    "boris-d-bodenrichtwerte": [
+        {"name": "portal.html", "url": "https://www.bodenrichtwerte-boris.de/", "kind": "portal", "note": ""},
+        {"name": "csw_bodenrichtwerte.xml", "url": "https://gdk.gdi-de.org/gdi-de/srv/eng/csw?service=CSW&version=2.0.2&request=GetRecords&typeNames=csw:Record&resultType=results&elementSetName=summary&constraintLanguage=CQL_TEXT&constraint_language_version=1.1.0&outputSchema=http%3A%2F%2Fwww.opengis.net%2Fcat%2Fcsw%2F2.0.2&constraint=AnyText%20like%20%27%25bodenrichtwert%25%27", "kind": "catalogue", "handler": "csw_records",
+         "note": "BORIS-D is a viewer over the Laender services and publishes no catalogue of its "
+                 "own, so the dataset titles come from the official GDI-DE metadata catalogue "
+                 "(Geodatenkatalog.de) instead."},
+    ],
+    "wahlergebnisse-bundeswahlleiterin": [
+        {"name": "btw2025_ergebnisse.html", "url": "https://www.bundeswahlleiterin.de/bundestagswahlen/2025/ergebnisse.html", "kind": "catalogue", "note": ""},
+        {"name": "btw2025_kerg2.csv", "url": "https://www.bundeswahlleiterin.de/dam/jcr/f49a47a1-735b-4e9b-b4e1-4c73cad2292e/btw25_kerg2.csv", "kind": "sample",
+         "note": "Wahlkreis results 2025 in the long 'kerg2' layout; its header defines the result variables."},
+        {"name": "btw_ab49_datenbank_ergebnisse.csv", "url": "https://www.bundeswahlleiterin.de/dam/jcr/24d8e745-920d-431a-893a-12805bc7ef40/btw_ab49_datenbank_ergebnisse.csv", "kind": "sample",
+         "note": "Results database for every Bundestag election since 1949."},
+        {"name": "europawahl2024_ergebnisse.html", "url": "https://www.bundeswahlleiterin.de/europawahlen/2024/ergebnisse.html", "kind": "catalogue", "note": ""},
+    ],
+    "ioer-monitor-flaechennutzung": [
+        {"name": "portal.html", "url": "https://www.ioer-monitor.de/", "kind": "portal", "note": ""},
+        {"name": "indikatoren.html", "url": "https://www.ioer-monitor.de/indikatoren/", "kind": "catalogue",
+         "note": "Theme level only. The full ~90-indicator table and the WMS/WCS/WFS URLs sit "
+                 "behind the app's user area, which needs a personal key."},
+    ],
+    "rwi-geo-grid-rwi-geo-red-fdz-ruhr": [
+        {"name": "portal.html", "url": "https://fdz.rwi-essen.de/", "kind": "portal", "note": ""},
+        {"name": "fdz_datasets.json", "url": "https://fdz.rwi-essen.de/", "kind": "catalogue",
+         "handler": "fdz_datasets",
+         "note": "The portal lists every dataset only as a 'Details' link, so titles, DOIs, "
+                 "keywords and abstracts are harvested from the da|ra detail pages."},
+    ],
     "deutsche-bahn-bahnhofsuche": [
         {"name": "portal.html", "url": "https://www.bahnhof.de/bahnhof-de", "kind": "portal", "note": ""},
+        {
+            "name": "stada_stations.json",
+            "url": "https://apis.deutschebahn.com/db-api-marketplace/apis/station-data/v2/stations?limit=10000",
+            "kind": "catalogue",
+            "handler": "db_stada",
+            "note": "StaDa station data, 5,408 stations with category, price category, accessibility, "
+                    "facilities, Aufgabentraeger and WGS84 coordinates. Needs BOTH marketplace "
+                    "credentials in ~/.config/secrets/db_stada.txt (clientid= and key=): the key "
+                    "alone answers 401 'Invalid client id or secret'.",
+        },
     ],
     "open-data-oepnv": [
         {"name": "portal.html", "url": "https://www.opendata-oepnv.de/ht/de/willkommen", "kind": "portal", "note": "Downloading a dataset needs a free account; the catalogue itself is public."},
@@ -299,6 +360,13 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
     ],
     "strukturdaten-bundestagswahl-2021": [
         {
+            "name": "btw2025_strukturdaten.csv",
+            "url": "https://www.bundeswahlleiterin.de/dam/jcr/181f9e38-38db-4f64-991c-8141dfa0f2cb/btw2025_strukturdaten.csv",
+            "kind": "sample",
+            "note": "Strukturdaten for the 2025 constituencies. Same layout as 2021: a 'Spalten-Nr' "
+                    "header row followed by one column per indicator.",
+        },
+        {
             "name": "btw21_strukturdaten.csv",
             "url": "https://www.bundeswahlleiter.de/dam/jcr/b1d3fc4f-17eb-455f-a01c-a0bf32135c5d/btw21_strukturdaten.csv",
             "kind": "catalogue",
@@ -349,10 +417,258 @@ MANUAL: Dict[str, str] = {
     "deutsche-bahn-infrastrukturregister": (
         "OPEN: the ISR viewer requires a company registration (Unternehmen, Art des Unternehmens "
         "EVU/ZB | EIU | Anderes, Hinweise zur Registrierung). For a university researcher that is "
-        "'Anderes / Sonstige'. Without it, DB's StaDa station dataset and OSM railway data are the "
-        "systematic alternatives."
+        "'Anderes / Sonstige'. RESOLVED 2026-08-25 anyway: the viewer's GeoServer is public, so no "
+        "registration was needed. StaDa (row 16) covers the stations themselves."
     ),
 }
+
+
+def fetch_db_stada(url: str, target: Path) -> Dict[str, Any]:
+    """DB API Marketplace needs two headers, `DB-Client-Id` and `DB-Api-Key`. Sending only the
+    key (or the same value as both) answers 401 'Invalid client id or secret', which reads like a
+    wrong key rather than a missing one."""
+    secret = Path.home() / "kwandel" / ".config" / "secrets" / "db_stada.txt"
+    if not secret.exists():
+        raise OSError(f"missing {secret}")
+    values = dict(
+        line.split("=", 1) for line in secret.read_text(encoding="utf-8").splitlines() if "=" in line
+    )
+    client_id = values.get("clientid", "").strip()
+    api_key = values.get("key", "").strip()
+    if not client_id or not api_key:
+        raise OSError(f"{secret} needs both clientid= and key=")
+    started = time.time()
+    request = urllib.request.Request(url, headers={
+        "User-Agent": UA, "Accept": "application/json",
+        "DB-Client-Id": client_id, "DB-Api-Key": api_key,
+    })
+    with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+        payload = response.read()
+        status = response.status
+        content_type = response.headers.get("Content-Type", "")
+    document = json.loads(payload.decode("utf-8"))
+    if len(document.get("result") or []) < document.get("total", 0):
+        raise OSError(f"StaDa returned {len(document.get('result') or [])} of {document.get('total')} stations")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {
+        "status": status, "bytes": len(payload), "content_type": content_type,
+        "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+        "stations": document.get("total"),
+    }
+
+
+# POI layers worth indexing, chosen for the questions the workbook actually asks (distance to
+# the nearest playground, pharmacy, school, place of worship, stop). Each layer lists the OSM
+# tags it is made of, the Overpass selector a user would run, and a German label. Counts come
+# from taginfo, so every record states a measured magnitude for Germany.
+OSM_POI_LAYERS: List[Tuple[str, List[Tuple[str, str]], str, str]] = [
+    ("playground", [("leisure", "playground")], '["leisure"="playground"]', "Spielplätze"),
+    ("pharmacy", [("amenity", "pharmacy")], '["amenity"="pharmacy"]', "Apotheken"),
+    ("doctors", [("amenity", "doctors")], '["amenity"="doctors"]', "Arztpraxen"),
+    ("dentist", [("amenity", "dentist")], '["amenity"="dentist"]', "Zahnarztpraxen"),
+    ("hospital", [("amenity", "hospital")], '["amenity"="hospital"]', "Krankenhäuser"),
+    ("clinic", [("amenity", "clinic")], '["amenity"="clinic"]', "Kliniken und Ambulanzen"),
+    ("school", [("amenity", "school")], '["amenity"="school"]', "Schulen"),
+    ("kindergarten", [("amenity", "kindergarten")], '["amenity"="kindergarten"]',
+     "Kindergärten und Kitas"),
+    ("university", [("amenity", "university"), ("amenity", "college")],
+     '["amenity"~"^(university|college)$"]', "Hochschulen"),
+    ("library", [("amenity", "library")], '["amenity"="library"]', "Bibliotheken"),
+    ("place_of_worship", [("amenity", "place_of_worship")], '["amenity"="place_of_worship"]',
+     "Gotteshäuser"),
+    ("cinema", [("amenity", "cinema")], '["amenity"="cinema"]', "Kinos"),
+    ("theatre", [("amenity", "theatre")], '["amenity"="theatre"]', "Theater"),
+    ("restaurant", [("amenity", "restaurant"), ("amenity", "cafe"), ("amenity", "fast_food"),
+                    ("amenity", "pub"), ("amenity", "bar")],
+     '["amenity"~"^(restaurant|cafe|fast_food|pub|bar)$"]', "Gastronomiebetriebe"),
+    ("supermarket", [("shop", "supermarket")], '["shop"="supermarket"]', "Supermärkte"),
+    ("bank", [("amenity", "bank")], '["amenity"="bank"]', "Bankfilialen"),
+    ("post_office", [("amenity", "post_office")], '["amenity"="post_office"]', "Postfilialen"),
+    ("social_facility", [("amenity", "social_facility")], '["amenity"="social_facility"]',
+     "Soziale Einrichtungen (u. a. Pflegeheime, Tafeln, Beratungsstellen)"),
+    ("community_centre", [("amenity", "community_centre")], '["amenity"="community_centre"]',
+     "Bürger- und Gemeinschaftshäuser"),
+    ("bus_stop", [("highway", "bus_stop")], '["highway"="bus_stop"]', "Bushaltestellen"),
+    ("railway_station", [("railway", "station"), ("railway", "halt")],
+     '["railway"~"^(station|halt)$"]', "Bahnhöfe und Haltepunkte"),
+    ("sports", [("leisure", "sports_centre"), ("leisure", "pitch"), ("leisure", "fitness_centre"),
+                ("leisure", "swimming_pool")],
+     '["leisure"~"^(sports_centre|pitch|fitness_centre|swimming_pool)$"]', "Sportanlagen"),
+    ("park", [("leisure", "park"), ("leisure", "garden")], '["leisure"~"^(park|garden)$"]',
+     "Parks und Grünflächen"),
+    ("charging_station", [("amenity", "charging_station")], '["amenity"="charging_station"]',
+     "Ladesäulen für E-Autos"),
+    ("police", [("amenity", "police"), ("amenity", "fire_station")],
+     '["amenity"~"^(police|fire_station)$"]', "Polizei- und Feuerwachen"),
+    ("fuel", [("amenity", "fuel")], '["amenity"="fuel"]', "Tankstellen"),
+]
+
+# Germany-only taginfo instance. Overpass would give the same counts, but every Overpass mirror
+# is refused at the network level from this host, and taginfo is a documented JSON API that is
+# reachable, so the counts come from there and the Overpass query stays in the record as the
+# recipe a user runs themselves.
+TAGINFO_GERMANY = "https://taginfo.geofabrik.de/europe:germany/api/4/tag/stats"
+
+
+def fetch_taginfo_counts(url: str, target: Path) -> Dict[str, Any]:
+    """Count each POI layer in Germany from taginfo, summing over the tags a layer is made of."""
+    started = time.time()
+    layers: Dict[str, Any] = {}
+    data_until = ""
+    for key, tags, selector, label in OSM_POI_LAYERS:
+        per_tag: Dict[str, int] = {}
+        for tag_key, tag_value in tags:
+            query = f"{url}?key={urllib.parse.quote(tag_key)}&value={urllib.parse.quote(tag_value)}"
+            request = urllib.request.Request(query, headers={"User-Agent": UA, "Accept": "application/json"})
+            try:
+                with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+                    document = json.loads(response.read().decode("utf-8"))
+            except (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError) as exc:
+                per_tag[f"{tag_key}={tag_value}"] = -1
+                print(f"       taginfo {tag_key}={tag_value}: FAILED {exc}")
+                continue
+            data_until = document.get("data_until") or data_until
+            total = next((row.get("count", 0) for row in document.get("data", [])
+                          if row.get("type") == "all"), 0)
+            per_tag[f"{tag_key}={tag_value}"] = int(total)
+        counted = [value for value in per_tag.values() if value >= 0]
+        layers[key] = {"label": label, "selector": selector, "tags": per_tag,
+                       "total": sum(counted) if counted else None}
+        print(f"       taginfo {key}: {layers[key]['total']}")
+    payload = json.dumps({"source": url, "area": "europe:germany", "data_until": data_until,
+                          "counted_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                          "layers": layers}, ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "layers": len(layers)}
+
+
+def fetch_dwd_tree(url: str, target: Path) -> Dict[str, Any]:
+    """Walk the DWD CDC directory listing two levels deep and record the real product tree.
+
+    opendata.dwd.de is a plain Apache index, so the tree IS the catalogue: which variable exists
+    at which aggregation, with a directory link that can be verified.
+    """
+    started = time.time()
+    tree: Dict[str, Dict[str, List[str]]] = {}
+
+    def listing(path: str) -> List[str]:
+        request = urllib.request.Request(path, headers={"User-Agent": UA})
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+            body = response.read().decode("utf-8", errors="replace")
+        return [name for name in re.findall(r'href="([A-Za-z0-9_.\-]+/)"', body)
+                if not name.startswith("..")]
+
+    for branch in ("grids_germany", "observations_germany/climate"):
+        base = f"{url.rstrip('/')}/{branch}/"
+        tree[branch] = {}
+        for aggregation in listing(base):
+            try:
+                tree[branch][aggregation.strip("/")] = [v.strip("/") for v in listing(base + aggregation)]
+            except (urllib.error.URLError, urllib.error.HTTPError, OSError) as exc:
+                tree[branch][aggregation.strip("/")] = [f"__error__ {exc}"]
+    payload = json.dumps({"root": url, "tree": tree,
+                          "listed_at": datetime.now(timezone.utc).isoformat(timespec="seconds")},
+                         ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    branches = sum(len(v) for v in tree.values())
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "aggregations": branches}
+
+
+def fetch_csw_records(url: str, target: Path) -> Dict[str, Any]:
+    """Page through a GDI-DE CSW GetRecords query and keep the Dublin Core summaries.
+
+    Geodatenkatalog.de is the official German spatial metadata catalogue, and for sources whose
+    own portal is a JS app (BORIS-D) it is the only machine-readable route to the dataset titles.
+    """
+    started = time.time()
+    records: List[str] = []
+    matched = 0
+    for start in range(1, 402, 100):
+        page = f"{url}&startPosition={start}&maxRecords=100"
+        request = urllib.request.Request(page, headers={"User-Agent": UA})
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+            body = response.read().decode("utf-8", errors="replace")
+        if not matched:
+            found = re.search(r'numberOfRecordsMatched="(\d+)"', body)
+            matched = int(found.group(1)) if found else 0
+        chunk = re.findall(r"<csw:SummaryRecord[ >].*?</csw:SummaryRecord>", body, re.S)
+        if not chunk:
+            break
+        records.extend(chunk)
+        if len(records) >= matched:
+            break
+    payload = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records matched=\"%d\">\n%s\n</records>\n"
+               % (matched, "\n".join(records))).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/xml",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "records": len(records), "matched": matched}
+
+
+def fetch_fdz_datasets(url: str, target: Path) -> Dict[str, Any]:
+    """Harvest the FDZ Ruhr dataset catalogue from its da|ra detail pages.
+
+    The portal lists only "Details" as link text, so the titles, DOIs, keywords and abstracts
+    have to come from the detail pages themselves. One page per dataset, so the catalogue is
+    complete rather than a hand-picked subset.
+    """
+    started = time.time()
+
+    def page(target_url: str) -> str:
+        request = urllib.request.Request(target_url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+            return response.read().decode("utf-8", errors="replace")
+
+    index = page(url)
+    paths = sorted({match for match in re.findall(r'href="(/doi-detail/[^"]+\.html)"', index)})
+    base = "https://fdz.rwi-essen.de"
+
+    def field(body: str, name: str) -> str:
+        found = re.search(rf"<strong>{re.escape(name)}</strong>\s*:?\s*(.*?)</p>", body, re.S)
+        if not found:
+            return ""
+        text = re.sub(r"<[^>]+>", " ", found.group(1))
+        return " ".join(html.unescape(text).split())
+
+    datasets: List[Dict[str, Any]] = []
+    for path in paths:
+        try:
+            body = page(base + path)
+        except (urllib.error.URLError, urllib.error.HTTPError, OSError) as exc:
+            print(f"       fdz {path}: FAILED {exc}")
+            continue
+        heading = re.search(r"<h1[^>]*>(.*?)</h1>", body, re.S)
+        section = re.search(r"Beschreibung</h2>(.*?)(?:<h2|\Z)", body, re.S)
+        description = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", section.group(1))).split()) if section else ""
+        keywords = re.search(r"Schlagworte</h2>(.*?)(?:<h2|\Z)", body, re.S)
+        datasets.append({
+            "url": base + path,
+            "name": " ".join(html.unescape(re.sub(r"<[^>]+>", "", heading.group(1))).split()) if heading else "",
+            "title": field(body, "Titel"),
+            "doi": field(body, "DOI"),
+            "language": field(body, "Sprache"),
+            "access": field(body, "Verfügbarkeit") or field(body, "Zugangsbedingungen"),
+            "period": field(body, "Zeitraum") or field(body, "Zeitliche Abdeckung"),
+            "geography": field(body, "Geographische Abdeckung") or field(body, "Raum"),
+            "keywords": " ".join(html.unescape(re.sub(r"<[^>]+>", " ", keywords.group(1))).split()) if keywords else "",
+            "description": description[:2000],
+        })
+    payload = json.dumps({"index": url, "datasets": datasets,
+                          "harvested_at": datetime.now(timezone.utc).isoformat(timespec="seconds")},
+                         ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "datasets": len(datasets)}
 
 
 def sha256_of(path: Path) -> str:
@@ -554,6 +870,16 @@ def main() -> None:
             try:
                 if artifact.get("handler") == "genesapi_keys":
                     result = fetch_genesapi_keys(artifact["url"], target)
+                elif artifact.get("handler") == "taginfo_counts":
+                    result = fetch_taginfo_counts(artifact["url"], target)
+                elif artifact.get("handler") == "dwd_tree":
+                    result = fetch_dwd_tree(artifact["url"], target)
+                elif artifact.get("handler") == "fdz_datasets":
+                    result = fetch_fdz_datasets(artifact["url"], target)
+                elif artifact.get("handler") == "csw_records":
+                    result = fetch_csw_records(artifact["url"], target)
+                elif artifact.get("handler") == "db_stada":
+                    result = fetch_db_stada(artifact["url"], target)
                 elif artifact.get("handler") == "isr_wfs_attributes":
                     result = fetch_isr_attributes(artifact["url"], target)
                 else:

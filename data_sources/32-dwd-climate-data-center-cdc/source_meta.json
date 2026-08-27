@@ -1,0 +1,53 @@
+{
+  "name": "DWD Climate Data Center (CDC)",
+  "slug": "dwd-climate-data-center-cdc",
+  "url": "https://opendata.dwd.de/climate_environment/CDC/",
+  "excel_row": 33,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "machine-readable API"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": false,
+    "API": true,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Adressen / Koordinaten",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Gesundheit",
+    "Nachhaltigkeit"
+  ],
+  "topics": [
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Nachhaltigkeit"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Umwelt"
+    }
+  ],
+  "topic_labels": [
+    "Gesundheit",
+    "Nachhaltigkeit",
+    "Umwelt"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": null,
+  "coverage_end_month": null,
+  "coverage_end_year": 2026,
+  "update_frequency": "täglich",
+  "note": "Stations- und Rasterdaten (1 km) zu Temperatur, Niederschlag, Sonnenschein, Hitze- und Frosttagen; offen ohne Anmeldung"
+}

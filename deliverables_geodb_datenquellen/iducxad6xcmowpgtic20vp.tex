@@ -16,7 +16,7 @@
 \centering
 \begin{talltblr}[         %% tabularray outer open
 entry=none,label=none,
-note{}={Stand: 2026-08-27. 29 Datenquellen: 17 fertig, 6 teilweise, 6 offen; 10222 indexierte Merkmale im Finder (geodb.geolab.soz.uni-bielefeld.de). Status: fertig = nichts offen; teilweise = eingebunden, vollstaendigerer Katalog erreichbar; offen = manueller Schritt noetig. Verlinkungstiefe: Indikator/Tabelle = der Treffer oeffnet genau die Groesse, Statistik/Datensatz = die enthaltende Einheit, Portal = Einstiegsseite. Erzeugt aus scripts/build\_status\_report.py + scripts/render\_progress\_table.R.},
+note{}={Stand: 2026-08-27. 29 Datenquellen: 20 fertig, 3 teilweise, 6 offen; 10554 indexierte Merkmale im Finder (geodb.geolab.soz.uni-bielefeld.de). Status: fertig = nichts offen; teilweise = eingebunden, vollstaendigerer Katalog erreichbar; offen = manueller Schritt noetig. Verlinkungstiefe: Indikator/Tabelle = der Treffer oeffnet genau die Groesse, Statistik/Datensatz = die enthaltende Einheit, Portal = Einstiegsseite. Erzeugt aus scripts/build\_status\_report.py + scripts/render\_progress\_table.R.},
 ]                     %% tabularray outer close
 {                     %% tabularray inner open
 width={1\linewidth},
@@ -43,7 +43,7 @@ Nr. & Datenquelle & Status & Dat. & Anz. & Verlinkung & Stand / offener Schritt 
 1 & Regionalatlas Deutschland & fertig & 3 & 233 & Indikator 232 & Nichts offen; Katalog bei Aktualisierung neu ziehen \\
 2 & Breitband-Monitor & fertig & 7 & 633 & Datensatz 632 & Eingebunden: Breitbandatlas, Mobilfunk-Monitoring und Rasterdaten (Gitterzellen) \\
 3 & Breitbandatlas & offen & 1 & 1 & Portal 1 & Nachfolger Gigabitgrundbuch; Indikatorliste fehlt noch \\
-4 & Arbeitsmarktstatistik BA - Karte & teilweise & 3 & 1 & Portal 1 & Glossar eingebunden; Karten-Indikatorliste nicht maschinenlesbar \\
+4 & Arbeitsmarktstatistik BA - Karte & fertig & 4 & 314 & Datensatz 313 & 313 Glossarbegriffe eingebunden; die Karte selbst hat keinen maschinenlesbaren Katalog \\
 5 & Strukturdaten und -indikatoren - BA & fertig & 2 & 69 & Datensatz 68 & Nichts offen; neueres Heft bei Bedarf \\
 6 & Arbeitsmarktreport BA & fertig & 2 & 289 & Datensatz 288 & 288 Merkmale aus 17 Blättern eingebunden, monatliche Reihe \\
 7 & Arbeitsmarkt kommunal - BA & fertig & 2 & 34 & Datensatz 33 & Gemeindescharfe Merkmale eingebunden; weitere Kreis-Hefte optional \\
@@ -59,11 +59,11 @@ Nr. & Datenquelle & Status & Dat. & Anz. & Verlinkung & Stand / offener Schritt 
 17 & Open Data - ÖPNV & fertig & 5 & 324 & Datensatz 317, Portal 6 & 71 Datensätze und die Feldschemata von GTFS und NeTEx eingebunden \\
 18 & Spielplatztreff - Suchmaschine für Spielplätze & offen & 1 & 1 & Portal 1 & Kein Export; OSM wäre die systematische Alternative \\
 19 & Spielplatzkarte & offen & 1 & 1 & Portal 1 & Kein Export; wie Spielplatztreff \\
-20 & Destatis - Regionale Mobilität und Infektionsgeschehen & teilweise & 1 & 1 & Portal 1 & Eingestellt (2020-2022); Indikatoren optional nachtragbar \\
+20 & Destatis - Regionale Mobilität und Infektionsgeschehen & fertig & 1 & 7 & Datensatz 6 & Eingestellt (2020-2022); 6 Indikatorgruppen eingebunden, Einstellung auf jedem Datensatz vermerkt \\
 21 & Datenguide (abgeschaltet) & fertig & 4 & 3306 & Portal 1596, Tabelle 866, Statistik 843 & Merkmalskatalog (2.757) + 866 Regionaltabellen eingebunden \\
 22 & INKAR & fertig & 1 & 0 & Portal 1 & Ursprungsquelle des Finders \\
 23 & German Companies & fertig & 3 & 13 & Datensatz 12 & Felder eingebunden; kein Bulk-Download möglich (Lookup-API) \\
-24 & Open Data Handelsregister & teilweise & 2 & 1 & Portal 1 & Nur Portaleintrag; Feldliste nachtragbar \\
+24 & Open Data Handelsregister & fertig & 2 & 14 & Datensatz 13 & 13 Registerfelder eingebunden; der Volldump wird bewusst nicht geladen \\
 25 & Ländermonitor Frühkindliche Bildungssysteme & fertig & 5 & 18 & Datensatz 17 & 17 Indikatoren mit offiziellen Methodik-Definitionen eingebunden \\
 26 & Strukturdaten Bundestagswahl 2021 & fertig & 2 & 50 & Datensatz 49 & Nichts offen; Strukturdaten 2025 wären eine Erweiterung \\
 27 & Unfallatlas & fertig & 11 & 26 & Datensatz 25 & Eingebunden: 25 Merkmale, Unfalljahre 2016-2025, punktgenau \\

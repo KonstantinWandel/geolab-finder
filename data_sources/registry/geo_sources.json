@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "workbook": "Geospatial_Data_Sources.xlsx",
-  "n_sources": 29,
+  "n_sources": 36,
   "sources": [
     {
       "name": "Regionalatlas Deutschland",
@@ -2386,7 +2386,10 @@
         "Bauen / Wohnen",
         "Bevölkerung",
         "Bildung",
+        "Flächennutzung",
+        "Gesundheit",
         "Soziales",
+        "Verkehr / Mobilität",
         "Wirtschaft und Unternehmen"
       ],
       "topics": [
@@ -2407,8 +2410,20 @@
           "topic": "Bildung"
         },
         {
+          "group": "Flächennutzung",
+          "topic": "Flächennutzung"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Gesundheit"
+        },
+        {
           "group": "Soziales",
           "topic": "Soziales"
+        },
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "Verkehr / Mobilität"
         },
         {
           "group": "Wirtschaft und Unternehmen",
@@ -2420,7 +2435,10 @@
         "Bauen / Wohnen",
         "Bevölkerung",
         "Bildung",
+        "Flächennutzung",
+        "Gesundheit",
         "Soziales",
+        "Verkehr / Mobilität",
         "Wirtschaft und Unternehmen"
       ],
       "coverage_start_month": null,
@@ -2456,14 +2474,618 @@
         "weitere räumliche Gliederungen"
       ],
       "topic_groups": [
+        "Arbeitsmarkt & Beschäftigung",
         "Bauen / Wohnen",
         "Bevölkerung",
-        "Bildung"
+        "Bildung",
+        "Migration",
+        "Religion"
+      ],
+      "topics": [
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Arbeitsmarkt & Beschäftigung"
+        },
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Bauen / Wohnen"
+        },
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Wohnfläche je Wohnung / Einwohner"
+        },
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Einwohner je Wohnung"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerung"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerungsstand"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerung nach Geschlecht / Alter"
+        },
+        {
+          "group": "Bildung",
+          "topic": "Bildung"
+        },
+        {
+          "group": "Migration",
+          "topic": "Migration"
+        },
+        {
+          "group": "Religion",
+          "topic": "Religion"
+        }
+      ],
+      "topic_labels": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Bauen / Wohnen",
+        "Wohnfläche je Wohnung / Einwohner",
+        "Einwohner je Wohnung",
+        "Bevölkerung",
+        "Bevölkerungsstand",
+        "Bevölkerung nach Geschlecht / Alter",
+        "Bildung",
+        "Migration",
+        "Religion"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 2022,
+      "coverage_end_month": null,
+      "coverage_end_year": 2022,
+      "update_frequency": "alle 10 Jahre",
+      "note": "Gebäude, Wohnungen, Haushalte und Personenmerkmale; Ebene steckt im Tabellencode, bis Gemeinde/Gitterzelle"
+    },
+    {
+      "name": "OpenStreetMap POI-Layer (Overpass)",
+      "slug": "openstreetmap-poi-layer-overpass",
+      "url": "https://wiki.openstreetmap.org/wiki/Map_features",
+      "excel_row": 31,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only",
+        "machine-readable API",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": true,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "PLZ",
+        "Adressen / Koordinaten",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Bildung",
+        "Gesundheit",
+        "Kinder und Jugend",
+        "Kultur",
+        "Nachhaltigkeit",
+        "Religion",
+        "Sport",
+        "Verkehr / Mobilität",
+        "Wirtschaft und Unternehmen"
+      ],
+      "topics": [
+        {
+          "group": "Bildung",
+          "topic": "Anzahl Schulen"
+        },
+        {
+          "group": "Bildung",
+          "topic": "Distanz nächste Schule/Hochschule/VHS"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Gesundheit"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Distanz zum nächsten (Fach-)Arzt"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Distanz zur nächsten Apotheke"
+        },
+        {
+          "group": "Kinder und Jugend",
+          "topic": "Kinder und Jugend"
+        },
+        {
+          "group": "Kinder und Jugend",
+          "topic": "Distanz nächster Spielplatz"
+        },
+        {
+          "group": "Kultur",
+          "topic": "Kultur"
+        },
+        {
+          "group": "Kultur",
+          "topic": "Kinos"
+        },
+        {
+          "group": "Kultur",
+          "topic": "Distanz nächstes Theater"
+        },
+        {
+          "group": "Kultur",
+          "topic": "Anzahl Gastronomiebetriebe / Bewohner"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Bildung"
+        },
+        {
+          "group": "Religion",
+          "topic": "Religion"
+        },
+        {
+          "group": "Religion",
+          "topic": "Distanz zum nächsten Gotteshaus"
+        },
+        {
+          "group": "Sport",
+          "topic": "Sport"
+        },
+        {
+          "group": "Sport",
+          "topic": "Sportanlagen / Einwohner"
+        },
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "Verkehr / Mobilität"
+        },
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "ÖPNV"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Wirtschaft und Unternehmen"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Anzahl Läden / Bewohner"
+        }
+      ],
+      "topic_labels": [
+        "Anzahl Schulen",
+        "Distanz nächste Schule/Hochschule/VHS",
+        "Gesundheit",
+        "Distanz zum nächsten (Fach-)Arzt",
+        "Distanz zur nächsten Apotheke",
+        "Kinder und Jugend",
+        "Distanz nächster Spielplatz",
+        "Kultur",
+        "Kinos",
+        "Distanz nächstes Theater",
+        "Anzahl Gastronomiebetriebe / Bewohner",
+        "Bildung",
+        "Religion",
+        "Distanz zum nächsten Gotteshaus",
+        "Sport",
+        "Sportanlagen / Einwohner",
+        "Verkehr / Mobilität",
+        "ÖPNV",
+        "Wirtschaft und Unternehmen",
+        "Anzahl Läden / Bewohner"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 2004,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "laufend",
+      "note": "Overpass-API, freie Abfrage nach Tags; systematischer Ersatz für die Spielplatz- und Arztsuchportale"
+    },
+    {
+      "name": "Wegweiser Kommune (Bertelsmann Stiftung)",
+      "slug": "wegweiser-kommune-bertelsmann-stiftung",
+      "url": "https://www.wegweiser-kommune.de/",
+      "excel_row": 32,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": false,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden"
+      ],
+      "topic_groups": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Bauen / Wohnen",
+        "Bevölkerung",
+        "Bildung",
+        "Finanzen",
+        "Nachhaltigkeit",
+        "Soziales"
+      ],
+      "topics": [
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Arbeitsmarkt & Beschäftigung"
+        },
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Arbeitslose (-nquote)"
+        },
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Bauen / Wohnen"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerung"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerungsstand"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerung nach Geschlecht / Alter"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Wanderungen"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Durchschnittsalter"
+        },
+        {
+          "group": "Bildung",
+          "topic": "Betreuungsquote"
+        },
+        {
+          "group": "Finanzen",
+          "topic": "Finanzen"
+        },
+        {
+          "group": "Finanzen",
+          "topic": "Schulden je Einwohner"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Bildung"
+        },
+        {
+          "group": "Soziales",
+          "topic": "Soziales"
+        },
+        {
+          "group": "Soziales",
+          "topic": "Sozialleistungen"
+        }
+      ],
+      "topic_labels": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Arbeitslose (-nquote)",
+        "Bauen / Wohnen",
+        "Bevölkerung",
+        "Bevölkerungsstand",
+        "Bevölkerung nach Geschlecht / Alter",
+        "Wanderungen",
+        "Durchschnittsalter",
+        "Betreuungsquote",
+        "Finanzen",
+        "Schulden je Einwohner",
+        "Bildung",
+        "Soziales",
+        "Sozialleistungen"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 2006,
+      "coverage_end_month": null,
+      "coverage_end_year": 2040,
+      "update_frequency": "jährlich",
+      "note": "Bevölkerungsprognosen bis 2040 für Gemeinden ab 5.000 Einwohnern"
+    },
+    {
+      "name": "DWD Climate Data Center (CDC)",
+      "slug": "dwd-climate-data-center-cdc",
+      "url": "https://opendata.dwd.de/climate_environment/CDC/",
+      "excel_row": 33,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "machine-readable API"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": false,
+        "API": true,
+        "Karte": false,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Adressen / Koordinaten",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Gesundheit",
+        "Nachhaltigkeit"
+      ],
+      "topics": [
+        {
+          "group": "Gesundheit",
+          "topic": "Gesundheit"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Nachhaltigkeit"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Umwelt"
+        }
+      ],
+      "topic_labels": [
+        "Gesundheit",
+        "Nachhaltigkeit",
+        "Umwelt"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": null,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "täglich",
+      "note": "Stations- und Rasterdaten (1 km) zu Temperatur, Niederschlag, Sonnenschein, Hitze- und Frosttagen; offen ohne Anmeldung"
+    },
+    {
+      "name": "BORIS-D Bodenrichtwerte",
+      "slug": "boris-d-bodenrichtwerte",
+      "url": "https://www.bodenrichtwerte-boris.de/",
+      "excel_row": 34,
+      "provider": "",
+      "access_modes": [
+        "web UI / search form only",
+        "machine-readable API",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": false,
+        "GUI": true,
+        "API": true,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "Adressen / Koordinaten",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Bauen / Wohnen",
+        "Flächennutzung"
       ],
       "topics": [
         {
           "group": "Bauen / Wohnen",
           "topic": "Bauen / Wohnen"
+        },
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Bautätigkeit und Wohnen"
+        },
+        {
+          "group": "Flächennutzung",
+          "topic": "Flächennutzung"
+        },
+        {
+          "group": "Flächennutzung",
+          "topic": "Bodennutzung"
+        }
+      ],
+      "topic_labels": [
+        "Bauen / Wohnen",
+        "Bautätigkeit und Wohnen",
+        "Flächennutzung",
+        "Bodennutzung"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 2000,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "jährlich",
+      "note": "Bodenrichtwerte der Gutachterausschüsse, Bodenrichtwertzone; Länderportale mit WMS/WFS, Nutzungsbedingungen je Land"
+    },
+    {
+      "name": "Wahlergebnisse Bundeswahlleiterin",
+      "slug": "wahlergebnisse-bundeswahlleiterin",
+      "url": "https://www.bundeswahlleiterin.de/",
+      "excel_row": 35,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": false,
+        "Karte": false,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Politik"
+      ],
+      "topics": [
+        {
+          "group": "Politik",
+          "topic": "Politik"
+        },
+        {
+          "group": "Politik",
+          "topic": "Bundestagswahl"
+        },
+        {
+          "group": "Politik",
+          "topic": "Europawahl"
+        },
+        {
+          "group": "Politik",
+          "topic": "Wahlberechtigte"
+        }
+      ],
+      "topic_labels": [
+        "Politik",
+        "Bundestagswahl",
+        "Europawahl",
+        "Wahlberechtigte"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 1949,
+      "coverage_end_month": null,
+      "coverage_end_year": 2025,
+      "update_frequency": "je Wahl",
+      "note": "Ergebnisse und Strukturdaten für Bundestags- und Europawahlen, Wahlkreis- und Gemeindeebene als CSV"
+    },
+    {
+      "name": "IÖR-Monitor (Flächennutzung)",
+      "slug": "ioer-monitor-flaechennutzung",
+      "url": "https://www.ioer-monitor.de/",
+      "excel_row": 36,
+      "provider": "",
+      "access_modes": [
+        "web UI / search form only",
+        "machine-readable API",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": false,
+        "GUI": true,
+        "API": true,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Flächennutzung",
+        "Nachhaltigkeit",
+        "Verkehr / Mobilität"
+      ],
+      "topics": [
+        {
+          "group": "Flächennutzung",
+          "topic": "Flächennutzung"
+        },
+        {
+          "group": "Flächennutzung",
+          "topic": "nach ALKIS"
+        },
+        {
+          "group": "Flächennutzung",
+          "topic": "Bodennutzung"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Nachhaltigkeit"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Straßenverkehr"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Umwelt"
+        },
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "Verkehr / Mobilität"
+        }
+      ],
+      "topic_labels": [
+        "Flächennutzung",
+        "nach ALKIS",
+        "Bodennutzung",
+        "Nachhaltigkeit",
+        "Straßenverkehr",
+        "Umwelt",
+        "Verkehr / Mobilität"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 2000,
+      "coverage_end_month": null,
+      "coverage_end_year": 2024,
+      "update_frequency": "jährlich",
+      "note": "Rund 90 Indikatoren zur Flächennutzung und Landschaftsqualität, Raster und Verwaltungsebenen, WMS/WFS"
+    },
+    {
+      "name": "RWI-GEO-GRID / RWI-GEO-RED (FDZ Ruhr)",
+      "slug": "rwi-geo-grid-rwi-geo-red-fdz-ruhr",
+      "url": "https://fdz.rwi-essen.de/",
+      "excel_row": 37,
+      "provider": "",
+      "access_modes": [
+        "on request / registration needed"
+      ],
+      "access_flags": {
+        "Direkter Download": false,
+        "GUI": false,
+        "API": false,
+        "Karte": false,
+        "Beantragung": true
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "PLZ",
+        "Adressen / Koordinaten",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Bauen / Wohnen",
+        "Bevölkerung",
+        "Soziales"
+      ],
+      "topics": [
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Bauen / Wohnen"
+        },
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Mietpreise"
         },
         {
           "group": "Bauen / Wohnen",
@@ -2475,26 +3097,37 @@
         },
         {
           "group": "Bevölkerung",
-          "topic": "Bevölkerung nach Geschlecht / Alter"
+          "topic": "Bevölkerungsstand"
         },
         {
-          "group": "Bildung",
-          "topic": "Bildung"
+          "group": "Soziales",
+          "topic": "Soziales"
+        },
+        {
+          "group": "Soziales",
+          "topic": "Einkünfte"
+        },
+        {
+          "group": "Soziales",
+          "topic": "Armutsgefährdung"
         }
       ],
       "topic_labels": [
         "Bauen / Wohnen",
+        "Mietpreise",
         "Wohnfläche je Wohnung / Einwohner",
         "Bevölkerung",
-        "Bevölkerung nach Geschlecht / Alter",
-        "Bildung"
+        "Bevölkerungsstand",
+        "Soziales",
+        "Einkünfte",
+        "Armutsgefährdung"
       ],
       "coverage_start_month": null,
-      "coverage_start_year": 2022,
+      "coverage_start_year": 2005,
       "coverage_end_month": null,
-      "coverage_end_year": 2022,
-      "update_frequency": "alle 10 Jahre",
-      "note": "Gebäude, Wohnungen, Haushalte und Personenmerkmale; Ebene steckt im Tabellencode, bis Gemeinde/Gitterzelle"
+      "coverage_end_year": 2024,
+      "update_frequency": "jährlich",
+      "note": "1-km-Raster mit sozioökonomischen Merkmalen und geocodierte Immobilienanzeigen; Scientific-Use-Files auf Antrag"
     }
   ]
 }

@@ -425,31 +425,32 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def flatten_btw21(source: Dict[str, Any]) -> List[Dict[str, Any]]:
-    raw = source["folder"] / "raw"
-    csv_path = raw / "btw21_strukturdaten.csv"
-    text = csv_path.read_text(encoding="utf-8-sig", errors="replace")
-    lines = [line for line in text.splitlines() if not line.startswith("#")]
-    header: List[str] = []
-    for line in lines:
-        fields = [clean(f) for f in line.split(";")]
-        if fields and fields[0].startswith("Spalten-Nr"):
-            continue
-        if fields and fields[0] == "Land":
-            header = fields
-            break
-    if not header:
-        raise RuntimeError("Could not find the header row in btw21_strukturdaten.csv")
+    """Strukturdaten for the Bundestag constituencies, for every election edition on disk.
 
-    # Descriptions: <h3> indicator heading followed by explanatory text.
+    The 2021 and 2025 files have the same shape (a `Spalten-Nr.` row, then a `Land` header row,
+    then one column per indicator) but different constituency boundaries and reference dates, so
+    each edition is indexed separately: the same label means a different measurement in each.
+    """
+    raw = source["folder"] / "raw"
+    editions = [
+        (2021, "btw21_strukturdaten.csv", "Bundestagswahl 2021",
+         "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/beschreibung.html"),
+        (2025, "btw2025_strukturdaten.csv", "Bundestagswahl 2025",
+         "https://www.bundeswahlleiterin.de/bundestagswahlen/2025/strukturdaten.html"),
+    ]
+
+    # Descriptions: <h3> indicator heading followed by explanatory text (2021 documentation page;
+    # the indicator definitions carry over to 2025).
     descriptions: Dict[str, str] = {}
-    page = (raw / "beschreibung.html").read_text(encoding="utf-8", errors="replace")
-    blocks = re.split(r"<h3[^>]*>", page)[1:]
-    for block in blocks:
-        heading, _, rest = block.partition("</h3>")
-        heading = strip_tags(heading)
-        body = strip_tags(rest.split("<h3")[0])[:1200]
-        if heading:
-            descriptions[heading.lower()] = body
+    page_path = raw / "beschreibung.html"
+    if page_path.exists():
+        page = page_path.read_text(encoding="utf-8", errors="replace")
+        for block in re.split(r"<h3[^>]*>", page)[1:]:
+            heading, _, rest = block.partition("</h3>")
+            heading = strip_tags(heading)
+            body = strip_tags(rest.split("<h3")[0])[:1200]
+            if heading:
+                descriptions[heading.lower()] = body
 
     def tokens(text: str) -> set:
         return {t for t in re.split(r"[^a-zäöüß]+", text.lower()) if len(t) > 3}
@@ -470,35 +471,51 @@ def flatten_btw21(source: Dict[str, Any]) -> List[Dict[str, Any]]:
         return best if best_score >= 0.5 else ""
 
     records: List[Dict[str, Any]] = []
-    for position, column in enumerate(header[3:], start=1):  # skip Land, WK-Nr, WK-Name
-        if not column:
+    for year, filename, edition_label, doc_url in editions:
+        csv_path = raw / filename
+        if not csv_path.exists():
             continue
-        records.append(
-            make_record(
-                source_key="btw21_strukturdaten",
-                link_level="dataset",
-                source_label="Strukturdaten für die Wahlkreise (Bundestagswahl 2021)",
-                item_type="regional_indicator",
-                item_id=f"btw21:{position:02d}",
-                variable_name=f"BTW21-{position:02d}",
-                label=column,
-                dataset_label="Strukturdaten Bundestagswahl 2021",
-                theme="Politik / Wahlkreisstruktur",
-                description=describe(column),
-                spatial_levels=["Bundestagswahlkreise", "Bundesländer"],
-                nuts_levels=["Bundestagswahlkreise", "Bundesländer", "NUTS1"],
-                year_start=source["coverage_start_year"],
-                year_end=source["coverage_end_year"],
-                years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
-                source_url=source["url"],
-                indicator_url="https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/beschreibung.html",
-                access_modes=source["access_modes"],
-                update_frequency=source["update_frequency"],
-                api_hint="Spalte in btw21_strukturdaten.csv (Wahlkreisebene, Bundeswahlleiter).",
+        lines = [line for line in csv_path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+                 if not line.startswith("#")]
+        header: List[str] = []
+        for line in lines:
+            fields = [clean(f) for f in line.split(";")]
+            if fields and fields[0].startswith("Spalten-Nr"):
+                continue
+            if fields and fields[0] == "Land":
+                header = fields
+                break
+        if not header:
+            raise RuntimeError(f"Could not find the header row in {filename}")
+        for position, column in enumerate(header[3:], start=1):  # skip Land, WK-Nr, WK-Name
+            if not column:
+                continue
+            records.append(
+                make_record(
+                    source_key="btw_strukturdaten",
+                    link_level="dataset",
+                    source_label="Strukturdaten für die Wahlkreise (Bundestagswahl)",
+                    item_type="regional_indicator",
+                    item_id=f"btw{year}:{position:02d}",
+                    variable_name=f"BTW{year}-{position:02d}",
+                    label=f"{column} [{year}]",
+                    dataset_label=f"Strukturdaten {edition_label}",
+                    theme="Politik / Wahlkreisstruktur",
+                    description=describe(column),
+                    spatial_levels=["Bundestagswahlkreise", "Bundesländer"],
+                    nuts_levels=["Bundestagswahlkreise", "Bundesländer", "NUTS1"],
+                    year_start=year,
+                    year_end=year,
+                    years_text=str(year),
+                    source_url=source["url"],
+                    indicator_url=doc_url,
+                    access_modes=source["access_modes"],
+                    update_frequency=source["update_frequency"],
+                    api_hint=f"Spalte {position} in {filename} (Wahlkreisebene, Bundeswahlleiterin). "
+                             f"Gebietsstand der Wahlkreise zur {edition_label}.",
+                )
             )
-        )
     return records
-
 
 def flatten_migration_regionen(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     archive_path = source["folder"] / "raw" / "migration_integration_regionen.zip"
@@ -913,16 +930,23 @@ def flatten_deutschlandatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 year_end=years[-1] if years else None,
                 years_text=(f"{years[0]}-{years[-1]}" if len(years) > 1 else (str(years[0]) if years else "")),
                 source_url="https://www.deutschlandatlas.bund.de/",
-                indicator_url="https://www.deutschlandatlas.bund.de/DE/Karten/karten_node.html",
-                # deutschlandatlas.bund.de answers 400 to every scripted request, so its links
-                # are documented but unverifiable from here.
+                # /DE/Karten/karten_node.html was the map entry point and now answers 404 in a
+                # browser too, so the link goes to the download route, which does exist. The atlas
+                # answers 400 to every scripted request, so no link here can be probed from a script.
+                indicator_url="https://www.deutschlandatlas.bund.de/DE/Service/Downloads/downloads_node.html",
                 link_verified=False,
                 access_modes=source["access_modes"] or ["direct file download", "interactive map viewer"],
                 update_frequency=source["update_frequency"],
                 api_hint=(
                     (f"Gebietsstand: {info['gebietsstand']}. " if info.get("gebietsstand") else "")
-                    + f"Indikatorenkürzel {code}. Spalte in 'Deutschlandatlas-Daten.xlsx' bzw. den CSV-Dateien "
-                    "je Gebietsstand (Gemeinde-, Gemeindeverbands- und Kreisebene); fehlende Werte = -9999."
+                    + f"Indikatorenkürzel (Spaltenname) {code}"
+                    + (f", Blatt 'Deutschlandatlas_{info['gebietsstand']}'"
+                       if info.get("gebietsstand") else "")
+                    + " in 'Deutschlandatlas-Daten.xlsx' (Download: "
+                    "https://www.deutschlandatlas.bund.de/SharedDocs/Downloads/DE/"
+                    "Deutschlandatlas-Daten.html), fehlende Werte = -9999. Indikatorendokumentation: "
+                    "https://www.deutschlandatlas.bund.de/SharedDocs/Downloads/DE/"
+                    "Indikatoren_Deutschlandatlas.html"
                 ),
             )
         )
@@ -1959,6 +1983,27 @@ def flatten_breitband_raster(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     return records
 
 
+# BA workbook sheet names are internal shorthand ("Unterbeschäftigung_RK", "Eckwerte_Grusi").
+# They reach the user as the dataset facet, so they are spelled out.
+BA_SHEET_LABELS: Dict[str, str] = {
+    "_RK": " (nach Rechtskreisen)",
+    "_Grusi": " (Grundsicherung)",
+    "Alo_Bestand": "Arbeitslose: Bestand",
+    "Alo_Bewegungen": "Arbeitslose: Zu- und Abgänge",
+    "Alo_Struktur": "Arbeitslose: Struktur",
+}
+
+
+def ba_sheet_label(sheet: str) -> str:
+    """Readable dataset label for a BA workbook sheet name."""
+    if sheet in BA_SHEET_LABELS:
+        return BA_SHEET_LABELS[sheet]
+    for suffix, replacement in BA_SHEET_LABELS.items():
+        if suffix.startswith("_") and sheet.endswith(suffix):
+            return sheet[: -len(suffix)] + replacement
+    return sheet.replace("_", " ")
+
+
 def flatten_ba_arbeitsmarktreport(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     """'Arbeitsmarktreport': a monthly booklet per region whose 22 sheets carry the BA's
     headline labour-market indicators. Labels sit in the first two columns (indented for
@@ -2007,7 +2052,7 @@ def flatten_ba_arbeitsmarktreport(source: Dict[str, Any]) -> List[Dict[str, Any]
                     item_id=f"amr:{sheet}:{len(seen):04d}",
                     variable_name=f"AMR-{len(seen):04d}",
                     label=label[:130],
-                    dataset_label=sheet,
+                    dataset_label=ba_sheet_label(sheet),
                     theme="Arbeitsmarkt & Beschäftigung",
                     description=join_nonempty([
                         f"{label}. Merkmal im Tabellenblatt '{sheet}' des monatlichen "
@@ -2540,6 +2585,160 @@ OFFENEREGISTER_FIELDS: List[Tuple[str, str, str]] = [
 ]
 
 
+# What StaDa records per station. The gloss is authored; the counts in the descriptions are
+# computed from the downloaded file so a record states how much variation the field actually has.
+STADA_FIELDS: List[Tuple[str, str, str]] = [
+    ("category", "Bahnhofskategorie",
+     "Preis- und Ausstattungskategorie 1 bis 7 der Station. Kategorie 1 sind die größten "
+     "Fernverkehrsknoten, Kategorie 7 kleine Haltepunkte. Der üblichste Indikator für die "
+     "Bedeutung eines Bahnhofs im Netz."),
+    ("priceCategory", "Preisklasse der Station",
+     "Preisklasse, nach der das Stationsentgelt berechnet wird."),
+    ("productLine", "Produktlinie der Station",
+     "Funktion im Netz: Metropolbahnhof, Knotenbahnhof, S-Bahnhof, Zubringerbahnhof."),
+    ("hasSteplessAccess", "Stufenfreier Zugang",
+     "Stufenfreier Zugang zu den Bahnsteigen (ja, teilweise, nein). Kernindikator für "
+     "Barrierefreiheit im Nahverkehr."),
+    ("hasMobilityService", "Mobilitätsservice / Ein- und Ausstiegshilfe",
+     "Verfügbarkeit der Ein- und Ausstiegshilfe, oft nur nach Voranmeldung."),
+    ("mobilityServiceStaff", "Personal des Mobilitätsservice",
+     "Anwesenheitszeiten des Mobilitätsservice-Personals je Wochentag und Feiertag."),
+    ("localServiceStaff", "Servicepersonal vor Ort",
+     "Anwesenheitszeiten des Servicepersonals je Wochentag und Feiertag."),
+    ("hasParking", "Park-and-ride / Pkw-Stellplätze",
+     "Pkw-Stellplätze am Bahnhof. Grundlage für Park-and-ride-Analysen."),
+    ("hasBicycleParking", "Fahrradabstellanlage",
+     "Abstellanlagen für Fahrräder am Bahnhof (Bike-and-ride)."),
+    ("hasLocalPublicTransport", "Anschluss an den ÖPNV",
+     "Anschluss an Bus, Tram oder U-Bahn am Bahnhof. Indikator für intermodale Verknüpfung."),
+    ("hasTaxiRank", "Taxistand", "Taxistand am Bahnhof."),
+    ("hasCarRental", "Mietwagenangebot", "Mietwagenschalter oder -station am Bahnhof."),
+    ("hasTravelCenter", "Reisezentrum", "Personalbesetztes Reisezentrum am Bahnhof."),
+    ("hasTravelNecessities", "Reisebedarf / Einkaufsmöglichkeit",
+     "Verkaufsstelle für Reisebedarf am Bahnhof."),
+    ("hasDBLounge", "DB Lounge", "DB Lounge am Bahnhof, faktisch nur an Großstadtknoten."),
+    ("hasLockerSystem", "Schließfächer", "Schließfachanlage am Bahnhof."),
+    ("hasPublicFacilities", "Öffentliche Toiletten", "Oeffentlich zugängliche Toiletten am Bahnhof."),
+    ("hasWiFi", "WLAN am Bahnhof", "Oeffentliches WLAN am Bahnhof."),
+    ("wirelessLan", "WLAN-Details", "Art und Betreiber des WLAN-Angebots, wo erfasst."),
+    ("hasRailwayMission", "Bahnhofsmission",
+     "Bahnhofsmission am Bahnhof, ein Indikator für soziale Infrastruktur am Verkehrsknoten."),
+    ("hasLostAndFound", "Fundbüro", "Fundbüro am Bahnhof."),
+    ("DBinformation", "DB Information",
+     "Servicepoint DB Information mit Öffnungszeiten, wo vorhanden."),
+    ("mailingAddress", "Anschrift des Bahnhofs",
+     "Straße, Postleitzahl und Ort des Bahnhofs. Geocodierbar und auf PLZ-, Gemeinde- oder "
+     "Kreisebene aggregierbar."),
+    ("evaNumbers", "EVA-Nummer und Koordinaten",
+     "EVA-Nummer der Betriebsstelle mit WGS84-Koordinaten (Punktgeometrie). Der Schlüssel, mit "
+     "dem Fahrplandaten (GTFS, NeTEx, HAFAS) an die Station gehängt werden."),
+    ("ril100Identifiers", "RIL100 / Betriebsstellenkürzel",
+     "Betriebsstellenkürzel nach Richtlinie 100 mit Koordinaten und Primary Location Code. "
+     "Verbindet die Station mit dem Infrastrukturregister (ISR) und den Streckendaten."),
+    ("ifopt", "IFOPT-Kennung",
+     "IFOPT-Kennung der Haltestelle (de:<Gemeindeschlüssel>:<Nummer>), die den amtlichen "
+     "Gemeindeschlüssel enthält und damit die Zuordnung zur Gemeinde erlaubt."),
+    ("municipalityCode", "Amtlicher Gemeindeschlüssel",
+     "Amtlicher Gemeindeschlüssel (AGS) der Gemeinde, in der die Station liegt. Der direkte "
+     "Join-Schlüssel zu Gemeinde- und Kreisstatistiken."),
+    ("federalState", "Bundesland der Station",
+     "Bundesland und Bundeslandcode (DE-NW, DE-BY, ...) der Station."),
+    ("aufgabentraeger", "Aufgabenträger des SPNV",
+     "Zuständiger Aufgabenträger des Schienenpersonennahverkehrs (Zweckverband, Landesgesellschaft). "
+     "Erlaubt Vergleiche der Ausstattung zwischen Bestellerorganisationen."),
+    ("regionalbereich", "Regionalbereich der DB InfraGO",
+     "Regionalbereich (RB Nord, Ost, Süd, Süd-Ost, West, Mitte) der Station."),
+    ("stationManagement", "Bahnhofsmanagement",
+     "Zuständiges Bahnhofsmanagement der DB InfraGO."),
+    ("szentrale", "Zuständige 3-S-Zentrale",
+     "3-S-Zentrale (Service, Sicherheit, Sauberkeit), die die Station betreut, mit Kontakt."),
+    ("timeTableOffice", "Fahrplanbüro", "Zuständiges Fahrplanbüro der Station."),
+    ("localizedNames", "Übersetzter Stationsname",
+     "Stationsname in weiteren Sprachen, wo erfasst (Grenzbahnhöfe)."),
+    ("number", "Stationsnummer (StaDa-ID)",
+     "Eindeutige Stationsnummer der StaDa-Datenbank, der Primärschlüssel der Station."),
+    ("name", "Name der Station", "Offizieller Stationsname."),
+]
+
+
+def flatten_db_stada(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """DB StaDa station data. Following the register rule, what gets indexed is what StaDa
+    RECORDS about a station (category, accessibility, facilities, Aufgabenträger, coordinates),
+    not the 5,408 station rows: a concept query is about the attribute, not about one station."""
+    path = source["folder"] / "raw" / "stada_stations.json"
+    if not path.exists():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    stations = document.get("result") or []
+    if not stations:
+        return []
+
+    def coverage(field: str) -> str:
+        filled = sum(1 for row in stations if row.get(field) not in (None, "", [], {}))
+        values = [row.get(field) for row in stations if isinstance(row.get(field), (str, int, bool))]
+        summary = f"Erfasst für {filled} von {len(stations)} Stationen."
+        distinct = sorted({str(v) for v in values})
+        if 1 < len(distinct) <= 8:
+            counts = {v: sum(1 for x in values if str(x) == v) for v in distinct}
+            summary += " Verteilung: " + ", ".join(f"{v} ({counts[v]})" for v in distinct) + "."
+        return summary
+
+    records: List[Dict[str, Any]] = []
+    for field, label, gloss in STADA_FIELDS:
+        records.append(
+            make_record(
+                source_key="db_stada",
+                source_label="Bahnhofsdaten StaDa (DB InfraGO / DB Station&Service)",
+                item_type="register_attribute",
+                item_id=f"db_stada:{field}",
+                variable_name=field,
+                label=f"{label} (Bahnhof)",
+                dataset_label="StaDa Bahnhofsdaten",
+                theme="Verkehr & Erreichbarkeit",
+                description=join_nonempty([gloss, coverage(field)]),
+                spatial_levels=["Adressen/Koordinaten", "Gemeinden", "Kreise", "Bundesländer"],
+                nuts_levels=["Adressen/Koordinaten", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                             "Bundesländer", "NUTS1"],
+                source_url="https://developers.deutschebahn.com/db-api-marketplace/apis/product/stada",
+                indicator_url="https://developers.deutschebahn.com/db-api-marketplace/apis/product/stada",
+                link_level="dataset",
+                access_modes=["machine-readable API"],
+                update_frequency="laufend",
+                api_hint=f"Feld {field} in GET /station-data/v2/stations der DB-StaDa-API "
+                         f"({len(stations)} Stationen). Die Marketplace-Zugangsdaten sind zwei Header, "
+                         "DB-Client-Id und DB-Api-Key.",
+            )
+        )
+    records.append(
+        make_record(
+            source_key="db_stada",
+            source_label="Bahnhofsdaten StaDa (DB InfraGO / DB Station&Service)",
+            item_type="dataset",
+            item_id="db_stada:stations",
+            variable_name="stations",
+            label="Verzeichnis aller Personenbahnhöfe in Deutschland (StaDa)",
+            dataset_label="StaDa Bahnhofsdaten",
+            theme="Verkehr & Erreichbarkeit",
+            description=f"Vollständiges Verzeichnis der {len(stations)} Personenbahnhöfe und "
+                        "Haltepunkte der DB InfraGO mit Koordinaten, amtlichem Gemeindeschlüssel, "
+                        "Bahnhofskategorie, Barrierefreiheit, Ausstattung und Aufgabenträger. "
+                        "Punktgenau und damit auf jede Gebietsebene aggregierbar, etwa für "
+                        "Bahnanbindung und Erreichbarkeit je Gemeinde.",
+            spatial_levels=["Adressen/Koordinaten", "Gemeinden", "Kreise", "Bundesländer"],
+            nuts_levels=["Adressen/Koordinaten", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                         "Bundesländer", "NUTS1"],
+            source_url="https://developers.deutschebahn.com/db-api-marketplace/apis/product/stada",
+            indicator_url="https://developers.deutschebahn.com/db-api-marketplace/apis/product/stada",
+            link_level="dataset",
+            access_modes=["machine-readable API"],
+            update_frequency="laufend",
+            api_hint="GET /db-api-marketplace/apis/station-data/v2/stations?limit=10000 mit den "
+                     "Headern DB-Client-Id und DB-Api-Key. Kostenloser Zugang nach Registrierung.",
+        )
+    )
+    return records
+
+
 def flatten_offeneregister(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     """offeneregister.de mirrors the German commercial register as open data. The dump is
     multi-GB, so only the record structure is indexed: what the register records about a company,
@@ -2629,7 +2828,786 @@ def flatten_destatis_mobility(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     return records
 
 
+# ---------------------------------------------------------------------------
+# OpenStreetMap POI layers
+# ---------------------------------------------------------------------------
+# What each layer is good for, in the language a researcher would search in. The counts and the
+# tag list come from raw/taginfo_counts.json, so nothing here restates a number.
+OSM_LAYER_NOTES: Dict[str, str] = {
+    "playground": "Öffentliche Spielplätze. Der systematische Ersatz für die Spielplatzportale: "
+                  "punktgenau, bundesweit einheitlich getaggt und damit als Distanz zum nächsten "
+                  "Spielplatz oder als Spielplatzdichte je Gemeinde auswertbar.",
+    "pharmacy": "Apotheken. Grundlage für Apothekendichte und Distanz zur nächsten Apotheke, "
+                "kleinräumiger als die Erreichbarkeitsindikatoren des Deutschlandatlas.",
+    "doctors": "Arztpraxen (Allgemein- und Fachärzte). Punktgenaue Alternative zur Arztsuche der "
+               "Bundesärztekammer, die keinen Export anbietet.",
+    "dentist": "Zahnarztpraxen.",
+    "hospital": "Krankenhausstandorte. Ergänzt das G-BA-Verzeichnis und den Klinik-Atlas um eine "
+                "punktgenaue, frei nutzbare Standortgeometrie.",
+    "clinic": "Kliniken, Ambulanzen und medizinische Versorgungszentren ohne Vollversorgung.",
+    "school": "Schulstandorte aller Schularten. Für Schuldichte und Schulwegdistanzen; die "
+              "Schulart steht im Tag school:DE bzw. isced:level.",
+    "kindergarten": "Kindergärten, Kitas und Krippen. Punktgenaue Ergänzung zur Betreuungsquote "
+                    "aus INKAR und dem Ländermonitor.",
+    "university": "Hochschulen und Colleges. Punktgeometrie zum Hochschulkompass-Register.",
+    "library": "Öffentliche und wissenschaftliche Bibliotheken.",
+    "place_of_worship": "Gotteshäuser aller Religionen; die Konfession steht im Tag religion "
+                        "bzw. denomination. Für Distanz zum nächsten Gotteshaus.",
+    "cinema": "Kinos.",
+    "theatre": "Theater und Bühnen.",
+    "restaurant": "Gastronomiebetriebe (Restaurants, Cafés, Imbisse, Kneipen, Bars). Für "
+                  "Gastronomiedichte je Einwohner.",
+    "supermarket": "Supermärkte. Kernindikator für Nahversorgung und Lebensmittelerreichbarkeit.",
+    "bank": "Bankfilialen. Für Filialdichte und Filialabbau im Zeitverlauf.",
+    "post_office": "Postfilialen und Postagenturen.",
+    "social_facility": "Soziale Einrichtungen: Pflegeheime, Tagespflege, Tafeln, Beratungsstellen, "
+                       "Obdachlosenhilfe. Die Art steht im Tag social_facility bzw. "
+                       "social_facility:for.",
+    "community_centre": "Bürgerhäuser, Gemeindezentren und Nachbarschaftstreffs. Näherung für "
+                        "soziale Infrastruktur und Treffpunkte.",
+    "bus_stop": "Bushaltestellen. Feinste verfügbare ÖPNV-Punktebene ohne Fahrplanbezug; für "
+                "Fahrplandaten siehe Open Data ÖPNV (GTFS/NeTEx).",
+    "railway_station": "Bahnhöfe und Haltepunkte. Ergänzt die StaDa-Bahnhofsdaten um Stationen "
+                       "ohne DB-Bezug (S-Bahn-, Tram- und Privatbahnstationen).",
+    "sports": "Sportanlagen: Sportzentren, Spielfelder, Fitnessstudios, Schwimmbäder.",
+    "park": "Parks und öffentliche Gärten. Für Grünflächenversorgung und Distanz zur nächsten "
+            "Grünfläche.",
+    "charging_station": "Ladesäulen für Elektroautos. Feinere Alternative zum "
+                        "Erreichbarkeitsindikator des Deutschlandatlas.",
+    "police": "Polizeidienststellen und Feuerwachen.",
+    "fuel": "Tankstellen.",
+}
+
+
+def flatten_osm_poi(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """One record per OSM POI layer, with the object count measured for Germany.
+
+    OSM is the systematic answer to the workbook rows that are only a search mask (playgrounds,
+    physician search): the tags are documented, the extract is free, and every object carries
+    coordinates. What a researcher needs from us is the tag filter, so the record carries the
+    ready Overpass query and links to the tag's own wiki page.
+    """
+    path = source["folder"] / "raw" / "taginfo_counts.json"
+    if not path.exists():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    as_of = (document.get("data_until") or "")[:10]
+
+    records: List[Dict[str, Any]] = []
+    for key, info in (document.get("layers") or {}).items():
+        tags = list((info.get("tags") or {}).keys())
+        if not tags:
+            continue
+        first_key, first_value = tags[0].split("=", 1)
+        total = info.get("total")
+        counted = (f"In Deutschland etwa {total:,} Objekte".replace(",", ".") + f" (taginfo, Stand {as_of})."
+                   if total else "")
+        if len(tags) > 1:
+            counted += " Der Layer fasst mehrere Tags zusammen: " + ", ".join(tags) + "."
+        records.append(
+            make_record(
+                source_key="osm_poi",
+                source_label="OpenStreetMap POI-Layer (Overpass)",
+                item_type="poi_layer",
+                item_id=f"osm:{key}",
+                variable_name=tags[0],
+                label=f"{info.get('label', key)} (OpenStreetMap)",
+                dataset_label="OpenStreetMap POI-Layer",
+                theme="Infrastruktur & Erreichbarkeit",
+                description=join_nonempty([OSM_LAYER_NOTES.get(key, ""), counted]),
+                spatial_levels=["Adressen/Koordinaten", "PLZ", "Gemeinden", "Kreise", "Bundesländer"],
+                nuts_levels=["Adressen/Koordinaten", "PLZ", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                             "Bundesländer", "NUTS1"],
+                year_start=2004,
+                year_end=int(as_of[:4]) if as_of[:4].isdigit() else None,
+                years_text=f"2004-{as_of[:4]}" if as_of[:4].isdigit() else "laufend",
+                source_url=f"https://wiki.openstreetmap.org/wiki/Tag:{first_key}%3D{first_value}",
+                indicator_url=f"https://wiki.openstreetmap.org/wiki/Tag:{first_key}%3D{first_value}",
+                link_level="indicator",
+                access_modes=["machine-readable API", "direct file download"],
+                update_frequency="laufend",
+                api_hint="Overpass-Abfrage für Deutschland: "
+                         '[out:json][timeout:600];area["ISO3166-1"="DE"][admin_level=2]->.de;'
+                         f"nwr{info.get('selector', '')}(area.de);out center; "
+                         "Alternativ Geofabrik-Auszug (.osm.pbf) und lokale Filterung; "
+                         f"Zählstand über https://taginfo.geofabrik.de/europe:germany/tags/{tags[0]}",
+            )
+        )
+    return records
+
+
+# ---------------------------------------------------------------------------
+# Wegweiser Kommune
+# ---------------------------------------------------------------------------
+# The site is a Liferay app whose indicator tree loads client-side, so the products are named
+# here and every record links to the one page that does exist (/daten). Each entry is
+# (id, label, description).
+WEGWEISER_PRODUCTS: List[Tuple[str, str, str]] = [
+    ("indikatoren", "Kommunale Indikatoren (Wegweiser Kommune)",
+     "Rund 100 Indikatoren zu Demografie, Bildung, Arbeitsmarkt, Soziales, Finanzen und Wohnen "
+     "für alle Gemeinden ab 5.000 Einwohnern, Kreise und Bundesländer. Frei abrufbar und als "
+     "Tabelle exportierbar."),
+    ("bevoelkerungsprognose", "Bevölkerungsprognose bis 2040 (Wegweiser Kommune)",
+     "Kleinräumige Bevölkerungsvorausberechnung nach Alter und Geschlecht bis 2040 für Gemeinden "
+     "ab 5.000 Einwohnern. Die einzige Projektionsebene in dieser Sammlung: INKAR und die "
+     "amtliche Statistik liefern Bestände, keine kommunalen Prognosen."),
+    ("demografietypen", "Demografietypen der Kommunen (Wegweiser Kommune)",
+     "Typisierung der Kommunen nach demografischer Ausgangslage und Entwicklung (Demografietypen). "
+     "Erlaubt Vergleichsgruppen für Fallauswahl und Matching."),
+    ("kommunalprofile", "Kommunalprofile und Berichte (Wegweiser Kommune)",
+     "Zusammenfassende Profile je Kommune mit Zeitreihen und Vergleichswerten, als PDF und Tabelle."),
+]
+
+
+def flatten_wegweiser(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Wegweiser Kommune: indexed at product level.
+
+    The indicator tree is rendered client-side and /statistik redirects to /daten, so there is no
+    machine-readable indicator list to flatten. What is indexed is what the portal offers, above
+    all the municipal population projection to 2040, which nothing else here has.
+    """
+    landing = "https://www.wegweiser-kommune.de/daten"
+    records: List[Dict[str, Any]] = []
+    for key, label, description in WEGWEISER_PRODUCTS:
+        records.append(
+            make_record(
+                source_key="wegweiser_kommune",
+                source_label="Wegweiser Kommune (Bertelsmann Stiftung)",
+                item_type="dataset",
+                item_id=f"wegweiser:{key}",
+                variable_name=key,
+                label=label,
+                dataset_label="Wegweiser Kommune",
+                theme="Bevölkerung & Kommunalentwicklung",
+                description=description,
+                spatial_levels=["Gemeinden", "Kreise", "Bundesländer"],
+                nuts_levels=["Gemeinden", "LAU", "Kreise", "NUTS3", "Bundesländer", "NUTS1"],
+                year_start=source["coverage_start_year"],
+                year_end=source["coverage_end_year"],
+                years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
+                source_url=source["url"],
+                indicator_url=landing,
+                link_level="dataset",
+                access_modes=source["access_modes"] or ["direct file download", "interactive map viewer"],
+                update_frequency=source["update_frequency"] or "jährlich",
+                api_hint="Abruf über wegweiser-kommune.de/daten (Auswahl von Kommune, Thema und "
+                         "Jahr, Export als XLSX/CSV). Keine offene API; der Indikatorenbaum wird "
+                         "clientseitig geladen.",
+            )
+        )
+    return records
+
+
+# ---------------------------------------------------------------------------
+# DWD Climate Data Center
+# ---------------------------------------------------------------------------
+DWD_VARIABLES: Dict[str, str] = {
+    "air_temperature": "Lufttemperatur",
+    "air_temperature_max": "Maximum der Lufttemperatur",
+    "air_temperature_mean": "Mittel der Lufttemperatur",
+    "air_temperature_min": "Minimum der Lufttemperatur",
+    "climate_indices": "Klimaindizes (u. a. Hitze-, Frost- und Vegetationskennzahlen)",
+    "cloud_type": "Wolkenart",
+    "cloudiness": "Bedeckungsgrad",
+    "dew_point": "Taupunkttemperatur",
+    "drought_index": "Trockenheitsindex (de Martonne)",
+    "duett": "Deutsches Wetterdienst-Testreferenzjahr (DUETT)",
+    "erosivity": "Erosivität des Niederschlags (R-Faktor)",
+    "evapo_p": "Potenzielle Verdunstung",
+    "evapo_r": "Reale Verdunstung",
+    "evaporation_fao": "Verdunstung nach FAO-Referenzverfahren",
+    "extreme_temperature": "Extremwerte der Temperatur",
+    "extreme_wind": "Extremwerte des Windes",
+    "frost_days": "Frosttage",
+    "frost_depth": "Frosteindringtiefe",
+    "hostrada": "HOSTRADA: stündliche Rasterdaten für urbane Räume",
+    "hot_days": "Heiße Tage (Maximum ab 30 Grad)",
+    "hyras_de": "HYRAS: hydrometeorologische Rasterdaten",
+    "ice_days": "Eistage (Maximum unter 0 Grad)",
+    "kl": "Klimastandardwerte der Stationen (Temperatur, Niederschlag, Sonne, Wind, Feuchte)",
+    "moisture": "Luftfeuchte",
+    "more_precip": "Niederschlag der Niederschlagsstationen (inkl. Schneehöhe)",
+    "more_weather_phenomena": "Weitere Wettererscheinungen",
+    "phenology": "Phänologie (Eintrittstermine der Pflanzenentwicklung)",
+    "precipGE10mm_days": "Tage mit mindestens 10 mm Niederschlag",
+    "precipGE20mm_days": "Tage mit mindestens 20 mm Niederschlag",
+    "precipGE30mm_days": "Tage mit mindestens 30 mm Niederschlag",
+    "precipitation": "Niederschlagshöhe",
+    "pressure": "Luftdruck",
+    "radiation_diffuse": "Diffuse Sonnenstrahlung",
+    "radiation_direct": "Direkte Sonnenstrahlung",
+    "radiation_global": "Globalstrahlung",
+    "radolan": "RADOLAN: radargestützte Niederschlagshöhe",
+    "regnie": "REGNIE: regionalisierte Niederschlagshöhe",
+    "snowcover_days": "Tage mit Schneedecke",
+    "soil": "Bodenklima (Temperatur und Feuchte im Boden)",
+    "soil_moist": "Bodenfeuchte",
+    "soil_moisture": "Bodenfeuchte",
+    "soil_temperature": "Bodentemperatur",
+    "soil_temperature_5cm": "Bodentemperatur in 5 cm Tiefe",
+    "solar": "Strahlung und Sonnenscheindauer",
+    "summer_days": "Sommertage (Maximum ab 25 Grad)",
+    "sun": "Sonnenscheindauer",
+    "sunshine_duration": "Sonnenscheindauer",
+    "vegetation_begin": "Beginn der Vegetationsperiode",
+    "vegetation_end": "Ende der Vegetationsperiode",
+    "visibility": "Sichtweite",
+    "water_balance": "Klimatische Wasserbilanz",
+    "water_equiv": "Wasseräquivalent der Schneedecke",
+    "weather_phenomena": "Wettererscheinungen (Gewitter, Hagel, Nebel, Sturm)",
+    "wind": "Windgeschwindigkeit und Windrichtung",
+    "wind_parameters": "Windparameter (Weibull-Verteilung)",
+    "wind_synop": "Wind aus SYNOP-Meldungen",
+    "moisture_": "Luftfeuchte",
+}
+
+DWD_AGGREGATIONS: Dict[str, str] = {
+    "1_minute": "Minutenwerte",
+    "5_minutes": "5-Minuten-Werte",
+    "10_minutes": "10-Minuten-Werte",
+    "hourly": "Stundenwerte",
+    "subdaily": "Terminwerte (mehrmals täglich)",
+    "daily": "Tageswerte",
+    "monthly": "Monatswerte",
+    "seasonal": "Jahreszeitenwerte",
+    "halfyear": "Halbjahreswerte",
+    "annual": "Jahreswerte",
+    "multi_annual": "Vieljährige Mittelwerte (Klimanormalperioden)",
+    "return_periods": "Wiederkehrintervalle (Starkniederschlag)",
+}
+
+
+def flatten_dwd(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """DWD Climate Data Center, indexed from the real directory tree.
+
+    opendata.dwd.de is an open Apache index, so the tree IS the catalogue: one record per
+    (grid or station) x aggregation x variable, each linking to the directory that holds the
+    files. Directories that are documentation, obsolete duplicates or project-specific bundles
+    are skipped rather than dressed up as indicators.
+    """
+    path = source["folder"] / "raw" / "cdc_tree.json"
+    if not path.exists():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    root = document.get("root", "https://opendata.dwd.de/climate_environment/CDC").rstrip("/")
+
+    branch_labels = {
+        "grids_germany": ("Rasterdaten (1 km) für Deutschland",
+                          ["Rasterzellen", "Gemeinden", "Kreise", "Bundesländer"],
+                          ["Rasterzellen", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                           "Bundesländer", "NUTS1"]),
+        "observations_germany/climate": ("Stationsmessungen der DWD-Klimastationen",
+                                         ["Adressen/Koordinaten", "Kreise", "Bundesländer"],
+                                         ["Adressen/Koordinaten", "Kreise", "NUTS3",
+                                          "Bundesländer", "NUTS1"]),
+    }
+
+    records: List[Dict[str, Any]] = []
+    for branch, aggregations in (document.get("tree") or {}).items():
+        if branch not in branch_labels:
+            continue
+        branch_label, levels, nuts = branch_labels[branch]
+        for aggregation, variables in sorted(aggregations.items()):
+            aggregation_label = DWD_AGGREGATIONS.get(aggregation, aggregation)
+            for variable in sorted(variables):
+                if (variable.startswith("__error__") or variable.startswith("Project_")
+                        or "obsolete" in variable or variable in {"standard_format", "wind_test"}):
+                    continue
+                gloss = DWD_VARIABLES.get(variable)
+                if not gloss and variable.startswith("mean_"):
+                    gloss = f"Vieljähriges Mittel der Periode {variable.replace('mean_', '')}"
+                if not gloss:
+                    continue
+                grid = branch == "grids_germany"
+                records.append(
+                    make_record(
+                        source_key="dwd_cdc",
+                        source_label="DWD Climate Data Center (CDC)",
+                        item_type="climate_dataset",
+                        item_id=f"dwd:{branch.replace('/', '_')}:{aggregation}:{variable}",
+                        variable_name=f"{aggregation}/{variable}",
+                        label=f"{gloss}, {aggregation_label} "
+                              f"({'1-km-Raster' if grid else 'Stationen'})",
+                        dataset_label=branch_label,
+                        theme="Klima & Umwelt",
+                        description=f"{gloss}, {aggregation_label.lower()}, als "
+                                    f"{'flächendeckendes 1-km-Raster für Deutschland' if grid else 'Messreihe der DWD-Klimastationen'}. "
+                                    "Offen und ohne Anmeldung herunterladbar (Datenlizenz "
+                                    "Deutschland, Namensnennung). "
+                                    + ("Rasterzellen sind auf Gemeinde-, Kreis- oder Landesebene "
+                                       "aggregierbar und damit mit der Regionalstatistik verknüpfbar."
+                                       if grid else
+                                       "Stationen sind punktgenau (Koordinaten in der "
+                                       "Stationsliste) und lassen sich Gemeinden zuordnen."),
+                        spatial_levels=levels,
+                        nuts_levels=nuts,
+                        year_start=source["coverage_start_year"],
+                        year_end=source["coverage_end_year"],
+                        years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
+                        source_url=f"{root}/{branch}/{aggregation}/{variable}/",
+                        indicator_url=f"{root}/{branch}/{aggregation}/{variable}/",
+                        link_level="dataset",
+                        access_modes=["direct file download", "machine-readable API"],
+                        update_frequency=source["update_frequency"] or "laufend",
+                        api_hint=f"Verzeichnis {branch}/{aggregation}/{variable}/ auf "
+                                 "opendata.dwd.de; die DESCRIPTION- und BESCHREIBUNG-PDFs im "
+                                 "Verzeichnis dokumentieren Format, Einheit und Stationsliste.",
+                    )
+                )
+    return records
+
+
+# ---------------------------------------------------------------------------
+# BORIS-D (Bodenrichtwerte)
+# ---------------------------------------------------------------------------
+GERMAN_STATES: List[str] = [
+    "Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen", "Hamburg", "Hessen",
+    "Mecklenburg-Vorpommern", "Niedersachsen", "Nordrhein-Westfalen", "Rheinland-Pfalz",
+    "Saarland", "Sachsen-Anhalt", "Sachsen", "Schleswig-Holstein", "Thüringen",
+]
+
+BORIS_PRODUCTS: List[Tuple[str, str, str]] = [
+    ("bodenrichtwert", "Bodenrichtwert (zonal und lagetypisch)",
+     "Durchschnittlicher Lagewert des Bodens je Quadratmeter für eine Bodenrichtwertzone, "
+     "jährlich zum Stichtag 1. Januar von den Gutachterausschüssen beschlossen. Der amtliche "
+     "Bodenpreis und damit das Gegenstück zu den Mietpreisen in INKAR."),
+    ("bodenrichtwertzone", "Bodenrichtwertzone (Geometrie)",
+     "Flächengeometrie der Bodenrichtwertzone, auf die sich ein Bodenrichtwert bezieht. "
+     "Kleinräumiger als jede Verwaltungsebene und damit auf Gemeinde- oder Kreisebene "
+     "aggregierbar."),
+    ("beitragszustand", "Entwicklungs- und Beitragszustand der Fläche",
+     "Entwicklungszustand (Bauland, Rohbauland, Bauerwartungsland, land- und "
+     "forstwirtschaftliche Fläche) und beitragsrechtlicher Zustand der Bodenrichtwertzone. "
+     "Bestimmt, was ein Bodenrichtwert vergleichbar macht."),
+    ("nutzungsart", "Art der Nutzung (Bodenrichtwert)",
+     "Vorherrschende Nutzungsart der Zone (Wohnbaufläche, gemischte Baufläche, Gewerbe, "
+     "Sonderbaufläche) samt Maß der baulichen Nutzung (GFZ, WGFZ)."),
+    ("immobilienrichtwert", "Immobilienrichtwerte und Grundstücksmarktberichte",
+     "Ergänzende Auswertungen der Gutachterausschüsse: Immobilienrichtwerte, Umsätze, "
+     "Liegenschaftszinssätze und Marktberichte je Gutachterausschussbezirk."),
+]
+
+
+def flatten_boris(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """BORIS-D: indexed by concept plus one record per Land.
+
+    BORIS-D is a viewer over sixteen Länder services and publishes no catalogue of its own, so
+    the coverage evidence comes from the official GDI-DE metadata catalogue: how many
+    Bodenrichtwerte datasets each Land has registered there. Per-Kreis-per-year entries are
+    deliberately NOT indexed as records; a concept query is about the Bodenrichtwert, not about
+    one district in one year.
+    """
+    path = source["folder"] / "raw" / "csw_bodenrichtwerte.xml"
+    titles: List[str] = []
+    matched = 0
+    if path.exists():
+        xml = path.read_text(encoding="utf-8", errors="replace")
+        titles = re.findall(r"<dc:title>([^<]+)</dc:title>", xml)
+        found = re.search(r'matched="(\d+)"', xml)
+        matched = int(found.group(1)) if found else len(titles)
+
+    portal = "https://www.bodenrichtwerte-boris.de/boris-d/"
+    catalogue_note = (f"Der Geodatenkatalog des Bundes und der Länder führt {matched} Metadatensätze "
+                      "zu Bodenrichtwerten (Suche: AnyText like '%bodenrichtwert%' über die "
+                      "CSW-Schnittstelle von gdk.gdi-de.org)." if matched else "")
+
+    records: List[Dict[str, Any]] = []
+    for key, label, description in BORIS_PRODUCTS:
+        records.append(
+            make_record(
+                source_key="boris_d",
+                source_label="BORIS-D Bodenrichtwerte (Gutachterausschüsse der Länder)",
+                item_type="regional_indicator",
+                item_id=f"boris:{key}",
+                variable_name=key,
+                label=label,
+                dataset_label="BORIS-D Bodenrichtwertinformationssystem",
+                theme="Bauen & Wohnen",
+                description=join_nonempty([description, catalogue_note]),
+                spatial_levels=["Adressen/Koordinaten", "Weitere Gliederungen", "Gemeinden",
+                                "Kreise", "Bundesländer"],
+                nuts_levels=["Adressen/Koordinaten", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                             "Bundesländer", "NUTS1"],
+                year_start=source["coverage_start_year"],
+                year_end=source["coverage_end_year"],
+                years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
+                source_url=portal,
+                indicator_url=portal,
+                link_level="portal",
+                access_modes=source["access_modes"] or ["interactive map viewer", "machine-readable API"],
+                update_frequency=source["update_frequency"] or "jährlich",
+                api_hint="BORIS-D bündelt die Länderportale; Abruf je Land über dessen WMS/WFS "
+                         "(INSPIRE-Thema Bodennutzung). Nutzungsbedingungen und Entgelte "
+                         "unterscheiden sich je Land.",
+            )
+        )
+
+    for state in GERMAN_STATES:
+        count = sum(1 for title in titles if state.lower() in title.lower())
+        records.append(
+            make_record(
+                source_key="boris_d",
+                source_label="BORIS-D Bodenrichtwerte (Gutachterausschüsse der Länder)",
+                item_type="dataset",
+                item_id=f"boris:land:{re.sub(r'[^a-z]+', '_', state.lower()).strip('_')}",
+                variable_name=state,
+                label=f"Bodenrichtwerte {state}",
+                dataset_label="BORIS-D nach Bundesland",
+                theme="Bauen & Wohnen",
+                description=f"Bodenrichtwerte und Bodenrichtwertzonen für {state}, geführt vom "
+                            "zuständigen Gutachterausschuss bzw. der Landesvermessung und über "
+                            "BORIS-D gebündelt. "
+                            + (f"Im Geodatenkatalog sind dazu {count} Metadatensätze verzeichnet "
+                               "(Stichprobe der ersten 500 Treffer)." if count else
+                               "Im ausgewerteten Katalogauszug ohne eigenen Treffer; der Zugang "
+                               "läuft über das Landesportal."),
+                spatial_levels=["Adressen/Koordinaten", "Gemeinden", "Kreise", "Bundesländer"],
+                nuts_levels=["Adressen/Koordinaten", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                             "Bundesländer", "NUTS1"],
+                year_start=source["coverage_start_year"],
+                year_end=source["coverage_end_year"],
+                years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
+                source_url=portal,
+                indicator_url=portal,
+                link_level="portal",
+                access_modes=source["access_modes"] or ["interactive map viewer"],
+                update_frequency=source["update_frequency"] or "jährlich",
+                api_hint=f"In BORIS-D das Land {state} wählen; die Landesdienste sind zusätzlich "
+                         "im Geodatenkatalog (gdk.gdi-de.org) mit WMS/WFS-Adresse verzeichnet.",
+            )
+        )
+    return records
+
+
+# ---------------------------------------------------------------------------
+# Election results (Bundeswahlleiterin)
+# ---------------------------------------------------------------------------
+ELECTION_SYSTEM_GROUPS: Dict[str, str] = {
+    "Wahlberechtigte": "Zahl der Wahlberechtigten im Gebiet. Nenner für die Wahlbeteiligung.",
+    "Wählende": "Zahl der Wählenden, absolut und als Wahlbeteiligung in Prozent.",
+    "Ungültige": "Ungültige Erst- und Zweitstimmen, absolut und in Prozent.",
+    "Gültige": "Gültige Erst- und Zweitstimmen, der Nenner aller Stimmenanteile.",
+}
+
+ELECTION_DATASETS: List[Tuple[str, str, str, str, str]] = [
+    ("btw2025_kerg2",
+     "Wahlkreisergebnisse Bundestagswahl 2025 (kerg2, Langformat)",
+     "Endgültiges Ergebnis der Bundestagswahl 2025 für Bund, Länder und alle 299 Wahlkreise: "
+     "Wahlberechtigte, Wählende, gültige und ungültige Erst- und Zweitstimmen sowie Stimmen je "
+     "Partei, jeweils mit dem Vergleichswert der Vorwahl. Langformat, eine Zeile je Gebiet, "
+     "Gruppe und Stimme.",
+     "https://www.bundeswahlleiterin.de/bundestagswahlen/2025/ergebnisse.html",
+     "btw25_kerg2.csv"),
+    ("btw2025_kerg",
+     "Wahlkreisergebnisse Bundestagswahl 2025 (kerg, Breitformat)",
+     "Dasselbe Ergebnis in der klassischen breiten Darstellung, eine Zeile je Gebiet und eine "
+     "Spalte je Partei und Stimme. Das übliche Format für Wahlkreisanalysen.",
+     "https://www.bundeswahlleiterin.de/bundestagswahlen/2025/ergebnisse.html",
+     "btw25_kerg.csv"),
+    ("btw_ab1949",
+     "Bundestagswahlergebnisse seit 1949 nach Ländern",
+     "Wahlberechtigte, Wählende, Stimmabgabe und Sitzverteilung für jede Bundestagswahl seit "
+     "1949 nach Ländern. Die Zeitreihe für Langfristvergleiche.",
+     "https://www.bundeswahlleiterin.de/bundestagswahlen/2025/ergebnisse.html",
+     "btw_ab49_datenbank_ergebnisse.csv"),
+    ("btw_briefwahl",
+     "Brief- und Urnenwahl sowie Wahlscheine seit 1957",
+     "Aufteilung in Urnen- und Briefwahl und Zahl der Wahlscheine seit 1957. Grundlage für "
+     "Analysen des Briefwahlanteils.",
+     "https://www.bundeswahlleiterin.de/bundestagswahlen/2025/ergebnisse.html",
+     "btw_ab57_brief_urne.csv"),
+    ("europawahl2024",
+     "Ergebnisse der Europawahl 2024",
+     "Ergebnis der Europawahl 2024 für Bund, Länder, Kreise und Gemeinden: Wahlberechtigte, "
+     "Wählende, gültige Stimmen und Stimmen je Partei. Die Gemeindeebene macht sie feiner als "
+     "die Bundestagswahlergebnisse.",
+     "https://www.bundeswahlleiterin.de/europawahlen/2024/ergebnisse.html",
+     "ew24_kerg.csv"),
+]
+
+
+def flatten_wahlergebnisse(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Election results: the result variables come from the 2025 kerg2 file itself.
+
+    The parties are read out of the data rather than typed, and only those that stood nationwide
+    (present at Bund level) get their own record; the many single-Land lists would otherwise
+    bury everything else in near-identical rows.
+    """
+    raw = source["folder"] / "raw"
+    kerg2 = raw / "btw2025_kerg2.csv"
+
+    parties: List[str] = []
+    areas: Dict[str, int] = {}
+    if kerg2.exists():
+        lines = kerg2.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+        start = next((index for index, line in enumerate(lines) if line.startswith("Wahlart;")), None)
+        if start is not None:
+            header = lines[start].split(";")
+            kind = header.index("Gruppenart")
+            name = header.index("Gruppenname")
+            area = header.index("Gebietsart")
+            national: set = set()
+            for line in lines[start + 1:]:
+                fields = line.split(";")
+                if len(fields) <= name:
+                    continue
+                areas[fields[area]] = areas.get(fields[area], 0) + 1
+                if fields[kind] == "Partei" and fields[area] == "Bund":
+                    national.add(fields[name])
+            parties = sorted(national)
+
+    records: List[Dict[str, Any]] = []
+    for group, description in ELECTION_SYSTEM_GROUPS.items():
+        records.append(
+            make_record(
+                source_key="wahlergebnisse",
+                source_label="Wahlergebnisse der Bundeswahlleiterin",
+                item_type="regional_indicator",
+                item_id=f"wahl:system:{group.lower()}",
+                variable_name=group,
+                label=f"{group} (Wahlergebnis)",
+                dataset_label="Bundestags- und Europawahlergebnisse",
+                theme="Politik / Wahlen",
+                description=description + " Verfügbar für Bund, Länder und Wahlkreise, bei "
+                            "Europawahlen zusätzlich für Kreise und Gemeinden.",
+                spatial_levels=["Bundestagswahlkreise", "Gemeinden", "Kreise", "Bundesländer"],
+                nuts_levels=["Bundestagswahlkreise", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                             "Bundesländer", "NUTS1"],
+                year_start=1949,
+                year_end=2025,
+                years_text="1949-2025",
+                source_url=source["url"],
+                indicator_url="https://www.bundeswahlleiterin.de/bundestagswahlen/2025/ergebnisse.html",
+                link_level="dataset",
+                access_modes=["direct file download"],
+                update_frequency="je Wahl",
+                api_hint=f"Gruppenname '{group}' (Gruppenart System-Gruppe) in den kerg2-Dateien "
+                         "der Bundeswahlleiterin; im kerg-Breitformat eine eigene Spalte.",
+            )
+        )
+
+    for party in parties:
+        records.append(
+            make_record(
+                source_key="wahlergebnisse",
+                source_label="Wahlergebnisse der Bundeswahlleiterin",
+                item_type="regional_indicator",
+                item_id="wahl:partei:" + re.sub(r"[^a-z0-9]+", "_", party.lower()).strip("_")[:48],
+                variable_name=party,
+                label=f"Stimmen für {party} (Wahlergebnis)",
+                dataset_label="Bundestags- und Europawahlergebnisse",
+                theme="Politik / Wahlen",
+                description=f"Erst- und Zweitstimmen für {party}, absolut und als Anteil der "
+                            "gültigen Stimmen, für Bund, Länder und alle Wahlkreise, mit dem "
+                            "Vergleichswert der Vorwahl. Bundesweit angetreten zur "
+                            "Bundestagswahl 2025.",
+                spatial_levels=["Bundestagswahlkreise", "Bundesländer"],
+                nuts_levels=["Bundestagswahlkreise", "Bundesländer", "NUTS1"],
+                year_start=2025,
+                year_end=2025,
+                years_text="2025 (Zeitreihe je Wahl ab 1949)",
+                source_url=source["url"],
+                indicator_url="https://www.bundeswahlleiterin.de/bundestagswahlen/2025/ergebnisse.html",
+                link_level="dataset",
+                access_modes=["direct file download"],
+                update_frequency="je Wahl",
+                api_hint=f"Gruppenname '{party}' (Gruppenart Partei) in btw25_kerg2.csv; "
+                         "im kerg-Breitformat je eine Spalte für Erst- und Zweitstimmen.",
+            )
+        )
+
+    for key, label, description, page, filename in ELECTION_DATASETS:
+        records.append(
+            make_record(
+                source_key="wahlergebnisse",
+                source_label="Wahlergebnisse der Bundeswahlleiterin",
+                item_type="dataset",
+                item_id=f"wahl:datensatz:{key}",
+                variable_name=key,
+                label=label,
+                dataset_label="Bundestags- und Europawahlergebnisse",
+                theme="Politik / Wahlen",
+                description=description,
+                spatial_levels=(["Bundestagswahlkreise", "Gemeinden", "Kreise", "Bundesländer"]
+                                if "europawahl" in key else
+                                ["Bundestagswahlkreise", "Bundesländer"]),
+                nuts_levels=(["Bundestagswahlkreise", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                              "Bundesländer", "NUTS1"] if "europawahl" in key else
+                             ["Bundestagswahlkreise", "Bundesländer", "NUTS1"]),
+                year_start=1949 if "ab1949" in key or "briefwahl" in key else (2024 if "europa" in key else 2025),
+                year_end=2025 if "europa" not in key else 2024,
+                years_text=("1949-2025" if "ab1949" in key else
+                            ("1957-2025" if "briefwahl" in key else
+                             ("2024" if "europa" in key else "2025"))),
+                source_url=source["url"],
+                indicator_url=page,
+                link_level="dataset",
+                access_modes=["direct file download"],
+                update_frequency="je Wahl",
+                api_hint=f"CSV {filename}, abrufbar über {page} "
+                         "(Datenlizenz Deutschland, Namensnennung 2.0).",
+            )
+        )
+    return records
+
+
+# ---------------------------------------------------------------------------
+# IÖR-Monitor
+# ---------------------------------------------------------------------------
+IOER_THEMES: List[Tuple[str, str, str]] = [
+    ("flaechennutzung", "Flächennutzung und Flächenanteile",
+     "Anteile von Siedlungs-, Verkehrs-, Landwirtschafts-, Wald- und Wasserflächen an der "
+     "Gebietsfläche, aus Geobasisdaten (ATKIS) berechnet und damit unabhängig von der "
+     "Flächenerhebung nach Nutzungsart."),
+    ("flaechenneuinanspruchnahme", "Flächenneuinanspruchnahme",
+     "Zunahme der Siedlungs- und Verkehrsfläche je Zeitraum, absolut und je Einwohner. Der "
+     "Indikator hinter dem 30-Hektar-Ziel der Nachhaltigkeitsstrategie."),
+    ("bodenversiegelung", "Bodenversiegelung und Flächenproduktivität",
+     "Versiegelte Fläche und ihr Anteil an der Siedlungs- und Verkehrsfläche sowie "
+     "Flächenproduktivität (Wertschöpfung je Fläche)."),
+    ("siedlungsstruktur", "Siedlungsstruktur und Dichte",
+     "Siedlungsdichte, Einwohner und Arbeitsplätze je Siedlungsfläche, Gebäude- und "
+     "Wohnungsdichte."),
+    ("freiraum", "Freiraum und Landschaftsqualität",
+     "Freiraumanteil, unzerschnittene Freiraumflächen, Landschaftszerschneidung durch Verkehr "
+     "und Anteil naturnaher Flächen."),
+    ("erreichbarkeit", "Ausstattung, Erreichbarkeiten und Einwirkbereiche",
+     "Erreichbarkeit von Grünflächen, Ausstattung mit Infrastruktur und Einwirkbereiche von "
+     "Lärm- und Emissionsquellen."),
+    ("flaechenumwidmung", "Flächenumwidmung",
+     "Umwidmung zwischen Nutzungsarten im Zeitverlauf, etwa Landwirtschaft zu Siedlung."),
+]
+
+
+def flatten_ioer(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """IÖR-Monitor, indexed at indicator-group level.
+
+    The monitor publishes about 90 indicators, but the table that names them sits behind the
+    app's user area (the API needs a personal key and the WMS needs a per-indicator mapfile
+    name), so what is indexed here are the indicator groups the public pages do name, plus the
+    service note. Everything else about this row would be guesswork.
+    """
+    landing = "https://www.ioer-monitor.de/indikatoren/"
+    records: List[Dict[str, Any]] = []
+    for key, label, description in IOER_THEMES:
+        records.append(
+            make_record(
+                source_key="ioer_monitor",
+                source_label="IÖR-Monitor (Leibniz-Institut für ökologische Raumentwicklung)",
+                item_type="indicator_group",
+                item_id=f"ioer:{key}",
+                variable_name=key,
+                label=f"{label} (IÖR-Monitor)",
+                dataset_label="IÖR-Monitor Indikatorengruppen",
+                theme="Flächennutzung & Umwelt",
+                description=description + " Verfügbar von der Rasterebene (bis 100 m) bis zu "
+                            "Gemeinden, Kreisen und Ländern; Abruf als Karte, Tabelle oder über "
+                            "WMS, WFS und WCS.",
+                spatial_levels=["Rasterzellen", "Gemeinden", "Kreise", "Bundesländer"],
+                nuts_levels=["Rasterzellen", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                             "Bundesländer", "NUTS1"],
+                year_start=source["coverage_start_year"],
+                year_end=source["coverage_end_year"],
+                years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
+                source_url=source["url"],
+                indicator_url=landing,
+                link_level="dataset",
+                access_modes=source["access_modes"] or ["interactive map viewer", "machine-readable API"],
+                update_frequency=source["update_frequency"] or "jährlich",
+                api_hint="Auswahl im IÖR-Monitor unter Indikatoren; OGC-Dienste (WMS/WFS/WCS) "
+                         "werden je Indikator im Nutzerbereich mit persönlichem Schlüssel "
+                         "bereitgestellt. Nutzungsbedingungen: Namensnennung IÖR.",
+            )
+        )
+    return records
+
+
+# ---------------------------------------------------------------------------
+# FDZ Ruhr (RWI-GEO-GRID, RWI-GEO-RED and the rest of the catalogue)
+# ---------------------------------------------------------------------------
+def flatten_fdz_ruhr(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """One record per FDZ Ruhr dataset, from the harvested da|ra metadata.
+
+    These are scientific-use files on application rather than downloads, which is exactly why
+    they belong in a finder: the point is to learn that the dataset exists and what it covers
+    before starting an application.
+    """
+    path = source["folder"] / "raw" / "fdz_datasets.json"
+    if not path.exists():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+
+    # The FDZ catalogue also holds evaluation studies from Burkina Faso, Senegal, Rwanda and
+    # India. They are real datasets but not German georeferenced data, so they are out of this
+    # finder's scope and would only add noise to a concept search.
+    OUT_OF_SCOPE = re.compile(
+        r"burkina|senegal|rwanda|uganda|kenya|ghana|tanzania|mozambique|zambia|ethiopia|"
+        r"india|bangladesh|nepal|indonesia|peru|bolivia|brazil|afrika|africa", re.I)
+
+    records: List[Dict[str, Any]] = []
+    skipped = 0
+    for entry in document.get("datasets") or []:
+        name = entry.get("name") or entry.get("title") or ""
+        if not name:
+            continue
+        if OUT_OF_SCOPE.search(f"{name} {entry.get('title','')} {entry.get('keywords','')} "
+                               f"{entry.get('description','')[:400]}"):
+            skipped += 1
+            continue
+        description = re.sub(r"^Beschreibung\s*:\s*", "", entry.get("description") or "").strip()
+        german = bool(re.search(r"[äöüß]|\b(der|die|das|und|für|Daten)\b", description))
+        keywords = entry.get("keywords") or ""
+        doi = entry.get("doi") or ""
+        # Grid and geocoded datasets are the georeferenced ones; the rest stay indexed but are
+        # labelled by what they actually are.
+        georeferenced = bool(re.search(r"grid|geo|immo|raster|1\s?km|koordinat", f"{name} {keywords} {description}", re.I))
+        records.append(
+            make_record(
+                source_key="fdz_ruhr",
+                source_label="FDZ Ruhr am RWI (RWI-GEO-GRID, RWI-GEO-RED)",
+                item_type="dataset",
+                item_id="fdz:" + re.sub(r"[^a-z0-9]+", "_", (doi or name).lower()).strip("_")[:60],
+                variable_name=name,
+                label=f"{name} (FDZ Ruhr)",
+                dataset_label="FDZ Ruhr Scientific-Use-Files",
+                theme="Regionalforschung & Immobilienmarkt",
+                description=join_nonempty([
+                    description[:900] if german else "",
+                    f"Schlagworte: {keywords[:300]}" if keywords else "",
+                    f"DOI {doi}." if doi else "",
+                    "Scientific-Use-File des Forschungsdatenzentrums Ruhr, Zugang auf Antrag "
+                    "(Datenweitergabevertrag), für wissenschaftliche Zwecke kostenfrei."
+                    + (" Georeferenziert (1-km-Raster bzw. geocodierte Adressen)." if georeferenced else ""),
+                ]),
+                spatial_levels=(["Rasterzellen", "PLZ", "Gemeinden", "Kreise"] if georeferenced
+                                else ["Kreise", "Bundesländer"]),
+                nuts_levels=(["Rasterzellen", "PLZ", "Gemeinden", "LAU", "Kreise", "NUTS3"]
+                             if georeferenced else ["Kreise", "NUTS3", "Bundesländer", "NUTS1"]),
+                year_start=source["coverage_start_year"],
+                year_end=source["coverage_end_year"],
+                years_text=entry.get("period") or f"{source['coverage_start_year']}-{source['coverage_end_year']}",
+                source_url=entry.get("url") or source["url"],
+                indicator_url=entry.get("url") or source["url"],
+                link_level="dataset",
+                access_modes=["on request / registration needed"],
+                update_frequency=source["update_frequency"] or "jährlich",
+                api_hint=(f"Metadaten und Antragsweg: {entry.get('url')}. "
+                          + (f"Zitation über DOI {doi}." if doi else "")),
+            )
+        )
+    if skipped:
+        print(f"[note] fdz ruhr: skipped {skipped} non-German dataset(s) as out of scope")
+    return records
+
+
 FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
+    "openstreetmap-poi-layer-overpass": flatten_osm_poi,
+    "wegweiser-kommune-bertelsmann-stiftung": flatten_wegweiser,
+    "dwd-climate-data-center-cdc": flatten_dwd,
+    "boris-d-bodenrichtwerte": flatten_boris,
+    "wahlergebnisse-bundeswahlleiterin": flatten_wahlergebnisse,
+    "ioer-monitor-flaechennutzung": flatten_ioer,
+    "rwi-geo-grid-rwi-geo-red-fdz-ruhr": flatten_fdz_ruhr,
     "regionalatlas-deutschland": flatten_regionalatlas,
     "datenguide-abgeschaltet": lambda source: (flatten_datenguide_genesis(source)
                                                + flatten_genesis_tables(source, ["regionalstatistik"])),
@@ -2647,6 +3625,7 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "german-companies": flatten_german_companies,
     "unfallatlas": flatten_unfallatlas,
     "deutsche-bahn-infrastrukturregister": flatten_db_isr,
+    "deutsche-bahn-bahnhofsuche": flatten_db_stada,
     "arbeitsmarktstatistik-ba-karte": flatten_ba_glossary,
     "open-data-handelsregister": flatten_offeneregister,
     "destatis-regionale-mobilitaet-und-infektionsgesc": flatten_destatis_mobility,
@@ -2713,18 +3692,229 @@ def portal_record(source: Dict[str, Any]) -> Dict[str, Any]:
     )
 
 
+# ---------------------------------------------------------------------------
+# Facet hygiene
+# ---------------------------------------------------------------------------
+# Destatis writes the same statistic title two ways depending on the instance ("Statistik d.
+# Empfänger v. Hilfe z. Lebensunterhalt" in the regional database, spelled out in the federal
+# one), so the theme facet showed both. Expanding the abbreviations is what makes the two
+# spellings comparable at all.
+GERMAN_ABBREVIATIONS: Dict[str, str] = {
+    "d.": "der", "des.": "des", "v.": "von", "z.": "zum", "u.": "und", "f.": "für",
+    "b.": "bei", "i.": "im", "a.": "an", "m.": "mit", "n.": "nach", "je.": "je",
+    "jährl.": "jährliche", "monatl.": "monatliche", "vierteljährl.": "vierteljährliche",
+    "öffentl.": "öffentliche", "öffentlich-rechtl.": "öffentlich-rechtlichen",
+    "sozialversicherungspfl.": "sozialversicherungspflichtig", "allg.": "allgemeine",
+    "einschl.": "einschließlich", "insg.": "insgesamt", "erwerbst.": "erwerbstätige",
+    "beschäft.": "beschäftigte", "bev.": "bevölkerung", "krh.": "krankenhaus",
+    "verw.": "verwaltung", "wirtsch.": "wirtschaftliche", "landw.": "landwirtschaftliche",
+    "gesetzl.": "gesetzliche", "priv.": "private", "stat.": "statistik",
+}
+
+
+def _facet_tokens(value: str) -> List[str]:
+    """Comparable token list: abbreviations expanded, separators unified, case folded."""
+    # "u.bei" -> "u. bei", but a filename stays one token: splitting "calendar.txt" would make
+    # it look like a truncation of "calendar_dates.txt" and merge two different GTFS files.
+    text = re.sub(r"(?<![\w-])(?![\w-]+\.(?:txt|csv|xlsx?|json|pdf|html?|xml|zip|gpkg|shp)\b)"
+                  r"([a-zäöüß]{1,20}\.)(?=[A-Za-zÄÖÜäöü])", r"\1 ", value or "")
+    text = text.replace("&", "/").replace("–", "-")
+    tokens: List[str] = []
+    for token in re.split(r"[\s/,;]+", text.strip()):
+        if not token:
+            continue
+        expanded = GERMAN_ABBREVIATIONS.get(token.casefold())
+        # The trailing dot is kept: it marks a truncation ("Rehabilitationseinr.") that has to
+        # match the spelled-out word, which no edit-distance threshold would catch.
+        cleaned = (expanded or token).casefold().strip(",;:()")
+        tokens.append(cleaned if cleaned != "." else "")
+    return [t for t in tokens if t]
+
+
+def _edit_distance(left: str, right: str, limit: int = 3) -> int:
+    if abs(len(left) - len(right)) > limit:
+        return limit + 1
+    previous = list(range(len(right) + 1))
+    for i, a in enumerate(left, start=1):
+        current = [i]
+        for j, b in enumerate(right, start=1):
+            current.append(min(previous[j] + 1, current[j - 1] + 1,
+                              previous[j - 1] + (a != b)))
+        previous = current
+    return previous[-1]
+
+
+def _same_facet(left: str, right: str) -> bool:
+    """True when two facet labels are spelling variants of one thing.
+
+    Deliberately conservative: same number of words, and every word pair agrees on its first
+    four characters and is within two edits. That merges "Gebietsstandes"/"Gebietsstands" and
+    "Einbürgerungsstatistik"/"Einbürgerungsstatistiken" while keeping
+    "Krankenversicherung"/"Rentenversicherung" and "Bevölkerungsstand"/"Bevölkerungsstatistik"
+    apart, which a similarity ratio alone does not.
+    """
+    FILLER = {"der", "die", "das", "des", "den", "dem", "von", "vom", "für", "im", "in", "und"}
+
+    def token_match(x: str, y: str) -> bool:
+        if x == y:
+            return True
+        if x.endswith(".") and y.startswith(x[:-1]):        # "rehabilitationseinr." vs full word
+            return True
+        if y.endswith(".") and x.startswith(y[:-1]):
+            return True
+        x, y = x.rstrip("."), y.rstrip(".")
+        return x[:4] == y[:4] and _edit_distance(x, y) <= 2
+
+    def compare(a: List[str], b: List[str]) -> bool:
+        return bool(a) and len(a) == len(b) and all(token_match(x, y) for x, y in zip(a, b))
+
+    a, b = _facet_tokens(left), _facet_tokens(right)
+    if compare(a, b):
+        return True
+    # Second pass without articles and prepositions: "Fortschreibung des Wohnungsbestandes" and
+    # "Fortschreibung Wohnungsbestand" are one statistic written two ways.
+    return compare([t for t in a if t not in FILLER], [t for t in b if t not in FILLER])
+
+
+def unify_facet_values(records: List[Dict[str, Any]], fields: Iterable[str]) -> Dict[str, int]:
+    """Collapse spelling variants inside each facet field, keeping the commonest spelling.
+
+    Filters are the user's handle on the corpus, so a facet that lists one thing twice is a
+    defect in the data, not something to paper over in the UI.
+    """
+    merged: Dict[str, int] = {}
+    for field in fields:
+        counts: Dict[str, int] = {}
+        for record in records:
+            value = record.get(field)
+            if value:
+                counts[value] = counts.get(value, 0) + 1
+        # Spelled-out first, then commonest: a facet label is read by a person, so
+        # "Statistik der Empfänger von Hilfe zum Lebensunterhalt" wins over the abbreviated
+        # variant even when Destatis uses the abbreviation more often.
+        def rank(value: str) -> Tuple[int, int, int, str]:
+            abbreviations = len(re.findall(r"\b[A-Za-zÄÖÜäöüß]{1,20}\.", value))
+            return (abbreviations, -counts[value], -len(value), value)
+
+        ordered = sorted(counts, key=rank)
+        canonical: Dict[str, str] = {}
+        for value in ordered:
+            for kept in canonical.values():
+                if kept != value and _same_facet(kept, value):
+                    canonical[value] = kept
+                    break
+            else:
+                canonical[value] = value
+        renames = {k: v for k, v in canonical.items() if k != v}
+        if renames:
+            merged[field] = len(renames)
+            for record in records:
+                value = record.get(field)
+                if value in renames:
+                    record[field] = renames[value]
+            print(f"[facet] {field}: merged {len(renames)} spelling variant(s)")
+            for old, new in sorted(renames.items())[:8]:
+                print(f"          {old!r} -> {new!r}")
+        # A portal card is built from the workbook row name while the flattener writes the
+        # source's own name, which put both spellings in the source dropdown. The card follows
+        # the records.
+    return merged
+
+
+def align_portal_labels(produced: List[Dict[str, Any]]) -> int:
+    """Give one source's portal card the source_label that source's own records use.
+
+    The card is built from the workbook row name ("Wahlergebnisse Bundeswahlleiterin") while the
+    flattener writes the source's own name ("Wahlergebnisse der Bundeswahlleiterin"), so the
+    source dropdown listed the same portal twice. Only spelling variants are aligned; a card for
+    a genuinely differently-named portal keeps its name.
+    """
+    counts: Dict[str, int] = {}
+    for record in produced:
+        if record.get("source_key") == "geoportal":
+            continue
+        label = record.get("source_label") or ""
+        if label:
+            counts[label] = counts.get(label, 0) + 1
+    if not counts:
+        return 0
+    best = max(counts, key=lambda label: counts[label])
+    changed = 0
+
+    def same_portal(left: str, right: str) -> bool:
+        # A card and its records may differ by an article or a parenthetical suffix
+        # ("Hochschulkompass" vs "Hochschulkompass (HRK)"), which is still one portal.
+        filler = {"der", "die", "das", "des", "den", "dem", "von", "vom", "für", "im", "in"}
+        def core(value: str) -> List[str]:
+            without = re.sub(r"\([^)]*\)", " ", value or "")
+            return [t for t in _facet_tokens(without) if t not in filler]
+        left_core, right_core = core(left), core(right)
+        return bool(left_core) and (left_core == right_core or _same_facet(" ".join(left_core), " ".join(right_core)))
+
+    for record in produced:
+        if record.get("source_key") != "geoportal":
+            continue
+        current = record.get("source_label") or ""
+        if best != current and same_portal(best, current):
+            record["source_label"] = best
+            changed += 1
+    return changed
+
+
+# Cases the facet matcher must get right. Kept next to the code because both mistakes are
+# silent: a missed merge shows the same statistic twice in the dropdown, and a false merge hides
+# a real dataset behind another one's name.
+FACET_MATCH_CASES: List[Tuple[str, str, bool]] = [
+    ("Statistik d. Empfänger v. Hilfe z. Lebensunterhalt",
+     "Statistik der Empfänger von Hilfe zum Lebensunterhalt", True),
+    ("Grunddaten der Vorsorge- oder Rehabilitationseinr.",
+     "Grunddaten der Vorsorge- oder Rehabilitationseinrichtungen", True),
+    ("Fortschreibung Wohngebäude- und Wohnungsbestand",
+     "Fortschreibung des Wohngebäude- und Wohnungsbestandes", True),
+    ("Einbürgerungsstatistik", "Einbürgerungsstatistiken", True),
+    ("Bauen / Wohnen", "Bauen & Wohnen", True),
+    ("GTFS calendar.txt", "GTFS calendar_dates.txt", False),
+    ("Statistik der gesetzlichen Krankenversicherung",
+     "Statistik der gesetzlichen Rentenversicherung", False),
+    ("Eckwerte SGB II", "Eckwerte SGB III", False),
+    ("Strukturdaten Bundestagswahl 2021", "Strukturdaten Bundestagswahl 2025", False),
+    ("Sozialversicherungspflichtig Beschäftigte am Arbeitsort (Stichtag 30.06.)",
+     "Sozialversicherungspflichtig Beschäftigte am Wohnort (Stichtag 30.06.)", False),
+    ("Erhebung der öffentlichen Abwasserentsorgung",
+     "Erhebung der öffentlichen Wasserversorgung", False),
+    ("Bevölkerungsstand", "Bevölkerungsstatistik", False),
+]
+
+
+def self_test() -> None:
+    failures = []
+    for left, right, expected in FACET_MATCH_CASES:
+        if _same_facet(left, right) != expected:
+            failures.append(f"{left!r} ~ {right!r}: expected {expected}")
+    if failures:
+        raise SystemExit("facet matcher self-test failed:\n  " + "\n  ".join(failures))
+    print(f"facet matcher self-test: {len(FACET_MATCH_CASES)} case(s) ok")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--only", action="append", default=[], help="slug(s) to flatten")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--self-test", action="store_true",
+                        help="check the facet matcher against its known cases and exit")
     parser.add_argument("--output", default=str(OUTPUT))
     args = parser.parse_args()
+
+    if args.self_test:
+        self_test()
+        return
 
     sources = registry_sources()
     slugs = args.only or list(sources)
 
     records: List[Dict[str, Any]] = []
     counts: Dict[str, int] = {}
+    aligned_cards = 0
     for slug in slugs:
         source = sources[slug]
         flattener = FLATTENERS.get(slug)
@@ -2739,8 +3929,13 @@ def main() -> None:
             produced = [portal_record(source)]
         elif produced and slug not in NO_PORTAL_RECORD and flattener:
             produced.append(portal_record(source))
+        aligned_cards += align_portal_labels(produced)
         counts[slug] = len(produced)
         records.extend(produced)
+
+    unify_facet_values(records, ("theme", "dataset_label", "source_label"))
+    if aligned_cards:
+        print(f"[facet] aligned {aligned_cards} portal card label(s) with their source's records")
 
     missing_link = [r["item_id"] for r in records if not (r["source_url"] or r["indicator_url"])]
     if missing_link:

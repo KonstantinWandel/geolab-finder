@@ -25,7 +25,10 @@
     "Bauen / Wohnen",
     "Bevölkerung",
     "Bildung",
+    "Flächennutzung",
+    "Gesundheit",
     "Soziales",
+    "Verkehr / Mobilität",
     "Wirtschaft und Unternehmen"
   ],
   "topics": [
@@ -46,8 +49,20 @@
       "topic": "Bildung"
     },
     {
+      "group": "Flächennutzung",
+      "topic": "Flächennutzung"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
       "group": "Soziales",
       "topic": "Soziales"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
     },
     {
       "group": "Wirtschaft und Unternehmen",
@@ -59,7 +74,10 @@
     "Bauen / Wohnen",
     "Bevölkerung",
     "Bildung",
+    "Flächennutzung",
+    "Gesundheit",
     "Soziales",
+    "Verkehr / Mobilität",
     "Wirtschaft und Unternehmen"
   ],
   "coverage_start_month": null,
