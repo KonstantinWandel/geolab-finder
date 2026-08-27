@@ -99,8 +99,10 @@ Per-source state lives in that script's `OPEN_ITEMS`, candidate new sources in i
 
 `scripts/eval_geodb_search.py` is the retrieval smoke test: 28 concept queries with an expected hit,
 reporting hit@1/@3/@10. Baseline 2026-08-25 with e5-large-instruct + bge-reranker-base:
-**hit@1 27/28, hit@3 28/28, no misses**. Run it after any change to the model, the document
-construction, or the record set, and compare against that baseline before deploying.
+**hit@1 52/58, hit@3 57/58, hit@10 58/58, no misses** (2026-08-27, on the widened 58-query set
+that includes English phrasing and cases where an indicator must beat a portal card; the earlier
+28-query set scored 27/28). Run it after any change to the model, the document construction, or
+the record set, and compare against that baseline before deploying.
 
 Acquisition is scripted: `scripts/fetch_sources.py` holds a `FETCH_PLAN` (one entry per
 artifact, keyed by slug) and a `MANUAL` dict naming the sources a script cannot reach and why.
@@ -184,6 +186,16 @@ Long jobs run detached and finish themselves. Two conventions make that safe:
 Start them with `setsid ... </dev/null >>logs/<name>.log 2>&1 &` and verify with
 `ps -o pid,ppid,sid,tty -p <pid>`: own SID, no TTY, ancestor chain reaching pid 1. A job whose
 parent is the agent dies when the session does.
+
+**A waiting process must log a heartbeat.** The first autopilot logged only its start line and
+then slept in a two-minute poll loop. It died mid-wait on 2026-08-25, and because nothing was
+written after the start line there was no last-seen time and no traceback: impossible to tell a
+kill from a still-running sleep, and the box had not restarted (17 days up) while the crawler it
+was waiting for survived. It now logs every fifth poll and rewrites `logs/autopilot_alive.json`
+on every one, so a later session can see when it last breathed. The work itself was not lost,
+because the crawler's output was complete and every following step is idempotent, which is the
+other half of the pattern: make the long job resumable and the follow-up re-runnable, then a
+silent death costs a re-run rather than the work.
 
 ## Deploying a metadata update
 
