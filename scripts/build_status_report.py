@@ -418,14 +418,17 @@ def write_deliverable_workbook(rows: List[Dict[str, Any]], stamp: str) -> Option
     partial = sum(1 for row in rows if row["state"] == "partial")
     open_ = sum(1 for row in rows if row["state"] == "open")
     indexed = sum(row["indexed"] for row in rows)
+    # German thousands separator on the number only: replacing every comma in the sentence
+    # turned "26 fertig, 5 teilweise" into "26 fertig. 5 teilweise".
+    indexed_de = f"{indexed:,}".replace(",", ".")
     intro = (
         f"Stand der Einbindung in den GeoDB-Finder (geodb.geolab.soz.uni-bielefeld.de), "
         f"Stand {stamp}. {len(rows)} Quellen: {done} fertig, {partial} teilweise, {open_} offen; "
-        f"{indexed:,} indexierte Merkmale und Datensätze plus je ein Portaleintrag. "
+        f"{indexed_de} indexierte Merkmale und Datensätze plus je ein Portaleintrag. "
         "Maschinell erzeugt von scripts/build_status_report.py. Alles auf diesem Blatt wurde "
         "vom Assistenten ergänzt (blau); das Originalblatt Tabelle1 ist unverändert, ergänzt "
         "nur um die neu aufgenommenen Quellen (ebenfalls blau)."
-    ).replace(",", ".")
+    )
     sheet["A1"] = intro
     sheet["A1"].font = AI_BLUE_BOLD
     sheet["A1"].alignment = Alignment(wrap_text=True, vertical="top")
