@@ -97,6 +97,14 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
             "note": "BA glossary: definitions of the labour-market concepts behind every BA indicator.",
         },
         {
+            "name": "ba_gesamtglossar.pdf",
+            "url": "https://statistik.arbeitsagentur.de/DE/Statischer-Content/Grundlagen/Definitionen/"
+                   "Glossare/Generische-Publikationen/Gesamtglossar.pdf?__blob=publicationFile&v=53",
+            "kind": "catalogue",
+            "note": "The BA's own glossary: the authoritative definition of every labour-market "
+                    "concept behind its statistics, which is what its map and its booklets measure.",
+        },
+        {
             "name": "ba_api.html",
             "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Service/API/API-Start-Nav.html",
             "kind": "portal",
