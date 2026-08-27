@@ -115,17 +115,6 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
 # Sources NOT in the workbook that a German regional-data finder arguably should carry.
 # Ordered by what they would add that nothing already indexed provides.
 CANDIDATES = [
-    ("Zensus 2022", "https://ergebnisse.zensus2022.de/",
-     "The one large gap. Buildings, dwellings, households, employment and religion down to the "
-     "100 m grid and municipality level, far finer than anything else here. REST API with a token; "
-     "the `zensus-genesis-api` skill already documents the header-auth gotcha and a working client."),
-    ("Unfallatlas (Destatis)", "https://unfallatlas.statistikportal.de/",
-     "Every reported road accident as a geocoded point, 2016 onwards, free download by year and "
-     "Land. Point-level accident data exists nowhere else in this list; INKAR only has rates."),
-    ("Regionalstatistik table catalogue (live)", "https://www.regionalstatistik.de/genesis/online",
-     "We index the GENESIS Merkmale via the Datenguide snapshot. A live crawl of the table "
-     "catalogue (statistics -> tables -> regional depth) would add the actual downloadable tables "
-     "and their currency. Needs a Regionalstatistik webservice token."),
     ("OpenStreetMap / Overpass POI layers", "https://overpass-turbo.eu/",
      "The systematic replacement for the crowd-sourced portals in the workbook: playgrounds, "
      "pharmacies, GP practices, schools, kindergartens, stops, supermarkets, all as coordinates "
