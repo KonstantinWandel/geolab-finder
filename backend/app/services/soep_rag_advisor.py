@@ -842,7 +842,8 @@ class SOEPRagAdvisorService:
             summary["geodb"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
         return summary
 
-    def get_filter_options(self, source: Optional[str] = None) -> Dict[str, Any]:
+    def get_filter_options(self, source: Optional[str] = None,
+                           include_raw: bool = False) -> Dict[str, Any]:
         self.load()
         # The source list always covers everything loaded; the dependent facets below are
         # narrowed when a source is selected, so picking "Zensus 2022" cannot leave a
@@ -909,7 +910,12 @@ class SOEPRagAdvisorService:
             "conceptual_datasets": sorted({row.get("conceptual_dataset", "") for row in scoped
                                            if row.get("conceptual_dataset")}),
             "raw_rows": sum(1 for row in scoped if row.get("is_raw")),
-            "datasets": sorted({row.get("dataset_label") or row.get("dataset", "") for row in scoped if row.get("dataset_label") or row.get("dataset")}),
+            # The dataset dropdown must offer only datasets a result can actually come from.
+            # SOEP v41 has 622 datasets in total but 75 outside the raw questionnaire files, so
+            # with raw hidden the other 547 were dead options that filtered every hit away.
+            "datasets": sorted({row.get("dataset_label") or row.get("dataset", "") for row in scoped
+                                if (row.get("dataset_label") or row.get("dataset"))
+                                and (include_raw or not row.get("is_raw"))}),
             # Sample/questionnaire groups present among SOEP rows, in display order.
             "sample_groups": [
                 {"value": key, "label": label}

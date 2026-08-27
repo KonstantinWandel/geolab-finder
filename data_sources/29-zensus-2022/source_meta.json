@@ -24,11 +24,18 @@
     "weitere räumliche Gliederungen"
   ],
   "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
     "Bauen / Wohnen",
     "Bevölkerung",
-    "Bildung"
+    "Bildung",
+    "Migration",
+    "Religion"
   ],
   "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
     {
       "group": "Bauen / Wohnen",
       "topic": "Bauen / Wohnen"
@@ -38,8 +45,16 @@
       "topic": "Wohnfläche je Wohnung / Einwohner"
     },
     {
+      "group": "Bauen / Wohnen",
+      "topic": "Einwohner je Wohnung"
+    },
+    {
       "group": "Bevölkerung",
       "topic": "Bevölkerung"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerungsstand"
     },
     {
       "group": "Bevölkerung",
@@ -48,14 +63,27 @@
     {
       "group": "Bildung",
       "topic": "Bildung"
+    },
+    {
+      "group": "Migration",
+      "topic": "Migration"
+    },
+    {
+      "group": "Religion",
+      "topic": "Religion"
     }
   ],
   "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
     "Bauen / Wohnen",
     "Wohnfläche je Wohnung / Einwohner",
+    "Einwohner je Wohnung",
     "Bevölkerung",
+    "Bevölkerungsstand",
     "Bevölkerung nach Geschlecht / Alter",
-    "Bildung"
+    "Bildung",
+    "Migration",
+    "Religion"
   ],
   "coverage_start_month": null,
   "coverage_start_year": 2022,

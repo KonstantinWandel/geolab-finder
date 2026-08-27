@@ -1,39 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { makeTranslator, shortenPath } from '../i18n'
 
 // The project site carries the imprint, the privacy statement and the attribution list.
 const GEOLAB_SITE = 'https://lwc-soep-regiohub.pages.ub.uni-bielefeld.de/geolab'
 
-function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
+function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
+  const t = makeTranslator(language)
   const isInkar = mode === 'inkar'
   const isSoep = mode === 'soep'
   const isAll = mode === 'all'
   const showRegionalFilters = isInkar || isAll
   const showSoepFilters = isSoep || isAll
   const STORAGE_KEY = `geolab_history_${mode}`
-  const headerTitle = isInkar
-    ? 'GeoDB Regional Data Finder'
-    : isSoep
-    ? 'SOEP Variable Finder'
-    : 'GeoLAB Metadata Advisor'
-  const headerBlurb = isInkar
-    ? 'Semantic search across German georeferenced data sources. Describe the concept you need data on; every hit links out to the source that holds it, and says how precisely that link lands.'
-    : isSoep
-    ? 'Multilingual semantic search over SOEP-Core variable metadata.'
-    : 'Semantic search over SOEP variables and INKAR regional indicators.'
+  const headerBlurb = t(isInkar ? 'blurb.inkar' : isSoep ? 'blurb.soep' : 'blurb.all')
 
-  // Spatial levels: one concept, shown with its German name + NUTS/LAU alias.
-  const SPATIAL_LEVEL_LABELS = {
-    Gemeinden: 'Municipality (Gemeinde / LAU)',
-    Kreise: 'District (Kreis / NUTS3)',
-    NUTS2: 'NUTS2 region',
-    'Bundesländer': 'Federal state (Bundesland / NUTS1)',
-    Regierungsbezirke: 'Government region (Regierungsbezirk)',
-    Bezirke: 'Borough (Bezirk)',
-    Ortsteile: 'Locality (Ortsteil / Bezirksregion)',
-    PLZ: 'Postcode (PLZ)',
-    'Adressen/Koordinaten': 'Address / coordinates',
-    Bundestagswahlkreise: 'Federal constituency (Wahlkreis)',
-    'Weitere Gliederungen': 'Other spatial breakdowns',
+  // Spatial levels are one concept with a translated label; an unmapped level falls back to
+  // the German name the data uses, which is better than hiding it.
+  const spatialLevelLabel = (level) => {
+    const translated = t(`level.${level}`)
+    return translated === `level.${level}` ? level : translated
   }
 
   // Per-finder citation (each deployment is archived on Zenodo under its own DOI).
@@ -66,13 +51,9 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
 
   // How precisely a result's link lands on the thing it describes. Shown as a chip so a
   // user can tell "this opens the exact indicator" from "this opens a portal to search in".
-  const LINK_LEVEL = {
-    indicator: { label: 'opens the indicator', short: 'indicator link' },
-    table: { label: 'opens the exact table', short: 'table link' },
-    statistic: { label: 'opens the statistic that contains it', short: 'statistic link' },
-    dataset: { label: 'opens the dataset that contains it', short: 'dataset link' },
-    portal: { label: 'opens the portal; search from there', short: 'portal link' },
-  }
+  const LINK_LEVELS = ['indicator', 'table', 'statistic', 'dataset', 'portal']
+  const linkLevel = (level) =>
+    LINK_LEVELS.includes(level) ? { label: t(`link.${level}`), short: t(`link.${level}.short`) } : null
 
   // Human label for a SOEP sample/questionnaire group key (from the fetched facet).
   const sampleGroupLabel = (key) =>
@@ -102,10 +83,13 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     let cancelled = false
     async function loadFilterOptions() {
       try {
-        const scope = filters.dataset_scope && filters.dataset_scope !== 'all'
-          ? `?source=${encodeURIComponent(filters.dataset_scope)}`
-          : ''
-        const res = await fetch(`${apiUrl}/soep/filter-options${scope}`)
+        // include_raw is sent too: with raw files hidden, the SOEP dataset dropdown listed
+        // 622 raw per-wave files that no result could ever come from.
+        const query = new URLSearchParams()
+        if (filters.dataset_scope && filters.dataset_scope !== 'all') query.set('source', filters.dataset_scope)
+        if (filters.include_raw) query.set('include_raw', 'true')
+        const suffix = query.toString() ? `?${query}` : ''
+        const res = await fetch(`${apiUrl}/soep/filter-options${suffix}`)
         if (!res.ok) return
         const data = await res.json()
         if (cancelled) return
@@ -132,7 +116,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     return () => {
       cancelled = true
     }
-  }, [apiUrl, filters.dataset_scope])
+  }, [apiUrl, filters.dataset_scope, filters.include_raw])
 
   useEffect(() => {
     // Keep the TOP of the newest answer (the most relevant results) in view,
@@ -142,7 +126,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
 
   const sourceLabel = useMemo(() => {
     const source = filterOptions?.sources?.find((item) => item.value === filters.dataset_scope)
-    return source?.label || 'All metadata sources'
+    return source?.label || t('filter.allSources')
   }, [filterOptions, filters.dataset_scope])
 
   const updateFilter = (key, value) => {
@@ -279,8 +263,8 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
 
   const renderSourceLink = (row) => {
     const href = row.source_url || row.selector_url || row.indicator_url
-    if (!href) return <span className="text-muted">No link</span>
-    const label = row.source_key === 'inkar' ? 'INKAR' : 'codebook'
+    if (!href) return <span className="text-muted">{t('row.noLink')}</span>
+    const label = row.source_key === 'inkar' ? 'INKAR' : t('row.codebook')
     return (
       <a href={href} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>
         {label}
@@ -292,11 +276,11 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     if (msg.role === 'user') {
       return (
         <div key={i} className="glass-panel" style={{ padding: '1rem', marginBottom: '1rem', background: 'var(--surface-2)' }}>
-          <strong>You:</strong>
+          <strong>{t('chat.you')}</strong>
           <p style={{ whiteSpace: 'pre-wrap', margin: '0.5rem 0 0 0' }}>{msg.content}</p>
           {msg.filters && (
             <p className="text-muted" style={{ fontSize: '0.8rem', margin: '0.5rem 0 0 0' }}>
-              Filters: {msg.filters.dataset_scope}, {msg.filters.dataset_label}, {msg.filters.nuts_level}, {msg.filters.spatial_level}, {msg.filters.year_start || 'any'}-{msg.filters.year_end || 'any'}
+              {t('chat.filters', { summary: [msg.filters.dataset_scope, msg.filters.dataset_label, msg.filters.nuts_level, msg.filters.spatial_level, `${msg.filters.year_start || t('filter.any')}-${msg.filters.year_end || t('filter.any')}`].join(', ') })}
             </p>
           )}
         </div>
@@ -305,7 +289,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     if (msg.role === 'error') {
       return (
         <div key={i} className="error-message" style={{ marginBottom: '1rem' }}>
-          Error: {msg.content}
+          {t('chat.error', { message: msg.content })}
         </div>
       )
     }
@@ -320,33 +304,38 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
       return (
         <div key={i} className="execution-result glass-panel" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
           <div className="results-toolbar">
-            <h3 style={{ margin: 0 }}>Results</h3>
+            <h3 style={{ margin: 0 }}>{t('results.title')}</h3>
             <div className="export-actions">
-              <span className="text-muted">{selectedCount ? `${selectedCount} selected` : 'Export all rows'}</span>
+              <span className="text-muted">{selectedCount ? t('results.selected', { count: selectedCount }) : t('results.exportAll')}</span>
               <button type="button" className="btn-secondary" onClick={() => exportRows(rows, 'csv', i)}>CSV</button>
               <button type="button" className="btn-secondary" onClick={() => exportRows(rows, 'json', i)}>JSON</button>
             </div>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: '0.6rem' }}>
-            Retrieval: {result.embedding_model} | Generator: {result.llm_model || 'disabled'} | Mode: {result.response_mode || 'retrieval-only'} | Index: {result.index_type}
+            {t('results.pipeline', {
+              embedding: result.embedding_model,
+              llm: result.llm_model || t('results.generatorOff'),
+              responseMode: result.response_mode || t('results.retrievalOnly'),
+              index: result.index_type,
+            })}
           </p>
 
           {rows.length === 0 && portalRows.length > 0 && (
             <p className="text-muted" style={{ marginTop: '0.4rem' }}>
-              No indicator-level hit for this question. The portals below are the places to look.
+              {t('results.portalsOnly')}
             </p>
           )}
           <div className="table-scroll metadata-table">
             <table className="results-table">
               <thead>
                 <tr>
-                  <th>Select</th>
-                  <th>Record</th>
-                  <th>Source</th>
-                  <th>Score</th>
-                  <th>Coverage</th>
-                  <th>Why useful</th>
-                  <th>Get it from</th>
+                  <th>{t('col.select')}</th>
+                  <th>{t('col.record')}</th>
+                  <th>{t('col.source')}</th>
+                  <th>{t('col.score')}</th>
+                  <th>{t('col.coverage')}</th>
+                  <th>{t('col.why')}</th>
+                  <th>{t('col.link')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -357,21 +346,21 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                         type="checkbox"
                         checked={Boolean(selectedRows[`${i}:${row.item_id || row.variable_name || idx}`])}
                         onChange={() => toggleRow(i, row, idx)}
-                        aria-label={`Select ${row.variable_name || row.label || 'row'}`}
+                        aria-label={t('row.selectAria', { name: row.variable_name || row.label || '' })}
                       />
                     </td>
                     <td>
                       <div style={{ fontWeight: 'bold' }}>{row.variable_name}</div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{row.label}</div>
                       {row.source_key !== 'soep' && row.theme && <div className="mini-chip">{row.theme}</div>}
-                      {row.link_level && LINK_LEVEL[row.link_level] && (
+                      {row.link_level && linkLevel(row.link_level) && (
                         <div
                           className="mini-chip"
                           title={row.link_verified === false
-                            ? `${LINK_LEVEL[row.link_level].label} (documented form; the target portal is a JavaScript app, so the link could not be verified server-side)`
-                            : LINK_LEVEL[row.link_level].label}
+                            ? t('link.unverified', { label: linkLevel(row.link_level).label })
+                            : linkLevel(row.link_level).label}
                         >
-                          {LINK_LEVEL[row.link_level].short}{row.link_verified === false ? '*' : ''}
+                          {linkLevel(row.link_level).short}{row.link_verified === false ? '*' : ''}
                         </div>
                       )}
                       {row.source_key === 'soep' && sampleGroupLabel(row.sample_group) && (
@@ -379,7 +368,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                       )}
                       {row.also_in_datasets?.length > 0 && (
                         <div className="text-muted" style={{ fontSize: '0.8rem', marginTop: '2px' }}>
-                          also in: {row.also_in_datasets.join(', ')}
+                          {t('row.alsoIn', { datasets: row.also_in_datasets.join(', ') })}
                         </div>
                       )}
                     </td>
@@ -389,14 +378,14 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                     </td>
                     <td>{formatScore(row.score)}</td>
                     <td>
-                      <div>{row.available_years_text || 'No explicit years'}</div>
-                      <div className="text-muted">{(row.nuts_levels || []).join(', ') || (row.spatial_levels || []).join(', ') || 'No spatial level'}</div>
+                      <div>{row.available_years_text || t('row.noYears')}</div>
+                      <div className="text-muted">{(row.nuts_levels || []).join(', ') || (row.spatial_levels || []).join(', ') || t('row.noLevel')}</div>
                     </td>
                     <td>
                       <details className="why-useful" style={{ cursor: 'pointer' }}>
-                        <summary style={{ fontWeight: 'bold', color: 'var(--accent)', outline: 'none' }}>View extracted context</summary>
+                        <summary style={{ fontWeight: 'bold', color: 'var(--accent)', outline: 'none' }}>{t('row.context')}</summary>
                         <div style={{ marginTop: '0.5rem', lineHeight: '1.4', fontSize: '0.9rem', color: 'var(--text-soft)' }}>
-                          {row.rich_description || row.stats_summary || row.label || 'No description found.'}
+                          {row.rich_description || row.stats_summary || row.label || t('row.noDescription')}
                           {row.api_hint && <p className="text-muted">{row.api_hint}</p>}
                         </div>
                       </details>
@@ -410,14 +399,14 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
 
           {portalRows.length > 0 && (
             <div className="portal-block">
-              <h4 className="portal-heading">Data portals to search in</h4>
+              <h4 className="portal-heading">{t('portals.heading')}</h4>
               <ul className="portal-list">
                 {portalRows.map((row, idx) => (
                   <li key={`${row.item_id}-${idx}`}>
                     <a href={row.indicator_url || row.source_url} target="_blank" rel="noreferrer">
                       {row.source_label}
                     </a>
-                    {row.status === 'discontinued' && <span className="portal-flag"> no longer updated</span>}
+                    {row.status === 'discontinued' && <span className="portal-flag"> {t('portals.discontinued')}</span>}
                     <div className="text-muted portal-note">{row.theme}</div>
                   </li>
                 ))}
@@ -443,7 +432,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
               localStorage.removeItem(STORAGE_KEY)
             }}
           >
-            Clear
+            {t('action.clear')}
           </button>
         )}
       </div>
@@ -453,18 +442,18 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
           <div className="filter-panel glass-panel">
         {(filterOptions?.sources || []).length > 1 && (
           <div>
-            <label>Search source</label>
+            <label>{t('filter.source')}</label>
             <select value={filters.dataset_scope} onChange={(e) => updateFilter('dataset_scope', e.target.value)}>
-              {(filterOptions?.sources || [{ value: 'all', label: 'All metadata sources' }]).map((source) => (
+              {(filterOptions?.sources || [{ value: 'all', label: t('filter.allSources') }]).map((source) => (
                 <option key={source.value} value={source.value}>{source.label}</option>
               ))}
             </select>
           </div>
         )}
         <div>
-          <label>{isInkar ? 'Dataset / sheet' : 'SOEP dataset'}</label>
+          <label>{isInkar ? t('filter.datasetGeo') : t('filter.datasetSoep')}</label>
           <select value={filters.dataset_label} onChange={(e) => updateFilter('dataset_label', e.target.value)}>
-            <option value="All datasets">All datasets</option>
+            <option value="All datasets">{t('filter.allDatasets')}</option>
             {(filterOptions?.datasets || []).map((dataset) => (
               <option key={dataset} value={dataset}>{dataset}</option>
             ))}
@@ -472,9 +461,9 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
         </div>
         {showSoepFilters && (filterOptions?.sample_groups || []).length > 0 && (
           <div>
-            <label>Sample / questionnaire</label>
+            <label>{t('filter.sampleGroup')}</label>
             <select value={filters.sample_group} onChange={(e) => updateFilter('sample_group', e.target.value)}>
-              <option value="Any">Any sample / questionnaire</option>
+              <option value="Any">{t('filter.anySampleGroup')}</option>
               {(filterOptions?.sample_groups || []).map((g) => (
                 <option key={g.value} value={g.value}>{g.label}</option>
               ))}
@@ -484,11 +473,11 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
         {showRegionalFilters && (
           <>
             <div>
-              <label>Spatial level</label>
+              <label>{t('filter.spatialLevel')}</label>
               <select value={filters.spatial_level} onChange={(e) => updateFilter('spatial_level', e.target.value)}>
-                <option value="Any">Any level</option>
+                <option value="Any">{t('filter.anyLevel')}</option>
                 {(filterOptions?.spatial_levels || []).map((level) => (
-                  <option key={level} value={level}>{SPATIAL_LEVEL_LABELS[level] || level}</option>
+                  <option key={level} value={level}>{spatialLevelLabel(level)}</option>
                 ))}
               </select>
             </div>
@@ -498,39 +487,41 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
             facet is shown whenever the loaded sources actually offer themes. */}
         {(filterOptions?.themes || []).length > 0 && (
           <div>
-            <label>Theme</label>
+            <label>{t('filter.theme')}</label>
             <select value={filters.theme} onChange={(e) => updateFilter('theme', e.target.value)}>
-              <option>Any</option>
+              <option value="Any">{t('filter.any')}</option>
+              {/* SOEP topic paths are long, and a truncated dropdown made different paths look
+                  identical; the last segments are what distinguishes them. */}
               {(filterOptions?.themes || []).map((theme) => (
-                <option key={theme} value={theme}>{theme}</option>
+                <option key={theme} value={theme} title={theme}>{shortenPath(theme)}</option>
               ))}
             </select>
           </div>
         )}
         <div>
-          <label>Start year</label>
+          <label>{t('filter.startYear')}</label>
           <input
             type="number"
             min={filterOptions?.year_min || 1900}
             max={filterOptions?.year_max || 2100}
-            placeholder={filterOptions?.year_min || 'Any'}
+            placeholder={filterOptions?.year_min || t('filter.any')}
             value={filters.year_start}
             onChange={(e) => updateFilter('year_start', e.target.value)}
           />
         </div>
         <div>
-          <label>End year</label>
+          <label>{t('filter.endYear')}</label>
           <input
             type="number"
             min={filterOptions?.year_min || 1900}
             max={filterOptions?.year_max || 2100}
-            placeholder={filterOptions?.year_max || 'Any'}
+            placeholder={filterOptions?.year_max || t('filter.any')}
             value={filters.year_end}
             onChange={(e) => updateFilter('year_end', e.target.value)}
           />
         </div>
         <div>
-          <label>Returned records</label>
+          <label>{t('filter.topK')}</label>
           <input
             type="number"
             min="3"
@@ -546,26 +537,26 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
               checked={filters.regional_only}
               onChange={(e) => updateFilter('regional_only', e.target.checked)}
             />
-            Regionalized only
+            {t('filter.regionalOnly')}
           </label>
         )}
         {/* SOEP v41 publishes most of its variables in the raw questionnaire files. They are
             indexed but hidden by default, as a switch the user can see and undo rather than a
             silent penalty in the ranking. */}
         {showSoepFilters && (filterOptions?.raw_rows || 0) > 0 && (
-          <label className="checkbox-row" title="soepdata/raw: the raw questionnaire files behind the analysis datasets">
+          <label className="checkbox-row" title={t('filter.includeRawTitle')}>
             <input
               type="checkbox"
               checked={filters.include_raw}
               onChange={(e) => updateFilter('include_raw', e.target.checked)}
             />
-            Include raw questionnaire files ({filterOptions.raw_rows.toLocaleString()})
+            {t('filter.includeRaw', { count: filterOptions.raw_rows.toLocaleString(language === 'de' ? 'de-DE' : 'en-GB') })}
           </label>
         )}
           <div className="filter-note">
-            Active: {sourceLabel}
-            {filterOptions?.year_min && filterOptions?.year_max && ` | indexed years ${filterOptions.year_min}-${filterOptions.year_max}`}
-            {filterOptions?.index_built && ` | index as of ${filterOptions.index_built}`}
+            {t('filter.active', { source: sourceLabel })}
+            {filterOptions?.year_min && filterOptions?.year_max && ` | ${t('filter.years', { min: filterOptions.year_min, max: filterOptions.year_max })}`}
+            {filterOptions?.index_built && ` | ${t('filter.indexBuilt', { date: filterOptions.index_built })}`}
           </div>
           </div>
 
@@ -575,18 +566,14 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
                 className="chat-input"
                 rows={6}
                 style={{ resize: 'vertical', minHeight: '140px', maxHeight: '340px' }}
-                placeholder={isInkar
-                  ? 'Example: regional indicators for rural infrastructure, employment, childcare, or commuting (Shift+Enter for new line)'
-                  : isSoep
-                  ? 'Example: net individual income from labour; household equivalised income; years of education (Shift+Enter for new line)'
-                  : 'Example: net labour income and regional childcare coverage by district (Shift+Enter for new line)'}
+                placeholder={t(isInkar ? 'placeholder.inkar' : isSoep ? 'placeholder.soep' : 'placeholder.all')}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={handleKeyDown}
               />
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button className="btn-primary" type="submit" disabled={loading || !question.trim()}>
-                  {loading ? 'Searching...' : 'Ask'}
+                  {loading ? t('action.searching') : t('action.ask')}
                 </button>
               </div>
             </form>
@@ -596,7 +583,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
         <div className="right-col">
           <div className="chat-history-container" style={{ paddingRight: '0.5rem' }}>
           {chatHistory.length === 0 ? (
-            <p style={{ textAlign: 'center', color: 'var(--muted)', marginTop: '2rem' }}>No results yet. Enter a query on the left.</p>
+            <p style={{ textAlign: 'center', color: 'var(--muted)', marginTop: '2rem' }}>{t('results.empty')}</p>
           ) : (
             chatHistory.map((msg, i) => (
               <div key={`msg-${i}`} ref={i === chatHistory.length - 1 ? latestMsgRef : null}>
@@ -604,7 +591,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
               </div>
             ))
           )}
-          {loading && <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1rem' }}><em>Searching semantic metadata index...</em></div>}
+          {loading && <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1rem' }}><em>{t('results.searching')}</em></div>}
           {error && <div className="error-message">{error}</div>}
           <div ref={messagesEndRef} />
           </div>
@@ -612,14 +599,14 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
       </div>
 
       <div className="cite-footer text-muted">
-        Please cite: Wandel, K. (2026). {cite.title}. Zenodo.{' '}
+        {t('cite.prefix', { title: cite.title })}{' '}
         <a href={`https://doi.org/${cite.doi}`} target="_blank" rel="noreferrer">doi.org/{cite.doi}</a>
         {/* The service is public, so the imprint, the privacy statement and the attribution
             list of every indexed source have to be reachable from every page. */}
         <div className="legal-links">
-          <a href={`${GEOLAB_SITE}/imprint.html`} target="_blank" rel="noreferrer">Imprint</a>
-          <a href={`${GEOLAB_SITE}/privacy.html`} target="_blank" rel="noreferrer">Privacy</a>
-          <a href={`${GEOLAB_SITE}/data-sources.html`} target="_blank" rel="noreferrer">Data sources and attribution</a>
+          <a href={`${GEOLAB_SITE}/imprint.html`} target="_blank" rel="noreferrer">{t('legal.imprint')}</a>
+          <a href={`${GEOLAB_SITE}/privacy.html`} target="_blank" rel="noreferrer">{t('legal.privacy')}</a>
+          <a href={`${GEOLAB_SITE}/data-sources.html`} target="_blank" rel="noreferrer">{t('legal.sources')}</a>
           <a href={GEOLAB_SITE} target="_blank" rel="noreferrer">GeoLAB</a>
         </div>
       </div>

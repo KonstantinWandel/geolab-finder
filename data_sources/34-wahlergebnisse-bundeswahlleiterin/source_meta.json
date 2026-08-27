@@ -1,0 +1,57 @@
+{
+  "name": "Wahlergebnisse Bundeswahlleiterin",
+  "slug": "wahlergebnisse-bundeswahlleiterin",
+  "url": "https://www.bundeswahlleiterin.de/",
+  "excel_row": 35,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "web UI / search form only"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Politik"
+  ],
+  "topics": [
+    {
+      "group": "Politik",
+      "topic": "Politik"
+    },
+    {
+      "group": "Politik",
+      "topic": "Bundestagswahl"
+    },
+    {
+      "group": "Politik",
+      "topic": "Europawahl"
+    },
+    {
+      "group": "Politik",
+      "topic": "Wahlberechtigte"
+    }
+  ],
+  "topic_labels": [
+    "Politik",
+    "Bundestagswahl",
+    "Europawahl",
+    "Wahlberechtigte"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 1949,
+  "coverage_end_month": null,
+  "coverage_end_year": 2025,
+  "update_frequency": "je Wahl",
+  "note": "Ergebnisse und Strukturdaten für Bundestags- und Europawahlen, Wahlkreis- und Gemeindeebene als CSV"
+}

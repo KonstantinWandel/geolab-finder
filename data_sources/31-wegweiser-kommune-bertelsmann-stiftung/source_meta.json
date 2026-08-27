@@ -1,0 +1,113 @@
+{
+  "name": "Wegweiser Kommune (Bertelsmann Stiftung)",
+  "slug": "wegweiser-kommune-bertelsmann-stiftung",
+  "url": "https://www.wegweiser-kommune.de/",
+  "excel_row": 32,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "web UI / search form only",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": true,
+    "API": false,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Bauen / Wohnen",
+    "Bevölkerung",
+    "Bildung",
+    "Finanzen",
+    "Nachhaltigkeit",
+    "Soziales"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitslose (-nquote)"
+    },
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Bauen / Wohnen"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerungsstand"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung nach Geschlecht / Alter"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Wanderungen"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Durchschnittsalter"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Betreuungsquote"
+    },
+    {
+      "group": "Finanzen",
+      "topic": "Finanzen"
+    },
+    {
+      "group": "Finanzen",
+      "topic": "Schulden je Einwohner"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Soziales"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Sozialleistungen"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Arbeitslose (-nquote)",
+    "Bauen / Wohnen",
+    "Bevölkerung",
+    "Bevölkerungsstand",
+    "Bevölkerung nach Geschlecht / Alter",
+    "Wanderungen",
+    "Durchschnittsalter",
+    "Betreuungsquote",
+    "Finanzen",
+    "Schulden je Einwohner",
+    "Bildung",
+    "Soziales",
+    "Sozialleistungen"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2006,
+  "coverage_end_month": null,
+  "coverage_end_year": 2040,
+  "update_frequency": "jährlich",
+  "note": "Bevölkerungsprognosen bis 2040 für Gemeinden ab 5.000 Einwohnern"
+}

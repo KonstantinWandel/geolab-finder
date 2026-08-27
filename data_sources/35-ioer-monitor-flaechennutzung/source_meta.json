@@ -1,0 +1,75 @@
+{
+  "name": "IÖR-Monitor (Flächennutzung)",
+  "slug": "ioer-monitor-flaechennutzung",
+  "url": "https://www.ioer-monitor.de/",
+  "excel_row": 36,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only",
+    "machine-readable API",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": true,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Flächennutzung",
+    "Nachhaltigkeit",
+    "Verkehr / Mobilität"
+  ],
+  "topics": [
+    {
+      "group": "Flächennutzung",
+      "topic": "Flächennutzung"
+    },
+    {
+      "group": "Flächennutzung",
+      "topic": "nach ALKIS"
+    },
+    {
+      "group": "Flächennutzung",
+      "topic": "Bodennutzung"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Nachhaltigkeit"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Straßenverkehr"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Umwelt"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    }
+  ],
+  "topic_labels": [
+    "Flächennutzung",
+    "nach ALKIS",
+    "Bodennutzung",
+    "Nachhaltigkeit",
+    "Straßenverkehr",
+    "Umwelt",
+    "Verkehr / Mobilität"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2000,
+  "coverage_end_month": null,
+  "coverage_end_year": 2024,
+  "update_frequency": "jährlich",
+  "note": "Rund 90 Indikatoren zur Flächennutzung und Landschaftsqualität, Raster und Verwaltungsebenen, WMS/WFS"
+}

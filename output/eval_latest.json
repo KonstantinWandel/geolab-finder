@@ -1,7 +1,7 @@
 {
   "summary": {
     "queries": 58,
-    "hit@1": 52,
+    "hit@1": 53,
     "hit@3": 57,
     "hit@10": 58,
     "misses": []
@@ -84,7 +84,8 @@
       "sources_in_top": [
         "deutschlandatlas",
         "geoportal",
-        "inkar"
+        "inkar",
+        "osm_poi"
       ]
     },
     {
@@ -93,7 +94,7 @@
       "top_source": "regionalatlas",
       "top_label": "Pkw-Bestand je 1.000 EW am 01.01.",
       "sources_in_top": [
-        "btw21_strukturdaten",
+        "btw_strukturdaten",
         "deutschlandatlas",
         "inkar",
         "regionalatlas",
@@ -114,12 +115,12 @@
     },
     {
       "query": "Strukturdaten der Bundestagswahlkreise",
-      "rank": 2,
-      "top_source": "geoportal",
-      "top_label": "Strukturdaten Bundestagswahl 2021 (Datenportal)",
+      "rank": 1,
+      "top_source": "btw_strukturdaten",
+      "top_label": "Gemeinden am 31.12.2023 (Anzahl) [2025]",
       "sources_in_top": [
-        "btw21_strukturdaten",
-        "geoportal"
+        "btw_strukturdaten",
+        "regionalstatistik"
       ]
     },
     {
@@ -129,7 +130,7 @@
       "top_label": "Ausländeranteil in der Bevölkerung",
       "sources_in_top": [
         "ba_strukturdaten",
-        "btw21_strukturdaten",
+        "btw_strukturdaten",
         "deutschlandatlas",
         "genesis_bund",
         "inkar",
@@ -175,7 +176,7 @@
       "top_source": "regionalstatistik",
       "top_label": "Arbeitslosenquote bez.auf alle abhäng. Erwerbsp.",
       "sources_in_top": [
-        "deutschlandatlas",
+        "ba_strukturdaten",
         "regionalstatistik"
       ]
     },
@@ -200,6 +201,7 @@
         "deutschlandatlas",
         "genesis_bund",
         "inkar",
+        "ioer_monitor",
         "regionalatlas",
         "regionalstatistik"
       ]
@@ -211,6 +213,7 @@
       "top_label": "Angebotsmietpreise",
       "sources_in_top": [
         "deutschlandatlas",
+        "fdz_ruhr",
         "inkar",
         "regionalstatistik",
         "zensus2022"
@@ -230,13 +233,14 @@
     },
     {
       "query": "Spielplätze in der Umgebung",
-      "rank": 1,
-      "top_source": "geoportal",
-      "top_label": "Spielplatztreff - Suchmaschine für Spielplätze (Datenportal)",
+      "rank": 2,
+      "top_source": "osm_poi",
+      "top_label": "Spielplätze (OpenStreetMap)",
       "sources_in_top": [
         "geoportal",
         "inkar",
-        "regionalatlas",
+        "ioer_monitor",
+        "osm_poi",
         "regionalstatistik"
       ]
     },
@@ -258,8 +262,7 @@
       "top_source": "regionalstatistik",
       "top_label": "Bevölkerungsdichte (Einwohner je qkm)",
       "sources_in_top": [
-        "ba_strukturdaten",
-        "btw21_strukturdaten",
+        "btw_strukturdaten",
         "deutschlandatlas",
         "inkar",
         "regionalatlas",
@@ -273,6 +276,7 @@
       "top_label": "Anteil Schulabgänger/-innen ohne Hauptschulabschluss",
       "sources_in_top": [
         "ba_strukturdaten",
+        "btw_strukturdaten",
         "deutschlandatlas",
         "inkar",
         "regionalatlas",
@@ -308,6 +312,7 @@
       "top_label": "Barrierefreiheit",
       "sources_in_top": [
         "bundes_klinik_atlas",
+        "db_stada",
         "gba_qualitaetsbericht",
         "inkar"
       ]
@@ -319,7 +324,9 @@
       "top_label": "Flächenneuinanspruchnahme",
       "sources_in_top": [
         "deutschlandatlas",
+        "geoportal",
         "inkar",
+        "ioer_monitor",
         "regionalstatistik"
       ]
     },
@@ -330,7 +337,7 @@
       "top_label": "Kaufkraft",
       "sources_in_top": [
         "ba_strukturdaten",
-        "btw21_strukturdaten",
+        "btw_strukturdaten",
         "inkar",
         "regionalatlas",
         "regionalstatistik"
@@ -500,19 +507,21 @@
       "top_label": "Wahlbeteiligung, Bundestagswahl",
       "sources_in_top": [
         "deutschlandatlas",
-        "genesis_bund",
         "inkar",
         "regionalatlas",
-        "regionalstatistik"
+        "regionalstatistik",
+        "wahlergebnisse"
       ]
     },
     {
       "query": "Bodenrichtwerte und Grundstückspreise",
-      "rank": 2,
-      "top_source": "inkar",
-      "top_label": "Baulandpreise",
+      "rank": 1,
+      "top_source": "boris_d",
+      "top_label": "Bodenrichtwert (zonal und lagetypisch)",
       "sources_in_top": [
+        "boris_d",
         "genesis_bund",
+        "geoportal",
         "inkar",
         "regionalstatistik"
       ]
@@ -657,7 +666,7 @@
       "top_source": "inkar",
       "top_label": "Leistungen für Unterkunft an SGBII",
       "sources_in_top": [
-        "btw21_strukturdaten",
+        "btw_strukturdaten",
         "genesis_bund",
         "inkar",
         "regionalatlas",

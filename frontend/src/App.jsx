@@ -4,6 +4,7 @@ import ResultsList from './components/ResultsList'
 import AnalysisView from './components/AnalysisView'
 import SOEPView from './components/SOEPView'
 import SOEPRagAdvisor from './components/SOEPRagAdvisor'
+import { LANGUAGES, detectLanguage, makeTranslator } from './i18n'
 import './App.css'
 
 function App() {
@@ -32,6 +33,14 @@ function App() {
     const pageTitle = TITLES[APP_MODE] ? `${TITLES[APP_MODE]}` : 'GeoLAB metadata finder'
     if (!document.title || document.title.startsWith('%')) document.title = pageTitle
   }, [APP_MODE])
+
+  // German is the default for a German-speaking browser; the choice persists per browser.
+  const [language, setLanguage] = useState(detectLanguage)
+  const t = makeTranslator(language)
+  useEffect(() => {
+    document.documentElement.setAttribute('lang', language)
+    try { localStorage.setItem('geolab_lang', language) } catch (e) { /* ignore */ }
+  }, [language])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -91,14 +100,21 @@ function App() {
     <div className="app-container">
       <header className="app-header">
         <h1>GeoLAB <span className="text-gradient">{TITLES[APP_MODE] || TITLES.all}</span></h1>
-        <select className="theme-select" value={theme} onChange={(e) => setTheme(e.target.value)} aria-label="Theme">
-          <option value="default">Default</option>
-          <option value="dark">Dark</option>
-          <option value="light">Light</option>
-        </select>
+        <div className="header-controls">
+          <select className="theme-select" value={language} onChange={(e) => setLanguage(e.target.value)} aria-label={t('lang.aria')}>
+            {LANGUAGES.map((entry) => (
+              <option key={entry.value} value={entry.value}>{entry.label}</option>
+            ))}
+          </select>
+          <select className="theme-select" value={theme} onChange={(e) => setTheme(e.target.value)} aria-label={t('theme.aria')}>
+            <option value="default">{t('theme.default')}</option>
+            <option value="dark">{t('theme.dark')}</option>
+            <option value="light">{t('theme.light')}</option>
+          </select>
+        </div>
       </header>
       <main className="main-content">
-        <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} />
+        <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} language={language} />
       </main>
       <footer className="brand-strip">
         {BRANDS.map((brand) => (

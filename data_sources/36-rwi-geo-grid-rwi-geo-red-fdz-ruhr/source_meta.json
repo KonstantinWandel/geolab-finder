@@ -1,0 +1,80 @@
+{
+  "name": "RWI-GEO-GRID / RWI-GEO-RED (FDZ Ruhr)",
+  "slug": "rwi-geo-grid-rwi-geo-red-fdz-ruhr",
+  "url": "https://fdz.rwi-essen.de/",
+  "excel_row": 37,
+  "provider": "",
+  "access_modes": [
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": false,
+    "API": false,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "PLZ",
+    "Adressen / Koordinaten",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Bauen / Wohnen",
+    "Bevölkerung",
+    "Soziales"
+  ],
+  "topics": [
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Bauen / Wohnen"
+    },
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Mietpreise"
+    },
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Wohnfläche je Wohnung / Einwohner"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerungsstand"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Soziales"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Einkünfte"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Armutsgefährdung"
+    }
+  ],
+  "topic_labels": [
+    "Bauen / Wohnen",
+    "Mietpreise",
+    "Wohnfläche je Wohnung / Einwohner",
+    "Bevölkerung",
+    "Bevölkerungsstand",
+    "Soziales",
+    "Einkünfte",
+    "Armutsgefährdung"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2005,
+  "coverage_end_month": null,
+  "coverage_end_year": 2024,
+  "update_frequency": "jährlich",
+  "note": "1-km-Raster mit sozioökonomischen Merkmalen und geocodierte Immobilienanzeigen; Scientific-Use-Files auf Antrag"
+}

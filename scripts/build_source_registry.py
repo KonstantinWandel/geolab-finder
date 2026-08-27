@@ -35,7 +35,7 @@ SHEET = "Tabelle1"
 
 # Loud assertion: the wrong workbook must fail instead of silently producing a
 # half-registry (see the workspace rule on sample definitions).
-EXPECTED_SOURCES = 29
+EXPECTED_SOURCES = 36
 
 # Column blocks, by header text (trailing spaces in the workbook are stripped first).
 NAME_COL = "Datenquellen"

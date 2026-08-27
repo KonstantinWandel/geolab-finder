@@ -37,7 +37,7 @@ CASES = [
     ("Erreichbarkeit der nächsten Apotheke", r"apothek", None),
     ("Pkw-Dichte je 1000 Einwohner", r"pkw|auto", None),
     ("Betreuungsquote Kinder unter drei Jahren", r"betreu|kita|kinder", None),
-    ("Strukturdaten der Bundestagswahlkreise", r".", {"btw21_strukturdaten"}),
+    ("Strukturdaten der Bundestagswahlkreise", r".", {"btw_strukturdaten"}),
     ("Ausländeranteil im Kreis", r"ausl|migration|staatsang", None),
     ("Studierende und Hochschulstandorte", r"stud|hochschul", None),
     ("ÖPNV Haltestellen und Fahrpläne", r"haltestelle|fahrplan|öpnv|oepnv", None),

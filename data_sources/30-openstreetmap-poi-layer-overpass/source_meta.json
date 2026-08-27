@@ -1,0 +1,149 @@
+{
+  "name": "OpenStreetMap POI-Layer (Overpass)",
+  "slug": "openstreetmap-poi-layer-overpass",
+  "url": "https://wiki.openstreetmap.org/wiki/Map_features",
+  "excel_row": 31,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "web UI / search form only",
+    "machine-readable API",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": true,
+    "API": true,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "PLZ",
+    "Adressen / Koordinaten",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Bildung",
+    "Gesundheit",
+    "Kinder und Jugend",
+    "Kultur",
+    "Nachhaltigkeit",
+    "Religion",
+    "Sport",
+    "Verkehr / Mobilität",
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Bildung",
+      "topic": "Anzahl Schulen"
+    },
+    {
+      "group": "Bildung",
+      "topic": "Distanz nächste Schule/Hochschule/VHS"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Distanz zum nächsten (Fach-)Arzt"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Distanz zur nächsten Apotheke"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Kinder und Jugend"
+    },
+    {
+      "group": "Kinder und Jugend",
+      "topic": "Distanz nächster Spielplatz"
+    },
+    {
+      "group": "Kultur",
+      "topic": "Kultur"
+    },
+    {
+      "group": "Kultur",
+      "topic": "Kinos"
+    },
+    {
+      "group": "Kultur",
+      "topic": "Distanz nächstes Theater"
+    },
+    {
+      "group": "Kultur",
+      "topic": "Anzahl Gastronomiebetriebe / Bewohner"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Religion",
+      "topic": "Religion"
+    },
+    {
+      "group": "Religion",
+      "topic": "Distanz zum nächsten Gotteshaus"
+    },
+    {
+      "group": "Sport",
+      "topic": "Sport"
+    },
+    {
+      "group": "Sport",
+      "topic": "Sportanlagen / Einwohner"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "ÖPNV"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Anzahl Läden / Bewohner"
+    }
+  ],
+  "topic_labels": [
+    "Anzahl Schulen",
+    "Distanz nächste Schule/Hochschule/VHS",
+    "Gesundheit",
+    "Distanz zum nächsten (Fach-)Arzt",
+    "Distanz zur nächsten Apotheke",
+    "Kinder und Jugend",
+    "Distanz nächster Spielplatz",
+    "Kultur",
+    "Kinos",
+    "Distanz nächstes Theater",
+    "Anzahl Gastronomiebetriebe / Bewohner",
+    "Bildung",
+    "Religion",
+    "Distanz zum nächsten Gotteshaus",
+    "Sport",
+    "Sportanlagen / Einwohner",
+    "Verkehr / Mobilität",
+    "ÖPNV",
+    "Wirtschaft und Unternehmen",
+    "Anzahl Läden / Bewohner"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2004,
+  "coverage_end_month": null,
+  "coverage_end_year": 2026,
+  "update_frequency": "laufend",
+  "note": "Overpass-API, freie Abfrage nach Tags; systematischer Ersatz für die Spielplatz- und Arztsuchportale"
+}

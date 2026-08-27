@@ -1,0 +1,60 @@
+{
+  "name": "BORIS-D Bodenrichtwerte",
+  "slug": "boris-d-bodenrichtwerte",
+  "url": "https://www.bodenrichtwerte-boris.de/",
+  "excel_row": 34,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only",
+    "machine-readable API",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": true,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "Adressen / Koordinaten",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Bauen / Wohnen",
+    "Flächennutzung"
+  ],
+  "topics": [
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Bauen / Wohnen"
+    },
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Bautätigkeit und Wohnen"
+    },
+    {
+      "group": "Flächennutzung",
+      "topic": "Flächennutzung"
+    },
+    {
+      "group": "Flächennutzung",
+      "topic": "Bodennutzung"
+    }
+  ],
+  "topic_labels": [
+    "Bauen / Wohnen",
+    "Bautätigkeit und Wohnen",
+    "Flächennutzung",
+    "Bodennutzung"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2000,
+  "coverage_end_month": null,
+  "coverage_end_year": 2026,
+  "update_frequency": "jährlich",
+  "note": "Bodenrichtwerte der Gutachterausschüsse, Bodenrichtwertzone; Länderportale mit WMS/WFS, Nutzungsbedingungen je Land"
+}

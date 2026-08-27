@@ -843,18 +843,19 @@ button, input, select, textarea,
 .result-meta, table, .similarity-score { font-variant-numeric: tabular-nums; }
 
 /* Institutional footer: the page is a Universität Bielefeld / Leibniz-Gemeinschaft
-   project, so both marks sit at the foot of every view. The SVGs inherit the page
-   text colour (fill: currentColor), which keeps them legible in the dark theme. */
+   project, so the marks sit at the foot of every view. Kept deliberately small: at the
+   original size the strip plus the citation line took about 130px of a 1080p screen away
+   from the results table, which is the part people actually work in. */
 .brand-strip {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2.5rem;
+  gap: 1.4rem;
   flex-wrap: wrap;
-  padding: 1.5rem 1rem 2rem;
-  margin-top: 1.5rem;
+  padding: 0.45rem 1rem 0.55rem;
+  margin-top: 0.35rem;
   border-top: 1px solid var(--border, rgba(128, 128, 128, 0.25));
-  opacity: 0.75;
+  opacity: 0.7;
 }
 
 .brand-strip a {
@@ -886,21 +887,21 @@ button, input, select, textarea,
 }
 
 .brand-uni {
-  height: 34px;
+  height: 20px;
   aspect-ratio: 190 / 45;
   -webkit-mask-image: url('/brand/uni-bielefeld.svg');
   mask-image: url('/brand/uni-bielefeld.svg');
 }
 
 .brand-diw {
-  height: 40px;
+  height: 22px;
   aspect-ratio: 209 / 90;
   -webkit-mask-image: url('/brand/diw.svg');
   mask-image: url('/brand/diw.svg');
 }
 
 .brand-leibniz {
-  height: 52px;
+  height: 26px;
   aspect-ratio: 100 / 79;
   -webkit-mask-image: url('/brand/leibniz.svg');
   mask-image: url('/brand/leibniz.svg');
@@ -908,30 +909,38 @@ button, input, select, textarea,
 
 /* Multi-colour raster mark: never recoloured, given a light plate on dark backgrounds. */
 .brand-soep {
-  height: 42px;
-  border-radius: 4px;
+  height: 22px;
+  border-radius: 3px;
 }
 
 :root[data-theme="dark"] .brand-soep,
 :root[data-theme="default"] .brand-soep {
   background: #ffffff;
-  padding: 4px 8px;
+  padding: 2px 5px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .brand-soep {
     background: #ffffff;
-    padding: 4px 8px;
+    padding: 2px 5px;
   }
 }
 
-@media (max-width: 480px) {
-  .brand-strip { gap: 1.5rem; }
-  .brand-uni { height: 26px; }
-  .brand-diw { height: 30px; }
-  .brand-leibniz { height: 40px; }
-  .brand-soep { height: 32px; }
+/* Language and theme pickers sit together in the header. */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
+
+@media (max-width: 480px) {
+  .brand-strip { gap: 1rem; padding: 0.35rem 0.5rem 0.45rem; }
+  .brand-uni { height: 16px; }
+  .brand-diw { height: 18px; }
+  .brand-leibniz { height: 20px; }
+  .brand-soep { height: 18px; }
+}
+
 
 
 
