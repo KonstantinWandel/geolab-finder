@@ -802,12 +802,60 @@ def flatten_ba_strukturdaten(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     return records
 
 
+def _deutschlandatlas_maps(folder: Path) -> List[Dict[str, str]]:
+    """The atlas's own map pages, harvested by scripts/fetch_sources.py."""
+    path = folder / "raw" / "karten_index.json"
+    if not path.exists():
+        return []
+    return json.loads(path.read_text(encoding="utf-8")).get("maps") or []
+
+
+def _match_map(label: str, maps: List[Dict[str, str]]) -> Optional[Dict[str, str]]:
+    """Best map page for an indicator label.
+
+    The map titles are shorter than the indicator names ("Beschaeftigungsquote" for
+    "Beschaeftigungsquote (Maenner)"), so an exact match is tried first, then containment of the
+    map's words in the indicator's, then a token-overlap threshold. Anything weaker is left
+    unmatched on purpose: a wrong map link is worse than the dataset link it replaces.
+    """
+    def tokens(value: str) -> set:
+        cleaned = re.sub(r"\(.*?\)", " ", (value or "").replace("\u00ad", "").casefold())
+        return {t for t in re.split(r"[^a-z0-9\u00e4\u00f6\u00fc\u00df]+", cleaned) if len(t) > 2}
+
+    label_tokens = tokens(label)
+    if not label_tokens:
+        return None
+    normalised = " ".join(sorted(label_tokens))
+    for entry in maps:
+        if " ".join(sorted(tokens(entry["title"]))) == normalised:
+            return entry
+    best, best_score = None, 0.0
+    for entry in maps:
+        title_tokens = tokens(entry["title"])
+        if not title_tokens:
+            continue
+        if title_tokens <= label_tokens:
+            # map title is the short form of the indicator name
+            score = 0.90 + len(title_tokens) / 100.0
+        elif label_tokens <= title_tokens:
+            # some index entries are the title followed by the map's own blurb, so the
+            # indicator name sits INSIDE them; the shortest such entry is the closest one
+            score = 0.85 + 1.0 / (1 + len(title_tokens))
+        else:
+            score = len(title_tokens & label_tokens) / len(title_tokens | label_tokens)
+        if score > best_score:
+            best, best_score = entry, score
+    return best if best_score >= 0.7 else None
+
+
 def flatten_deutschlandatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     """The Deutschlandatlas ships both halves of a catalogue: the PDF documents every
     indicator (`<name> | Indikatorenkürzel: <code>`, definition, Gebietsstand, Datenbasis,
     methodischer Hinweis) and the XLSX shows which spatial level and reference date each
     indicator is actually published for."""
     raw = source["folder"] / "raw"
+    maps = _deutschlandatlas_maps(source["folder"])
+    matched_maps = 0
     pdf_path = raw / "Indikatoren_Deutschlandatlas.pdf"
     xlsx_path = raw / "Deutschlandatlas-Daten.xlsx"
 
@@ -911,10 +959,12 @@ def flatten_deutschlandatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
             f"Methodischer Hinweis: {info['hinweis']}" if info.get("hinweis") else "",
             f"Gebietsstand: {info['gebietsstand']}" if info.get("gebietsstand") else "",
         ])
+        match = _match_map(label, maps)
+        if match:
+            matched_maps += 1
         records.append(
             make_record(
                 source_key="deutschlandatlas",
-                link_level="dataset",
                 source_label="Deutschlandatlas (BBSR / Statistisches Bundesamt)",
                 item_type="regional_indicator",
                 item_id=f"deutschlandatlas:{code}",
@@ -930,11 +980,14 @@ def flatten_deutschlandatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 year_end=years[-1] if years else None,
                 years_text=(f"{years[0]}-{years[-1]}" if len(years) > 1 else (str(years[0]) if years else "")),
                 source_url="https://www.deutschlandatlas.bund.de/",
-                # /DE/Karten/karten_node.html was the map entry point and now answers 404 in a
-                # browser too, so the link goes to the download route, which does exist. The atlas
-                # answers 400 to every scripted request, so no link here can be probed from a script.
-                indicator_url="https://www.deutschlandatlas.bund.de/DE/Service/Downloads/downloads_node.html",
-                link_verified=False,
+                # The atlas does publish a page per map; the index lives at /DE/Karten/_node.html
+                # and is reachable with a cookie jar (it answers 307 to a cookie check, which
+                # earlier looked like a hard 400). An indicator without a confident title match
+                # keeps the download route, which always exists.
+                indicator_url=(match["url"] if match else
+                               "https://www.deutschlandatlas.bund.de/DE/Service/Downloads/downloads_node.html"),
+                link_level="indicator" if match else "dataset",
+                link_verified=bool(match),
                 access_modes=source["access_modes"] or ["direct file download", "interactive map viewer"],
                 update_frequency=source["update_frequency"],
                 api_hint=(
@@ -950,6 +1003,9 @@ def flatten_deutschlandatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 ),
             )
         )
+    if maps:
+        print(f"[info] deutschlandatlas: {matched_maps} of {len(records)} indicators matched to a map page "
+              f"({len(maps)} map pages harvested)")
     return records
 
 

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.cookiejar
 import html
 import json
 import ssl
@@ -170,6 +171,14 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
     ],
     "arztsuche-bundesaerztekammer": [
         {"name": "portal.html", "url": "https://www.bundesaerztekammer.de/service/arztsuche/", "kind": "portal", "note": ""},
+    ],
+    "deutschlandatlas-erreichbarkeit-von-apotheken": [
+        {"name": "karten_index.json",
+         "url": "https://www.deutschlandatlas.bund.de/DE/Karten/_node.html",
+         "kind": "catalogue", "handler": "deutschlandatlas_maps",
+         "note": "Per-indicator map pages. The site answers a 307 to a cookie-check URL, so the "
+                 "fetch needs a cookie jar; the PDF and the XLSX still come from a manual "
+                 "download because they are not linked from here."},
     ],
     "hochschulkompass": [
         {"name": "portal.html", "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html", "kind": "portal", "note": ""},
@@ -671,6 +680,56 @@ def fetch_fdz_datasets(url: str, target: Path) -> Dict[str, Any]:
             "datasets": len(datasets)}
 
 
+def fetch_deutschlandatlas_maps(url: str, target: Path) -> Dict[str, Any]:
+    """The Deutschlandatlas map index, with the per-indicator map URLs.
+
+    This host was previously recorded here as answering 400 to every scripted request. That was
+    wrong: it answers a 307 to a cookie-check URL, and a client that keeps the cookie and follows
+    the redirect gets the page. urllib does that with an HTTPCookieProcessor; without one the
+    redirect loops back and the site looks broken.
+    """
+    started = time.time()
+    jar = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+    opener.addheaders = [
+        ("User-Agent", UA),
+        ("Accept", "text/html,application/xhtml+xml"),
+        ("Accept-Language", "de-DE,de;q=0.9"),
+    ]
+    with opener.open(url, timeout=TIMEOUT) as response:
+        body = response.read().decode("utf-8", errors="replace")
+        status = response.status
+
+    maps: List[Dict[str, str]] = []
+    seen: set = set()
+    for href, inner in re.findall(r'href="([^"]+)"[^>]*>(.*?)</a>', body, re.S):
+        # The page links its maps RELATIVE and without a leading slash
+        # ("DE/Karten/Wo-wir-leben/003/_node.html"), so anchoring on "/DE/Karten/" finds nothing.
+        href = " ".join(href.split())
+        if "DE/Karten/" not in href or "#" in href:
+            continue
+        if href.rstrip("/").endswith("Karten/_node.html"):
+            continue
+        title = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", inner)).replace("\u00ad", "").split())
+        if not title or title.startswith("Zur "):
+            continue
+        absolute = urllib.parse.urljoin("https://www.deutschlandatlas.bund.de/", href.lstrip("/"))
+        theme = href.split("DE/Karten/")[-1].split("/")[0].replace("-", " ")
+        if absolute in seen:
+            continue
+        seen.add(absolute)
+        maps.append({"title": title, "url": absolute, "theme": theme})
+
+    payload = json.dumps({"index": url, "maps": maps,
+                          "harvested_at": datetime.now(timezone.utc).isoformat(timespec="seconds")},
+                         ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": status, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "maps": len(maps)}
+
+
 def sha256_of(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -870,6 +929,8 @@ def main() -> None:
             try:
                 if artifact.get("handler") == "genesapi_keys":
                     result = fetch_genesapi_keys(artifact["url"], target)
+                elif artifact.get("handler") == "deutschlandatlas_maps":
+                    result = fetch_deutschlandatlas_maps(artifact["url"], target)
                 elif artifact.get("handler") == "taginfo_counts":
                     result = fetch_taginfo_counts(artifact["url"], target)
                 elif artifact.get("handler") == "dwd_tree":

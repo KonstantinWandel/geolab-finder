@@ -114,6 +114,23 @@ export const STRINGS = {
     'legal.imprint': 'Imprint',
     'legal.privacy': 'Privacy',
     'legal.sources': 'Data sources and attribution',
+
+    'source.all': 'All metadata sources',
+    'source.soep': 'SOEP-Core variables',
+    'source.inkar': 'INKAR regional indicators',
+    'source.geoportal': 'Data portals (link only)',
+
+    'sample.core_person': 'Core - Individual (adult)',
+    'sample.core_household': 'Core - Household',
+    'sample.youth': 'Youth (16-17)',
+    'sample.children_parenting': 'Children & parenting',
+    'sample.biography_lifehistory': 'Biography & life-history',
+    'sample.migration_refugee': 'Migration & refugee',
+    'sample.employer_employee_lee': 'Employer-employee (SOEP-LEE2)',
+    'sample.regional_context': 'Regional context',
+    'sample.specialized_modules': 'Specialized modules & tests',
+    'sample.fieldwork_sampling': 'Fieldwork & sampling',
+    'sample.other': 'Other / unclassified',
   },
 
   de: {
@@ -168,7 +185,7 @@ export const STRINGS = {
     'col.select': 'Auswahl',
     'col.record': 'Merkmal',
     'col.source': 'Quelle',
-    'col.score': 'Score',
+    'col.score': 'Relevanz',
     'col.coverage': 'Abdeckung',
     'col.why': 'Warum passend',
     'col.link': 'Bezug über',
@@ -218,6 +235,23 @@ export const STRINGS = {
     'legal.imprint': 'Impressum',
     'legal.privacy': 'Datenschutz',
     'legal.sources': 'Datenquellen und Attribution',
+
+    'source.all': 'Alle Metadatenquellen',
+    'source.soep': 'SOEP-Core-Variablen',
+    'source.inkar': 'INKAR-Regionalindikatoren',
+    'source.geoportal': 'Datenportale (nur Verlinkung)',
+
+    'sample.core_person': 'Kern - Personenfragebogen (Erwachsene)',
+    'sample.core_household': 'Kern - Haushaltsfragebogen',
+    'sample.youth': 'Jugendfragebogen (16-17)',
+    'sample.children_parenting': 'Kinder und Erziehung',
+    'sample.biography_lifehistory': 'Biografie und Lebensverlauf',
+    'sample.migration_refugee': 'Migration und Geflüchtete',
+    'sample.employer_employee_lee': 'Arbeitgeber-Arbeitnehmer (SOEP-LEE2)',
+    'sample.regional_context': 'Regionaler Kontext',
+    'sample.specialized_modules': 'Spezialmodule und Tests',
+    'sample.fieldwork_sampling': 'Feldarbeit und Stichprobe',
+    'sample.other': 'Sonstiges / nicht zugeordnet',
   },
 }
 
@@ -257,4 +291,85 @@ export function shortenPath(value, segments = 2) {
   const parts = String(value || '').split('>').map((part) => part.trim()).filter(Boolean)
   if (parts.length <= segments) return value
   return '… ' + parts.slice(-segments).join(' > ')
+}
+
+// German titles for the SOEP datasets. The backend labels them in English ("Biography
+// questionnaire (biol)") because the dataset facet doubles as the export column, so the German
+// name is applied in the interface only, keyed by the SOEP dataset code that the label carries
+// in brackets. A code without an entry keeps the English title rather than being hidden.
+export const DATASET_TITLE_DE = {
+  pl: 'Personenfragebogen (long)',
+  pgen: 'Person: generierte Variablen',
+  pequiv: 'Cross-National Equivalent File (Person)',
+  ppathl: 'Personen-Pfaddatei (tracking)',
+  pkal: 'Personen-Aktivitätenkalender',
+  pwealth: 'Vermögen der Person (imputiert)',
+  selfempl: 'Modul Selbstständigkeit',
+  plueckel: 'Lücken-Personenfragebogen',
+  gkal: 'Kalender des Lückenfragebogens',
+  hl: 'Haushaltsfragebogen (long)',
+  hgen: 'Haushalt: generierte Variablen',
+  hpathl: 'Haushalts-Pfaddatei (tracking)',
+  hconsum: 'Haushaltskonsum',
+  hwealth: 'Haushaltsvermögen (imputiert)',
+  housing: 'Modul Wohnen und Wohnung',
+  mihinc: 'Haushaltsnettoeinkommen (imputiert)',
+  jugendl: 'Jugendfragebogen (long)',
+  youthl: 'Jugendfragebogen (harmonisiert)',
+  childl: 'Kinderfragebogen (Elternangaben)',
+  kidlong: 'Kinder-Längsschnittdatei',
+  biopupil: 'Schulkinderfragebogen',
+  bioagel: 'Kindesentwicklung nach Alter',
+  biol: 'Biografiefragebogen',
+  lkal: 'Lebensverlaufskalender',
+  artkalen: 'Artkalender (Aktivitätenspells)',
+  pbiospe: 'Biografische Spelldatei',
+  biobirth: 'Geburts- und Fertilitätsbiografie',
+  bioparen: 'Biografie der Eltern',
+  biojob: 'Biografie der ersten Erwerbstätigkeit',
+  biosib: 'Geschwisterdatei',
+  bioedu: 'Bildungsbiografie',
+  biocouplm: 'Partnerschaftsspells (monatlich)',
+  biocouply: 'Partnerschaftsspells (jährlich)',
+  biomarsm: 'Ehespells (monatlich)',
+  biomarsy: 'Ehespells (jährlich)',
+  biotwin: 'Zwillingsdatei',
+  lifespell: 'Lebens- und Teilnahmespells',
+  vpl: 'Fragebogen zu verstorbenen Personen',
+  migspell: 'Migrationsspells',
+  refugspell: 'Fluchtmigrationsspells',
+  bioimmig: 'Zuwanderungsbiografie',
+  cog_refu: 'Kognitionstests (Geflüchtete)',
+  abroad: 'Leben außerhalb Deutschlands (Fortgezogene)',
+  more_local: 'MORE Mentoring (Mentorinnen und Mentoren)',
+  more_docu: 'MORE Mentoring (Prozessdaten)',
+  lee2estab: 'SOEP-LEE2 Betriebsbefragung',
+  lee2person: 'SOEP-LEE2 Personen-Betriebs-Verknüpfung',
+  lee2brutto: 'SOEP-LEE2 Auswahlgrundlage',
+  regionl: 'Regionale Kontextindikatoren',
+  pbrutto: 'Personen-Bruttodatei (Feldarbeit)',
+  hbrutt: 'Haushalts-Adress- und Felddatei',
+  hbrutto: 'Haushalts-Bruttodatei (Feldarbeit)',
+  pbr_exit: 'Feldarbeit: Ausfälle von Personen',
+  pbr_hhch: 'Feldarbeit: Haushaltsveränderungen',
+  interviewer: 'Merkmale der Interviewerinnen und Interviewer',
+  instrumentation: 'Erhebungsmodus und Instrumentierung',
+  design: 'Stichprobendesign und Gewichte',
+  health: 'SF-12 Gesundheitsindizes',
+  gripstr: 'Handgreifkraftmessung',
+  pflege: 'Modul Pflege',
+  cognit: 'Kognitionstests (Erwachsene)',
+  cogdj: 'Kognitionstests (Jugendliche)',
+  timepref: 'Zeitpräferenz-Experiment',
+  trust: 'Vertrauensspiel-Experiment',
+  camces: 'Kodierung von Bildungsabschlüssen (CAMCES)',
+}
+
+// "Biography questionnaire (biol)" -> "Biografiefragebogen (biol)" in the German interface.
+export function datasetLabel(label, language) {
+  if (language !== 'de' || !label) return label
+  const match = String(label).match(/^(.*) \(([A-Za-z0-9_]+)\)$/)
+  if (!match) return label
+  const german = DATASET_TITLE_DE[match[2]]
+  return german ? `${german} (${match[2]})` : label
 }

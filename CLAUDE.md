@@ -50,10 +50,10 @@ State as of 2026-08-27 (evening): **live at <https://geodb.geolab.soz.uni-bielef
 records**. Largest: Regionalstatistik/GENESIS 3,305, GENESIS-Online Bund 3,026, Zensus 2022 1,440,
 Gigabit-Grundbuch 632, DB ISR 415, BA-Glossar 313, BA Arbeitsmarktreport 288, GTFS/NeTEx 246,
 Regionalatlas 232, Migration & Integration 141, DWD Klimadaten 137, Strukturdaten BTW 2021+2025 98,
-Deutschlandatlas 86, Open Data ÖPNV 78, BA Strukturdaten 68, G-BA 52, Bundes-Klinik-Atlas 42,
+Deutschlandatlas 86 (83 with a link to their own map page), Open Data ÖPNV 78, BA Strukturdaten 68, G-BA 52, Bundes-Klinik-Atlas 42,
 Wahlergebnisse 38, DB StaDa 37, BA Arbeitsmarkt kommunal 34, FDZ Ruhr 28, OSM POI-Layer 26,
 Unfallatlas 26, BORIS-D 21, Ländermonitor 18, offeneregister 13, Hochschulkompass 12, IÖR-Monitor 7,
-Destatis Mobilität 6, Wegweiser Kommune 4. Tracker: 25 done, 6 partial, 5 open.
+Destatis Mobilität 6, Wegweiser Kommune 4. Tracker: 26 done, 5 partial, 5 open.
 Retrieval gate 2026-08-27: **58 queries, hit@1 53, hit@3 57, hit@10 58, no misses.**
 
 **Both finders are bilingual.** `frontend/src/i18n.js` holds the German and English interface text
@@ -125,11 +125,13 @@ bracket). Sanity-check any PDF flattener by printing labels and asking whether e
 fetches the outward link, and compares the response against what that host returns for a
 deliberately invalid code. That is what separates "the table opened" from "the portal home page
 opened". Current result: **no broken links**; the only non-ok verdicts are the client-rendered
-portals (Regionalatlas, federal GENESIS, Zensus) plus deutschlandatlas.bund.de, which refuses
-scripted requests. Those records carry `link_verified: false`, the UI marks them with an asterisk,
-and the checklist counts them. Note that Regionalatlas belongs in that group too: it is a
-dojo/ArcGIS app that reads TCode/ICode client-side, so its "indicator" links cannot be verified
-from here either, and an earlier claim that they were is wrong.
+portals (Regionalatlas, federal GENESIS, Zensus). deutschlandatlas.bund.de used to be in that
+group and no longer is: with a cookie jar its map pages verify normally (a real map answers 200
+with about 124 KB, a bogus code 404 with 96 KB). Records whose link cannot be probed carry
+`link_verified: false`, the UI marks them with an asterisk, and the checklist counts them.
+Regionalatlas belongs in that group: it is a dojo/ArcGIS app that reads TCode/ICode client-side,
+so its "indicator" links cannot be verified from here, and an earlier claim that they were is
+wrong.
 
 **Every record carries `link_level`** (how precisely the link lands) and `link_verified` (whether
 that was probed). Improving the portal share and the unverified share is the quality lever.
@@ -142,7 +144,7 @@ kill long-running ones. Runtimes measured here: regionalstatistik 129 statistics
 about 20 min, federal 331 / 3,026 in about 50 min, Zensus 12 / 1,440 in about 20 min.
 
 **Adding a source that is not in the workbook means adding a workbook row**, not a special case:
-`build_source_registry.py` asserts the expected count (`EXPECTED_SOURCES`, currently 29) and
+`build_source_registry.py` asserts the expected count (`EXPECTED_SOURCES`, currently 36) and
 derives folder numbering from row order, so Unfallatlas, GENESIS-Bund and Zensus each got a blue
 row in `Tabelle1` and their own `data_sources/<NN>-<slug>/` folder. **Reordering sources reorders
 the records, which silently invalidates the embedding cache** (it matches on row count only), so
@@ -150,9 +152,14 @@ always re-embed after adding or moving a source, never only after changing conte
 
 **`data_sources/CHECKLIST.md` is the per-source tracker** and is generated, never hand-edited:
 `scripts/build_status_report.py` reads the registry, each `raw/` folder, the built metadata and a
-live link check, then writes both the checklist and a blue-marked `Status_GeoDB` sheet appended to
-`Geospatial_Data_Sources.xlsx` (untouched original kept as `Geospatial_Data_Sources_orig.xlsx`;
-both workbooks are git-ignored, the public facts live in `registry/geo_sources.json` instead).
+live link check, then writes the checklist, a blue-marked English `Status_GeoDB` sheet appended to
+`Geospatial_Data_Sources.xlsx`, the German handoff table (CSV/PDF/PNG) and a dated German copy of
+the whole workbook in `deliverables_geodb_datenquellen/` (`..._GeoDB_Stand_<date>.xlsx`, one
+German `Stand_GeoDB` sheet instead of the English one). The copy is what gets handed over; the
+working file keeps moving, and the untouched original stays as `Geospatial_Data_Sources_orig.xlsx`;
+all three workbooks are git-ignored, the public facts live in `registry/geo_sources.json` instead.
+The German table render needs `LD_LIBRARY_PATH` pointing at the rstats env, otherwise TinyTeX dies
+on `libfontconfig.so.1: cannot open shared object file`, which reads like a broken LaTeX install.
 Per-source state lives in that script's `OPEN_ITEMS`, candidate new sources in its `CANDIDATES`.
 
 `scripts/eval_geodb_search.py` is the retrieval smoke test: 28 concept queries with an expected hit,
@@ -186,8 +193,14 @@ What acquisition turned up (2026-08-25), worth knowing before re-deriving it:
   series, so there is no reason to download per-region files.
 - **inkar.de serves an incomplete certificate chain**, so that one artifact is fetched with
   verification off, declared per-artifact in the plan and never as a global default.
-- **deutschlandatlas.bund.de answers 400 to every scripted request** regardless of user-agent
-  and accept headers. It needs a browser; do not burn time on header permutations.
+- **deutschlandatlas.bund.de needs a cookie jar, not a browser.** It answers **307 to a
+  cookie-check URL** and serves the page to any client that keeps the cookie and follows the
+  redirect (`urllib.request.HTTPCookieProcessor`, or `curl -L -c jar -b jar`). Without one it
+  looks like a hard failure, and this file recorded it for two days as "400 to every scripted
+  request", which is wrong. The consequence was real: 86 Deutschlandatlas records sat at
+  dataset level and the map index at `/DE/Karten/_node.html` (122 map pages) went unread. When a
+  federal portal looks unreachable, check the redirect chain and the cookies before concluding
+  a browser is required.
 - **The G-BA and Klinik-Atlas data are indexed by schema, not by row.** The Qualitätsberichte
   archives are ~1.7 GB uncompressed per year, one XML per hospital; the flattener reads the section
   structure out of the largest report in the newest archive and never extracts the rest. The same

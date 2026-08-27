@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import http.cookiejar
 import ssl
 import urllib.error
 import urllib.request
@@ -98,7 +100,7 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
     "krankenhausverzeichnis": {"de": "Schema mit Unterabschnitten eingebunden (52), Einzelberichte bewusst nicht", "state": "done", "next": "Schema sections indexed from the 2024 archive; the 2008-2024 archives are on disk (about 1.7 GB per year uncompressed, deliberately never extracted). Indexing the per-hospital rows would be a different product."},
     "bundes-klinik-atlas": {"de": "Nichts offen; ersetzt die eingestellte Weisse Liste", "state": "done", "next": "Row renamed in the workbook on 2026-08-25: Weisse Liste is discontinued, the Bundes-Klinik-Atlas open-data export (IQTIG, 1,577 sites with coordinates) replaces it and is indexed."},
     "arztsuche-bundesaerztekammer": {"de": "Nur Suchmaske, kein Export; nur Portaleintrag möglich", "state": "open", "next": "Search UI over the Landesärztekammer registers, no export. Portal-level record only unless a state chamber publishes a list."},
-    "deutschlandatlas-erreichbarkeit-von-apotheken": {"de": "Alle 86 Indikatoren eingebunden; Kartenlinks existieren nicht mehr", "state": "partial", "next": "All 86 indicators are indexed from the PDF and XLSX with their official definitions, and this row covers the whole Deutschlandatlas rather than only the pharmacy map. The map entry point /DE/Karten/karten_node.html now answers 404 in a browser too, so the links were repointed on 2026-08-27 to the download route, which does exist, and each record names the exact sheet (Deutschlandatlas_<Gebietsstand>) and column (Indikatorenkuerzel) to open. Per-indicator map links are not obtainable: the site answers 400 to every scripted request, and the maps section it used to have is gone."},
+    "deutschlandatlas-erreichbarkeit-von-apotheken": {"de": "86 Indikatoren eingebunden, 83 davon mit Link auf die eigene Kartenseite", "state": "done", "next": "All 86 indicators are indexed from the PDF and XLSX with their official definitions, and this row covers the whole Deutschlandatlas rather than only the pharmacy map. Since 2026-08-27 the records also carry per-indicator map links: the map index at /DE/Karten/_node.html lists 122 map pages, and 83 of the 86 indicators are matched to one by title (62 distinct maps). The three unmatched ones keep the download link rather than a guessed map. Correction to what was written here before: this host does NOT answer 400 to every scripted request. It answers 307 to a cookie-check URL and serves the page to any client that keeps the cookie, so both the fetcher and the link checks now use a cookie jar. A real map answers HTTP 200 with about 124 KB, a bogus code 404 with 96 KB, which is how the links are verified."},
     "hochschulkompass": {"de": "Nichts offen; aktualisierte Liste einfach ersetzbar", "state": "done", "next": "Register attributes indexed. A refreshed hs_liste.txt is a drop-in replacement."},
     "deutsche-bahn-infrastrukturregister": {"de": "Ohne Anmeldung eingebunden: Kartenebenen und WFS-Merkmale des Schienennetzes", "state": "done", "next": "No registration needed, and it does publish a machine-readable catalogue after all. The viewer is a MapStore2 app over a public GeoServer: WMS GetCapabilities lists the map themes (Streckenklasse, Elektrifizierung, ETCS, Gleisanzahl, Betriebsstellen, Bahnsteige, Tunnel, Bruecken, Bahnuebergaenge) and WFS DescribeFeatureType lists the attributes per feature type. Both are indexed, so this row went from one portal card to 436 records. German and English field names are paired where ISR publishes both. Optional next step: DB's StaDa station dataset for the Bahnhofsuche row."},
     "deutsche-bahn-bahnhofsuche": {"de": "StaDa-API eingebunden: 37 Merkmale zu 5.408 Bahnhöfen", "state": "done", "next": "Resolved 2026-08-27 with the DB API Marketplace credentials: the StaDa station API returns all 5,408 stations, and 37 attribute records plus one dataset record are indexed (Bahnhofskategorie, Barrierefreiheit, Mobilitaetsservice, Ausstattung, Aufgabentraeger, amtlicher Gemeindeschluessel, WGS84 coordinates), each with the measured coverage across stations. The station rows themselves are not indexed, following the register rule. Note the auth trap: the marketplace needs BOTH headers, DB-Client-Id and DB-Api-Key; the key alone answers 401 'Invalid client id or secret', which reads like a wrong key rather than a missing one."},
@@ -171,9 +173,21 @@ STATE_WORD = {"done": "done", "partial": "partial", "open": "open"}
 def check_url(url: str) -> str:
     if not url:
         return "no url"
-    request = urllib.request.Request(url, headers={"User-Agent": UA}, method="GET")
+    request = urllib.request.Request(url, headers={
+        "User-Agent": UA,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",
+    }, method="GET")
     try:
-        with urllib.request.urlopen(request, timeout=25) as response:
+        # deutschlandatlas.bund.de answers 307 to a cookie-check URL and only serves the page to
+        # a client that keeps the cookie, so a jar is the difference between "unreachable" and
+        # HTTP 200. Certificate hygiene is not what this check is about (inkar.de ships an
+        # incomplete chain), so verification is off here as in the link auditor.
+        opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
+            urllib.request.HTTPSHandler(context=ssl._create_unverified_context()),
+        )
+        with opener.open(request, timeout=25) as response:
             return f"HTTP {response.status}"
     except urllib.error.HTTPError as exc:
         return f"HTTP {exc.code}"
@@ -372,11 +386,102 @@ def write_workbook(rows: List[Dict[str, Any]], stamp: str) -> None:
     workbook.save(WORKBOOK)
 
 
+
+
 STATE_DE = {"done": "fertig", "partial": "teilweise", "open": "offen"}
 LINK_LEVEL_DE = {
     "indicator": "Indikator", "table": "Tabelle", "statistic": "Statistik",
     "dataset": "Datensatz", "portal": "Portal",
 }
+
+
+def write_deliverable_workbook(rows: List[Dict[str, Any]], stamp: str) -> Optional[Path]:
+    """A German, dated copy of the workbook for handing over.
+
+    The working file keeps its English status sheet (the project docs are English), but the
+    copy that leaves this repo is read by German colleagues, so it carries exactly one status
+    sheet and that sheet is German. The copy is dated in its filename because it is a snapshot:
+    the working file keeps moving, a handed-over file must not silently change meaning.
+    """
+    if not WORKBOOK.exists():
+        return None
+    DELIVERABLES.mkdir(parents=True, exist_ok=True)
+    target = DELIVERABLES / f"Geospatial_Data_Sources_GeoDB_Stand_{stamp}.xlsx"
+
+    workbook = openpyxl.load_workbook(WORKBOOK)
+    for name in ("Status_GeoDB", "Stand_GeoDB"):
+        if name in workbook.sheetnames:
+            del workbook[name]
+    sheet = workbook.create_sheet("Stand_GeoDB", 1)
+
+    done = sum(1 for row in rows if row["state"] == "done")
+    partial = sum(1 for row in rows if row["state"] == "partial")
+    open_ = sum(1 for row in rows if row["state"] == "open")
+    indexed = sum(row["indexed"] for row in rows)
+    intro = (
+        f"Stand der Einbindung in den GeoDB-Finder (geodb.geolab.soz.uni-bielefeld.de), "
+        f"Stand {stamp}. {len(rows)} Quellen: {done} fertig, {partial} teilweise, {open_} offen; "
+        f"{indexed:,} indexierte Merkmale und Datensätze plus je ein Portaleintrag. "
+        "Maschinell erzeugt von scripts/build_status_report.py. Alles auf diesem Blatt wurde "
+        "vom Assistenten ergänzt (blau); das Originalblatt Tabelle1 ist unverändert, ergänzt "
+        "nur um die neu aufgenommenen Quellen (ebenfalls blau)."
+    ).replace(",", ".")
+    sheet["A1"] = intro
+    sheet["A1"].font = AI_BLUE_BOLD
+    sheet["A1"].alignment = Alignment(wrap_text=True, vertical="top")
+    sheet.merge_cells("A1:K1")
+    sheet.row_dimensions[1].height = 60
+
+    headers = ["Nr.", "Datenquelle", "URL", "Portal erreichbar", "Status", "Ordner",
+               "Heruntergeladen", "Größe", "Indexierte Einträge", "Linkgenauigkeit",
+               "Was fehlt / nächster Schritt"]
+    for column, title in enumerate(headers, start=1):
+        cell = sheet.cell(row=2, column=column, value=title)
+        cell.font = AI_BLUE_BOLD
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+    for offset, row in enumerate(rows, start=3):
+        values = [
+            row["position"], row["name"], row["url"],
+            row["link"] or "nicht geprüft",
+            STATE_DE[row["state"]],
+            f"data_sources/{row['folder']}/",
+            f"{len(row['files'])} Datei(en)" if row["files"] else "nichts",
+            human_bytes(row["bytes"]) if row["bytes"] else "",
+            row["indexed"] + row["portal_record"],
+            ", ".join(f"{count} x {LINK_LEVEL_DE.get(level, level)}"
+                      for level, count in sorted(row["link_levels"].items(), key=lambda kv: -kv[1]))
+            or "nur Portaleintrag",
+            row.get("next_de") or row["next"],
+        ]
+        for column, value in enumerate(values, start=1):
+            cell = sheet.cell(row=offset, column=column, value=value)
+            cell.font = AI_BLUE
+            cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+    legend_row = len(rows) + 4
+    for line in [
+        "Legende Status: fertig = nichts offen; teilweise = eingebunden, ein vollständigerer "
+        "Katalog wäre erreichbar; offen = es fehlt ein Schritt, den nur ein Mensch machen kann.",
+        "Legende Linkgenauigkeit: Indikator = der Link öffnet genau das Merkmal; Tabelle = die "
+        "Tabelle, die es enthält; Statistik/Datensatz = die Statistik bzw. den Datensatz, der es "
+        "enthält; Portal = die Startseite, ab da muss gesucht werden.",
+        "Die Spalte 'Indexierte Einträge' zählt Merkmale, Tabellen und Datensätze, nicht Zeilen "
+        "der Daten selbst: der Finder indexiert Beschreibungen und verlinkt nach außen.",
+    ]:
+        cell = sheet.cell(row=legend_row, column=1, value=line)
+        cell.font = AI_BLUE
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
+        sheet.merge_cells(start_row=legend_row, start_column=1, end_row=legend_row, end_column=11)
+        sheet.row_dimensions[legend_row].height = 30
+        legend_row += 1
+
+    widths = [5, 34, 46, 22, 12, 34, 16, 10, 14, 26, 78]
+    for column, width in enumerate(widths, start=1):
+        sheet.column_dimensions[openpyxl.utils.get_column_letter(column)].width = width
+    sheet.freeze_panes = "A3"
+    workbook.save(target)
+    return target
 
 
 def write_progress_table(rows: List[Dict[str, Any]], stamp: str) -> Optional[Path]:
@@ -418,14 +523,25 @@ def write_progress_table(rows: List[Dict[str, Any]], stamp: str) -> Optional[Pat
                f"{total} indexierte Merkmale im Finder (geodb.geolab.soz.uni-bielefeld.de).")
 
     rscript = shutil.which("Rscript") or "/home/researcher/miniconda3/envs/rstats/bin/Rscript"
+    # The rstats env ships libfontconfig.so.1 but the loader does not look there unless told,
+    # and TinyTeX then fails with "libfontconfig.so.1: cannot open shared object file" that
+    # reads like a broken LaTeX install. Point LD_LIBRARY_PATH at the env that owns Rscript.
+    env = dict(os.environ)
+    env_lib = Path(rscript).resolve().parent.parent / "lib"
+    if env_lib.exists():
+        env["LD_LIBRARY_PATH"] = f"{env_lib}:{env.get('LD_LIBRARY_PATH', '')}".rstrip(":")
     try:
         subprocess.run([rscript, str(REPO_ROOT / "scripts" / "render_progress_table.R"),
                         str(csv_path), str(DELIVERABLES / PROGRESS_BASE), stamp, summary],
-                       check=True, capture_output=True, timeout=600, cwd=str(REPO_ROOT))
+                       check=True, capture_output=True, timeout=600, cwd=str(REPO_ROOT), env=env)
     except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
         detail = getattr(exc, "stderr", b"")
         print(f"[warn] progress table not rendered: {exc} {detail[-400:] if detail else ''}")
         return csv_path
+    # The clean folder holds deliverables only; tinytable's LaTeX run drops id*.tex/.log there.
+    for debris in DELIVERABLES.glob("id*"):
+        if debris.suffix in {".tex", ".log", ".aux", ".out"}:
+            debris.unlink(missing_ok=True)
     return DELIVERABLES / f"{PROGRESS_BASE}.pdf"
 
 
@@ -440,6 +556,7 @@ def main() -> None:
     write_checklist(rows, args.date)
     write_workbook(rows, args.date)
     progress = write_progress_table(rows, args.date)
+    deliverable = write_deliverable_workbook(rows, args.date)
     print(json.dumps({
         "sources": len(rows),
         "done": sum(1 for r in rows if r["state"] == "done"),
@@ -448,6 +565,7 @@ def main() -> None:
         "indexed_records": sum(r["indexed"] for r in rows),
         "checklist": str(CHECKLIST),
         "workbook": str(WORKBOOK),
+        "deliverable_workbook": str(deliverable) if deliverable else None,
         "progress_table": str(progress) if progress else None,
         "unreachable": [r["name"] for r in rows if r["link"].startswith("unreachable") or r["link"].startswith("HTTP 4") or r["link"].startswith("HTTP 5")],
     }, ensure_ascii=False, indent=2))

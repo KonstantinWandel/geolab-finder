@@ -24,6 +24,7 @@ import argparse
 import json
 import random
 import re
+import http.cookiejar
 import ssl
 import urllib.error
 import urllib.request
@@ -65,7 +66,15 @@ def fetch_size(url: str, timeout: int = 45) -> Any:
         # inkar.de and a few federal hosts ship an incomplete chain; this check is about
         # whether a human reaches content, not about certificate hygiene.
         context = ssl._create_unverified_context()
-        with urllib.request.urlopen(request, timeout=timeout, context=context) as response:
+        # deutschlandatlas.bund.de answers 307 to a cookie-check URL and only serves the page
+        # to a client that keeps the cookie. Without a jar the response looks like a hard
+        # failure, which is why this host was wrongly recorded as unreachable by any script.
+        jar = http.cookiejar.CookieJar()
+        opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(jar),
+            urllib.request.HTTPSHandler(context=context),
+        )
+        with opener.open(request, timeout=timeout) as response:
             return len(response.read())
     except urllib.error.HTTPError as exc:
         return f"http-{exc.code}"

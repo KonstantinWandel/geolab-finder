@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { makeTranslator, shortenPath } from '../i18n'
+import { makeTranslator, shortenPath, datasetLabel } from '../i18n'
 
 // The project site carries the imprint, the privacy statement and the attribution list.
 const GEOLAB_SITE = 'https://lwc-soep-regiohub.pages.ub.uni-bielefeld.de/geolab'
@@ -55,9 +55,23 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
   const linkLevel = (level) =>
     LINK_LEVELS.includes(level) ? { label: t(`link.${level}`), short: t(`link.${level}.short`) } : null
 
+  // The API labels the facets it generates itself (source keys, sample groups, SOEP dataset
+  // titles) in English, because those strings are also the export columns. They are translated
+  // here by key, with the API's own label as the fallback, so a new key shows up in English
+  // rather than disappearing.
+  const apiLabel = (prefix, value, fallback) => {
+    const translated = t(`${prefix}.${value}`)
+    return translated === `${prefix}.${value}` ? (fallback || value) : translated
+  }
+  const sourceOptionLabel = (source) => apiLabel('source', source.value, source.label)
+  const sampleOptionLabel = (group) => apiLabel('sample', group.value, group.label)
+  const datasetOptionLabel = (label) => datasetLabel(label, language)
+
   // Human label for a SOEP sample/questionnaire group key (from the fetched facet).
-  const sampleGroupLabel = (key) =>
-    (filterOptions?.sample_groups || []).find((g) => g.value === key)?.label || null
+  const sampleGroupLabel = (key) => {
+    const group = (filterOptions?.sample_groups || []).find((g) => g.value === key)
+    return group ? sampleOptionLabel(group) : null
+  }
 
   const [chatHistory, setChatHistory] = useState([])
   const [selectedRows, setSelectedRows] = useState({})
@@ -126,8 +140,8 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
 
   const sourceLabel = useMemo(() => {
     const source = filterOptions?.sources?.find((item) => item.value === filters.dataset_scope)
-    return source?.label || t('filter.allSources')
-  }, [filterOptions, filters.dataset_scope])
+    return source ? sourceOptionLabel(source) : t('filter.allSources')
+  }, [filterOptions, filters.dataset_scope, language])
 
   const updateFilter = (key, value) => {
     setFilters((current) => ({ ...current, [key]: value }))
@@ -374,7 +388,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                     </td>
                     <td>
                       <div>{row.source_label}</div>
-                      <div className="text-muted">{row.dataset_label || row.dataset}</div>
+                      <div className="text-muted">{datasetOptionLabel(row.dataset_label || row.dataset)}</div>
                     </td>
                     <td>{formatScore(row.score)}</td>
                     <td>
@@ -445,7 +459,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             <label>{t('filter.source')}</label>
             <select value={filters.dataset_scope} onChange={(e) => updateFilter('dataset_scope', e.target.value)}>
               {(filterOptions?.sources || [{ value: 'all', label: t('filter.allSources') }]).map((source) => (
-                <option key={source.value} value={source.value}>{source.label}</option>
+                <option key={source.value} value={source.value}>{sourceOptionLabel(source)}</option>
               ))}
             </select>
           </div>
@@ -455,7 +469,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
           <select value={filters.dataset_label} onChange={(e) => updateFilter('dataset_label', e.target.value)}>
             <option value="All datasets">{t('filter.allDatasets')}</option>
             {(filterOptions?.datasets || []).map((dataset) => (
-              <option key={dataset} value={dataset}>{dataset}</option>
+              <option key={dataset} value={dataset}>{datasetOptionLabel(dataset)}</option>
             ))}
           </select>
         </div>
@@ -465,7 +479,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             <select value={filters.sample_group} onChange={(e) => updateFilter('sample_group', e.target.value)}>
               <option value="Any">{t('filter.anySampleGroup')}</option>
               {(filterOptions?.sample_groups || []).map((g) => (
-                <option key={g.value} value={g.value}>{g.label}</option>
+                <option key={g.value} value={g.value}>{sampleOptionLabel(g)}</option>
               ))}
             </select>
           </div>
