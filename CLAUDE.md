@@ -169,6 +169,30 @@ Design decisions already taken:
   comes from `scripts/build_source_registry.py`, which asserts the expected source count so a
   changed workbook fails loudly rather than producing a partial registry.
 
+## Refreshing the index, and the "as of" date
+
+`bash scripts/refresh_all.sh` is the whole chain in one command: fetch what is public, rebuild,
+re-embed on the GPU, run the retrieval gate, deploy, regenerate the tracker. `--no-deploy` stops
+before the VM. The build writes `soep_metadata_output/geodb_build_info.json`, the advisor exposes
+it as `index_built`, and the UI prints "index as of <date>", so a stale index is visible to a user
+rather than only to us.
+
+**Scheduling it is the unsolved part, and not for want of trying.** This box is a pod: `/etc/cron.d`
+is wiped on restart and there is no user systemd, so a cron entry here does not survive. The real
+options are running the script by hand after a source publishes, a scheduled Claude session, or a
+systemd timer on the geolab VM at the cost of embedding on 4 CPU cores instead of the H200.
+
+## Why SOEP needs no LLM enrichment any more
+
+The old corpus had German-only labels, so generated English text was the only way to make an
+English query work. v41 ships an official label in both languages for ~100% of variables, a topic
+path for 63,110 and the real survey question wording for 44,912. Measured on 2026-08-27: of the
+23,855 variables visible by default, **1,971 have no topic, no question text and no value labels**,
+and inspection shows those are mostly self-describing identifiers ("Geburtsmonat" / "Month Of
+Birth", "Jahr/Erhebungsjahr"). Generating prose for them would add words, not information, and
+would risk inventing meaning for a variable whose label is already the authoritative wording. So
+enrichment was dropped rather than run.
+
 ## Unattended follow-up work
 
 Long jobs run detached and finish themselves. Two conventions make that safe:

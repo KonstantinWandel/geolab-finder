@@ -883,8 +883,22 @@ class SOEPRagAdvisorService:
             for year in [row.get("year_start"), row.get("year_end")]
             if isinstance(year, int)
         ]
+        # When the index was last rebuilt. Without it a user cannot tell fresh from stale.
+        index_built = ""
+        for candidate in [
+            (self.geodb_metadata_path.parent / "geodb_build_info.json") if self.geodb_metadata_path else None,
+            (self.metadata_path.parent / "geodb_build_info.json") if self.metadata_path else None,
+        ]:
+            if candidate and candidate.exists():
+                try:
+                    index_built = json.loads(candidate.read_text(encoding="utf-8")).get("built", "")
+                except (OSError, ValueError):
+                    index_built = ""
+                break
+
         return {
             "app_mode": self.app_mode,
+            "index_built": index_built,
             "sources": sources,
             "scoped_source": scope or "all",
             "scoped_rows": len(scoped),

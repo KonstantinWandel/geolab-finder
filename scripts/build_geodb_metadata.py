@@ -25,6 +25,7 @@ import io
 import json
 import re
 import zipfile
+from datetime import date
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
@@ -607,18 +608,63 @@ def flatten_hochschulkompass(source: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def flatten_laendermonitor(source: Dict[str, Any]) -> List[Dict[str, Any]]:
-    path = source["folder"] / "raw" / "uebersicht-aller-indikatoren.html"
-    page = path.read_text(encoding="utf-8", errors="replace")
+    """Ländermonitor Frühkindliche Bildungssysteme.
+
+    The indicator names come from the server-rendered overview page. The definitions live in
+    public Methodik PDFs, one per topic area, which are two-column and therefore only readable
+    in reading order (`pdftotext` without `-layout`): with `-layout` the columns interleave and
+    every definition picks up half a sentence from its neighbour."""
+    import subprocess
+    import tempfile
+
+    raw = source["folder"] / "raw"
+    page = (raw / "uebersicht-aller-indikatoren.html").read_text(encoding="utf-8", errors="replace")
     headings = [strip_tags(match) for match in re.findall(r"<h2[^>]*>(.*?)</h2>", page, re.S)]
     indicators = [h for h in headings if "|" in h]
+
+    # Pull the methodology text once per PDF, in reading order.
+    methodology: Dict[str, List[str]] = {}
+    for pdf_path in sorted(raw.glob("Methodik_*.pdf")):
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
+            out_path = Path(tmp.name)
+        try:
+            subprocess.run(["pdftotext", str(pdf_path), str(out_path)],
+                           check=True, capture_output=True, timeout=120)
+            methodology[pdf_path.stem] = out_path.read_text(encoding="utf-8", errors="replace").splitlines()
+        except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+            print(f"[warn] laendermonitor: could not read {pdf_path.name}: {exc}")
+        finally:
+            out_path.unlink(missing_ok=True)
+
+    def definition_for(leaf: str) -> Tuple[str, str]:
+        """The paragraphs following the heading line that matches this indicator."""
+        target = leaf.strip().lower()
+        for source_name, lines in methodology.items():
+            for index, line in enumerate(lines):
+                if line.strip().lower() == target or (len(target) > 12 and target in line.strip().lower()
+                                                      and len(line.strip()) < len(target) + 24):
+                    collected: List[str] = []
+                    for following in lines[index + 1: index + 26]:
+                        text = following.strip()
+                        if not text:
+                            if collected:
+                                break
+                            continue
+                        # a short line with no sentence end is the next heading
+                        if collected and len(text) < 60 and not text.endswith((".", ":", ",", ";")):
+                            break
+                        collected.append(text)
+                    if collected:
+                        return " ".join(collected)[:1200], source_name
+        return "", ""
 
     records: List[Dict[str, Any]] = []
     for heading in dict.fromkeys(indicators):
         parts = [clean(part) for part in heading.split("|")]
+        definition, source_name = definition_for(parts[-1])
         records.append(
             make_record(
                 source_key="laendermonitor",
-                link_level="dataset",
                 source_label="Ländermonitor Frühkindliche Bildungssysteme (Bertelsmann Stiftung)",
                 item_type="regional_indicator",
                 item_id=f"laendermonitor:{'-'.join(parts).lower()}",
@@ -626,10 +672,12 @@ def flatten_laendermonitor(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 label=heading,
                 dataset_label=parts[0],
                 theme="Kinder und Jugend / Frühkindliche Bildung",
-                description=(
-                    f"Indikator des Ländermonitors zu {parts[0]}: {' / '.join(parts[1:])}. "
-                    "Vergleich der Bundesländer und regionaler Einheiten zur Kindertagesbetreuung."
-                ),
+                description=join_nonempty([
+                    f"Indikator des Ländermonitors zu {parts[0]}: {' / '.join(parts[1:])}.",
+                    f"Definition laut Methodik des Ländermonitors: {definition}" if definition else "",
+                    "Vergleich der Bundesländer und regionaler Einheiten zur Kindertagesbetreuung.",
+                    f"Quelle der Definition: {source_name.replace('_', ' ')}.pdf" if source_name else "",
+                ]),
                 spatial_levels=["Bundesländer", "Kreise"],
                 nuts_levels=["Bundesländer", "NUTS1", "Kreise", "NUTS3"],
                 year_start=source["coverage_start_year"],
@@ -637,8 +685,10 @@ def flatten_laendermonitor(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
                 source_url=source["url"],
                 indicator_url=source["url"],
+                link_level="dataset",
                 access_modes=source["access_modes"],
                 update_frequency=source["update_frequency"],
+                api_hint="Indikator im Ländermonitor; Definitionen in den Methodik-PDFs der jeweiligen Bereiche.",
             )
         )
     return records
@@ -925,9 +975,16 @@ def flatten_gba_qualitaetsbericht(source: Dict[str, Any]) -> List[Dict[str, Any]
         # A large report exercises most of the schema; a tiny one would under-report it.
         biggest = max(names, key=lambda n: archive.getinfo(n).file_size)
         root = ET.fromstring(archive.read(biggest))
+        subsections: Dict[str, Dict[str, int]] = {}
         for child in root:
             tag = re.sub(r"\{.*?\}", "", child.tag)
             sections[tag] = sections.get(tag, 0) + len(list(child.iter()))
+            # One level deeper: "Personal_des_Krankenhauses" alone does not tell a searcher that
+            # nursing staff, physicians and therapists are each recorded separately.
+            for grandchild in child:
+                sub = re.sub(r"\{.*?\}", "", grandchild.tag)
+                subsections.setdefault(tag, {})
+                subsections[tag][sub] = subsections[tag].get(sub, 0) + len(list(grandchild.iter()))
 
     records: List[Dict[str, Any]] = []
     for tag, field_count in sorted(sections.items()):
@@ -969,6 +1026,47 @@ def flatten_gba_qualitaetsbericht(source: Dict[str, Any]) -> List[Dict[str, Any]
                 ),
             )
         )
+
+    for parent, children in sorted(subsections.items()):
+        if parent in {"Einleitung"}:
+            continue
+        for child_tag, field_count in sorted(children.items()):
+            if child_tag in {"Kontakt_Person_lang", "Datensatz", "Software"} or field_count < 2:
+                continue
+            readable = child_tag.replace("_", " ")
+            records.append(
+                make_record(
+                    source_key="gba_qualitaetsbericht",
+                    source_label="Qualitätsberichte der Krankenhäuser (G-BA)",
+                    item_type="register_attribute",
+                    item_id=f"gba:{parent}:{child_tag}",
+                    variable_name=child_tag,
+                    label=f"{readable} ({parent.replace('_', ' ')})",
+                    dataset_label=f"Qualitätsbericht: {parent.replace('_', ' ')}",
+                    theme="Gesundheit",
+                    description=join_nonempty([
+                        f"Unterabschnitt '{readable}' im Berichtsteil '{parent.replace('_', ' ')}' des "
+                        f"strukturierten Qualitätsberichts nach §136b SGB V.",
+                        GBA_SECTIONS.get(parent, ""),
+                        f"Der Unterabschnitt umfasst rund {field_count} Einzelfelder je Krankenhausstandort."
+                        if field_count > 3 else "",
+                        "Standortgenau (Anschrift, Institutionskennzeichen) und damit auf Gemeinde-, "
+                        "Kreis- oder Postleitzahlebene aggregierbar.",
+                    ]),
+                    spatial_levels=["Adressen/Koordinaten", "PLZ", "Gemeinden", "Kreise", "Bundesländer"],
+                    nuts_levels=["Adressen/Koordinaten", "PLZ", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                                 "Bundesländer", "NUTS1"],
+                    year_start=years[0],
+                    year_end=years[-1],
+                    years_text=f"{years[0]}-{years[-1]}",
+                    source_url="https://www.g-ba.de/themen/qualitaetssicherung/datenerhebung-zur-qualitaetssicherung/datenerhebung-qualitaetsbericht/",
+                    indicator_url="https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+                    link_level="dataset",
+                    access_modes=["direct file download", "web UI / search form only"],
+                    update_frequency="jährlich",
+                    api_hint=f"Element <{child_tag}> unter <{parent}> im Qualitätsbericht-XML.",
+                )
+            )
     return records
 
 
@@ -1420,6 +1518,23 @@ def flatten_genesis_tables(source: Dict[str, Any], instances: Optional[List[str]
 
             period = clean(table.get("Time")) or clean(table.get("Zeitraum"))
             years = [int(y) for y in re.findall(r"\b(?:19|20)\d{2}\b", f"{period} {title}")]
+
+            # A Zensus "period" of "09.05.2011 - 15.05.2022" is not an interval: it means the
+            # table carries both census reference dates. Shown raw, a Zensus 2022 hit looks like
+            # it is from 2011. Name the censuses instead.
+            census_note = ""
+            if instance == "zensus":
+                has_2011 = "09.05.2011" in period or "09.05.2011" in statistic_name
+                has_2022 = "15.05.2022" in period or "15.05.2022" in statistic_name
+                if has_2011 and has_2022:
+                    period = "Zensus 2011 und Zensus 2022 (Stichtage 09.05.2011 und 15.05.2022)"
+                    census_note = "Die Tabelle weist beide Zensen aus und erlaubt damit den Vergleich 2011 zu 2022."
+                elif has_2011:
+                    period = "Zensus 2011 (Stichtag 09.05.2011)"
+                    census_note = ("Achtung: Tabelle des Zensus 2011, nicht des Zensus 2022. Sie liegt in der "
+                                   "Zensus-Datenbank als Vergleichsmaterial.")
+                elif has_2022:
+                    period = "Zensus 2022 (Stichtag 15.05.2022)"
             records.append(
                 make_record(
                     source_key=config["source_key"],
@@ -2322,6 +2437,18 @@ def main() -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"wrote {output} ({output.stat().st_size / 1e6:.1f} MB)")
+
+    # A user cannot tell a stale index from a fresh one, so the build stamps itself and the UI
+    # shows the date. Written next to the metadata so it travels with it on deploy.
+    if not args.only:
+        info = output.parent / "geodb_build_info.json"
+        info.write_text(json.dumps({
+            "built": date.today().isoformat(),
+            "records": len(records),
+            "sources": len({record["source_key"] for record in records}),
+            "per_source": counts,
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"wrote {info}")
 
 
 if __name__ == "__main__":

@@ -946,3 +946,26 @@ button, input, select, textarea,
 
 .legal-links a { color: inherit; opacity: 0.75; }
 .legal-links a:hover { opacity: 1; }
+
+/* Portal cards: a different kind of answer from an indicator hit, so they sit in their own
+   block under the table rather than competing for rank inside it. */
+.portal-block {
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.25));
+}
+
+.portal-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.portal-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.portal-note { font-size: 0.8rem; }
+.portal-flag { font-size: 0.8rem; opacity: 0.8; }

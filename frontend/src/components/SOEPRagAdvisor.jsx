@@ -311,7 +311,11 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
     }
     if (msg.role === 'assistant') {
       const result = msg.data
-      const rows = result.recommended_variables || []
+      // Portal cards answer a different question from indicator hits ("go and search here" vs
+      // "this variable exists"), so they get their own block instead of competing for rank.
+      const allRows = result.recommended_variables || []
+      const rows = allRows.filter((row) => row.source_key !== 'geoportal')
+      const portalRows = allRows.filter((row) => row.source_key === 'geoportal')
       const selectedCount = rows.filter((row, idx) => selectedRows[`${i}:${row.item_id || row.variable_name || idx}`]).length
       return (
         <div key={i} className="execution-result glass-panel" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
@@ -327,6 +331,11 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
             Retrieval: {result.embedding_model} | Generator: {result.llm_model || 'disabled'} | Mode: {result.response_mode || 'retrieval-only'} | Index: {result.index_type}
           </p>
 
+          {rows.length === 0 && portalRows.length > 0 && (
+            <p className="text-muted" style={{ marginTop: '0.4rem' }}>
+              No indicator-level hit for this question. The portals below are the places to look.
+            </p>
+          )}
           <div className="table-scroll metadata-table">
             <table className="results-table">
               <thead>
@@ -398,6 +407,24 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
               </tbody>
             </table>
           </div>
+
+          {portalRows.length > 0 && (
+            <div className="portal-block">
+              <h4 className="portal-heading">Data portals to search in</h4>
+              <ul className="portal-list">
+                {portalRows.map((row, idx) => (
+                  <li key={`${row.item_id}-${idx}`}>
+                    <a href={row.indicator_url || row.source_url} target="_blank" rel="noreferrer">
+                      {row.source_label}
+                    </a>
+                    {row.status === 'discontinued' && <span className="portal-flag"> no longer updated</span>}
+                    <div className="text-muted portal-note">{row.theme}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
         </div>
       )
     }
@@ -538,6 +565,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all' }) {
           <div className="filter-note">
             Active: {sourceLabel}
             {filterOptions?.year_min && filterOptions?.year_max && ` | indexed years ${filterOptions.year_min}-${filterOptions.year_max}`}
+            {filterOptions?.index_built && ` | index as of ${filterOptions.index_built}`}
           </div>
           </div>
 
