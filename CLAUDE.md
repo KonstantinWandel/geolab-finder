@@ -45,14 +45,58 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-08-27: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 11,214 rows**
-(10,554 GeoDB records from 23 sources + 660 INKAR), 28 portal cards among them. Largest:
-Regionalstatistik/GENESIS 3,305, GENESIS-Online Bund 3,026, Zensus 2022 1,440, Gigabit-Grundbuch
-632, DB ISR 415, BA-Glossar 313, BA Arbeitsmarktreport 288, GTFS/NeTEx field schemas 246,
-Regionalatlas 232, Migration & Integration 141, Deutschlandatlas 86, Open Data ÖPNV 78,
-BA Strukturdaten 68, G-BA Qualitätsberichte 52, Bundestagswahl 50, Bundes-Klinik-Atlas 42,
-BA Arbeitsmarkt kommunal 34, Unfallatlas 26, Hochschulkompass 12, offeneregister 13,
-Ländermonitor 18, Destatis Mobilität 6. Tracker says 20 done, 3 partial, 6 open of 29 workbook rows.
+State as of 2026-08-27 (evening): **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with
+11,567 rows** (10,907 GeoDB records + 660 INKAR) from **36 workbook rows, 30 of which carry real
+records**. Largest: Regionalstatistik/GENESIS 3,305, GENESIS-Online Bund 3,026, Zensus 2022 1,440,
+Gigabit-Grundbuch 632, DB ISR 415, BA-Glossar 313, BA Arbeitsmarktreport 288, GTFS/NeTEx 246,
+Regionalatlas 232, Migration & Integration 141, DWD Klimadaten 137, Strukturdaten BTW 2021+2025 98,
+Deutschlandatlas 86, Open Data ÖPNV 78, BA Strukturdaten 68, G-BA 52, Bundes-Klinik-Atlas 42,
+Wahlergebnisse 38, DB StaDa 37, BA Arbeitsmarkt kommunal 34, FDZ Ruhr 28, OSM POI-Layer 26,
+Unfallatlas 26, BORIS-D 21, Ländermonitor 18, offeneregister 13, Hochschulkompass 12, IÖR-Monitor 7,
+Destatis Mobilität 6, Wegweiser Kommune 4. Tracker: 25 done, 6 partial, 5 open.
+Retrieval gate 2026-08-27: **58 queries, hit@1 53, hit@3 57, hit@10 58, no misses.**
+
+**Both finders are bilingual.** `frontend/src/i18n.js` holds the German and English interface text
+and a `makeTranslator(lang)` helper; German is the default whenever the browser asks for it, and
+the choice sits next to the theme picker and persists per browser. Product names and everything
+that comes out of the DATA (record labels, source labels, themes) are deliberately NOT translated:
+those strings are what the portals themselves call the thing, and renaming them would break the
+link between what the finder shows and what the source calls it. Add a UI string to both `en` and
+`de`; a missing key falls back to English and then to the key, so a half-translated build is
+visible rather than blank.
+
+**The facet dropdowns are part of the data, so duplicates are fixed in the build.** Destatis writes
+the same statistic title two ways depending on the instance ("Statistik d. Empfänger v. Hilfe z.
+Lebensunterhalt" regionally, spelled out federally), which listed one statistic twice in the theme
+filter. `unify_facet_values()` merges spelling variants (abbreviation expansion, separator
+unification, truncation like "Rehabilitationseinr.", article drop) and keeps the spelled-out
+spelling; `align_portal_labels()` gives a portal card the name its own source's records use. Both
+mistakes are silent and point in opposite directions, so the matcher has a self-test:
+`build_geodb_metadata.py --self-test` asserts that "Kranken-" and "Rentenversicherung", SGB II and
+III, 2021 and 2025, and `calendar.txt` and `calendar_dates.txt` stay apart. Run it after touching
+the matcher.
+
+**A facet must describe the rows a user can actually get back.** The SOEP dataset dropdown listed
+all 622 datasets while the raw questionnaire files were hidden by default, so 547 of the options
+filtered every hit away. `/api/soep/filter-options` now takes `include_raw` and the UI passes its
+checkbox state. Same class of bug as the `dataset_scope` one: correct API, wrong scope.
+
+**Two acquisition traps worth remembering.**
+1. *DB API Marketplace needs two headers.* `DB-Client-Id` AND `DB-Api-Key`. Sending only the key
+   (or the same value twice) answers `401 Invalid client id or secret`, which reads like a wrong
+   key rather than a missing second one.
+2. *Overpass is unreachable from this pod.* Every mirror (overpass-api.de, kumi.systems,
+   private.coffee) answers **connection refused** at the TCP level, on IPv4 and IPv6, so it is an
+   egress block, not a rate limit or a bad user agent. `taginfo.geofabrik.de/europe:germany` gives
+   the same per-tag counts for Germany over a documented JSON API and IS reachable, so the counts
+   come from there and the Overpass query stays in the record as the recipe a user runs themselves.
+
+**Geodatenkatalog.de (GDI-DE) is a working CSW catalogue and the fallback for JS-only portals.**
+`gdk.gdi-de.org/gdi-de/srv/eng/csw?service=CSW&request=GetRecords...&constraint=AnyText%20like%20%27%25bodenrichtwert%25%27`
+returns Dublin Core summaries (1,962 matches for Bodenrichtwerte, 89,580 for Fläche). It is how
+BORIS-D coverage was evidenced without any portal of its own. Note the element name carries
+attributes (`<csw:SummaryRecord xmlns...>`), so a regex for `<csw:SummaryRecord>` silently matches
+nothing.
 
 **A two-column PDF needs word coordinates, not a character offset.** The BA Gesamtglossar is a
 term/definition table whose column boundary MOVES between pages (measured at columns 23, 26 and 30)
@@ -196,7 +240,12 @@ before the VM. The build writes `soep_metadata_output/geodb_build_info.json`, th
 it as `index_built`, and the UI prints "index as of <date>", so a stale index is visible to a user
 rather than only to us.
 
-**Scheduling it is the unsolved part, and not for want of trying.** This box is a pod: `/etc/cron.d`
+**The refresh is a manually started Claude session (decided 2026-08-27).** Konstantin wants the
+refresh to be a session that reasons about what changed rather than a blind cron job: check each
+source for a new edition, re-fetch, rebuild, re-embed, run the gate, deploy, regenerate the
+tracker. It is started by hand; nothing is scheduled. The mechanics below are still why.
+
+**Scheduling it automatically is the unsolved part, and not for want of trying.** This box is a pod: `/etc/cron.d`
 is wiped on restart and there is no user systemd, so a cron entry here does not survive. The real
 options are running the script by hand after a source publishes, a scheduled Claude session, or a
 systemd timer on the geolab VM at the cost of embedding on 4 CPU cores instead of the H200.
