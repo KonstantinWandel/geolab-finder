@@ -107,7 +107,6 @@
       "top_source": "regionalatlas",
       "top_label": "Betreuungsquote 0 bis 2 Jahre am 01.03.",
       "sources_in_top": [
-        "deutschlandatlas",
         "inkar",
         "regionalatlas",
         "regionalstatistik"
@@ -176,7 +175,7 @@
       "top_source": "regionalstatistik",
       "top_label": "Arbeitslosenquote bez.auf alle abhäng. Erwerbsp.",
       "sources_in_top": [
-        "ba_strukturdaten",
+        "deutschlandatlas",
         "regionalstatistik"
       ]
     },
@@ -187,6 +186,7 @@
       "top_label": "Bruttoinlandsprodukt je Einwohner",
       "sources_in_top": [
         "ba_strukturdaten",
+        "deutschlandatlas",
         "inkar",
         "regionalatlas",
         "regionalstatistik"
@@ -413,6 +413,7 @@
       "top_source": "migration_integration",
       "top_label": "Anteil der Ausländer aus den seit 2004 der EU beigetretenen Staaten (EU-Osterweiterung)",
       "sources_in_top": [
+        "deutschlandatlas",
         "inkar",
         "migration_integration",
         "regionalatlas",
@@ -577,6 +578,7 @@
       "top_source": "regionalatlas",
       "top_label": "Anteil Siedlungs- und Verkehrsfläche an Gesamtfläche",
       "sources_in_top": [
+        "deutschlandatlas",
         "inkar",
         "regionalatlas",
         "regionalstatistik"
