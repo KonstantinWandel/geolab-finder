@@ -2315,6 +2315,320 @@ def flatten_transit_formats(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     return records
 
 
+def _pdf_bbox_lines(path: Path) -> List[List[Tuple[float, float, str]]]:
+    """Text lines with real page geometry: [page][(xMin, yMin, text)].
+
+    `pdftotext -layout` renders a two-column table into a fixed-width grid whose column
+    boundary drifts between pages, so any character-offset split cuts some rows mid-word.
+    The word coordinates from `-bbox-layout` say where the columns actually are.
+    """
+    import subprocess
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=".xhtml", delete=False) as tmp:
+        out_path = Path(tmp.name)
+    try:
+        subprocess.run(["pdftotext", "-bbox-layout", str(path), str(out_path)],
+                       check=True, capture_output=True, timeout=300)
+        xml = out_path.read_text(encoding="utf-8", errors="replace")
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        print(f"[warn] could not read {path.name}: {exc}")
+        return []
+    finally:
+        out_path.unlink(missing_ok=True)
+
+    pages: List[List[Tuple[float, float, str]]] = []
+    head_re = re.compile(r'^<line xMin="([\d.]+)" yMin="([\d.]+)"')
+    word_re = re.compile(r"<word [^>]*>(.*?)</word>", re.S)
+    for chunk in xml.split("<page ")[1:]:
+        lines: List[Tuple[float, float, str]] = []
+        for raw in chunk.split("<line ")[1:]:
+            head = head_re.match("<line " + raw[: raw.find(">") + 1])
+            if not head:
+                continue
+            words = [w for w in (html.unescape(x).strip() for x in word_re.findall(raw[: raw.find("</line>")])) if w]
+            text = re.sub(r"\s+", " ", " ".join(words)).strip()
+            if text:
+                lines.append((float(head.group(1)), float(head.group(2)), text))
+        pages.append(lines)
+    return pages
+
+
+def _column_split(lines: List[Tuple[float, float, str]]) -> Optional[float]:
+    """x midway between the term column and the definition column on one page."""
+    counts: Dict[int, int] = {}
+    for x, _y, _t in lines:
+        counts[int(round(x / 2.0)) * 2] = counts.get(int(round(x / 2.0)) * 2, 0) + 1
+    if not counts:
+        return None
+    def_x = max(counts, key=lambda k: (counts[k], -k))
+    left = {x: n for x, n in counts.items() if x < def_x - 15}
+    if not left:
+        return None
+    term_x = max(left, key=lambda k: (left[k], -k))
+    return (term_x + def_x) / 2.0
+
+
+def _pdf_text(path: Path, layout: bool = True) -> str:
+    import subprocess
+    import tempfile
+    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
+        out_path = Path(tmp.name)
+    try:
+        args = ["pdftotext"] + (["-layout"] if layout else []) + [str(path), str(out_path)]
+        subprocess.run(args, check=True, capture_output=True, timeout=180)
+        return out_path.read_text(encoding="utf-8", errors="replace")
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        print(f"[warn] could not read {path.name}: {exc}")
+        return ""
+    finally:
+        out_path.unlink(missing_ok=True)
+
+
+def flatten_ba_glossary(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The BA's own glossary: the definition of every labour-market concept its statistics
+    measure. The map behind this workbook row publishes no machine-readable indicator list, but
+    the concepts are what a researcher actually searches for ("Unterbeschaeftigung",
+    "Aktivierungsquote"), and the glossary is the authoritative wording for them.
+
+    The PDF is a two-column table (term | definition) whose column boundary MOVES between pages
+    (observed at columns 23, 26 and 30), and a long term wraps onto further lines in the left
+    column. So the boundary is measured per page from the indent shared by the definition
+    continuation lines, and a new entry starts only where a left-column line follows definition
+    text rather than another term fragment.
+    """
+    pdf = source["folder"] / "raw" / "ba_gesamtglossar.pdf"
+    if not pdf.exists():
+        return []
+    pages = _pdf_bbox_lines(pdf)
+    if not pages:
+        return []
+
+    SKIP = re.compile(
+        r"^(Definitionen\s*[-\u2013]\s*Glossar|Glossar der Statistik|Begriff$|Erkl\u00e4rung$|Impressum|"
+        r"Nutzungsbedingungen|Produktlinie|Herausgeberin|R\u00fcckfragen|Zitierhinweis|Titel:|Stand:|"
+        r"Erstellungsdatum|Weiterf\u00fchrende|Seite \d|\d+$|E-Mail|Internet$|Telefon)", re.I)
+
+    # A term too long for the left column wraps onto the next line, and the wrap is
+    # recognisable: it sits one line-height below (~12pt, vs ~15pt+ between table rows) and it
+    # continues the words above it (trailing hyphen, lowercase start, a dangling preposition, or
+    # an unclosed bracket). Everything else in the left column starts a new glossary entry.
+    DANGLING = {"bei", "in", "im", "am", "an", "auf", "aus", "bis", "der", "des", "die", "das",
+                "dem", "den", "durch", "f\u00fcr", "gegen", "mit", "nach", "ohne", "\u00fcber", "um",
+                "und", "von", "vor", "zu", "zur", "zum", "je", "pro", "als", "aus\u00dfer"}
+
+    entries: List[Tuple[str, List[str]]] = []
+    term_parts: List[str] = []
+    body: List[str] = []
+
+    def flush() -> None:
+        if term_parts and body:
+            term = re.sub(r"([a-z\u00e4\u00f6\u00fc\u00df])-\s+(?=[a-z\u00e4\u00f6\u00fc\u00df])", r"\1", " ".join(term_parts))
+            term = re.sub(r"\s+", " ", term).strip(" .:\u2013-")
+            definition = re.sub(r"([a-z\u00e4\u00f6\u00fc\u00df])-\s+(?=[a-z\u00e4\u00f6\u00fc\u00df])", r"\1", " ".join(body))
+            definition = re.sub(r"\s+", " ", definition).strip()
+            if 3 < len(term) < 90:
+                entries.append((term, [definition]))
+        term_parts.clear()
+        body.clear()
+
+    def continues(prev_y: Optional[float], y: float, text: str) -> bool:
+        if not term_parts or prev_y is None or y - prev_y > 13.5:
+            return False
+        prev = term_parts[-1]
+        joined = " ".join(term_parts)
+        return (prev.endswith("-")
+                or text[:1].islower()
+                or prev.split(" ")[-1].lower() in DANGLING
+                or joined.count("(") > joined.count(")"))
+
+    for lines in pages:
+        page_lines = [(x, y, t) for x, y, t in lines if 60.0 < y < 780.0 and not SKIP.match(t)]
+        split = _column_split(page_lines)
+        if split is None:
+            continue
+        last_term_y: Optional[float] = None
+        for x, y, text in sorted(page_lines, key=lambda r: (r[1], r[0])):
+            if x < split:
+                if len(text.rstrip(".")) < 3:          # alphabet section marker ("A", "0-9")
+                    continue
+                if not continues(last_term_y, y, text):
+                    flush()
+                term_parts.append(text)
+                last_term_y = y
+            else:
+                body.append(text)
+        flush()
+
+    records: List[Dict[str, Any]] = []
+    seen: set = set()
+    for term, lines in entries:
+        definition = " ".join(lines).strip()
+        # Reject fragments: a real term starts with a capital and is not a cut-off word.
+        # Reject anything that is not a term: sentences that leaked out of the definition
+        # column, page furniture from the impressum, and cut-off fragments.
+        if (len(definition) < 40 or term.lower() in seen or not term[:1].isupper()
+                or len(term) < 5 or len(term.split()) > 8
+                or re.search(r"@|http|\.pdf", term)
+                or re.search(r",\s|\b(sind|ist|werden|wird|handelt|gelten|z\u00e4hlen)\b", term)
+                or definition.startswith("http") or "@arbeitsagentur" in definition):
+            continue
+        seen.add(term.lower())
+        summary = definition if len(definition) <= 600 else definition[:600].rsplit(" ", 1)[0] + " ..."
+        records.append(
+            make_record(
+                source_key="ba_glossar",
+                source_label="Glossar der Statistik der Bundesagentur f\u00fcr Arbeit",
+                item_type="concept",
+                item_id="ba_glossar:" + re.sub(r"[^a-z0-9]+", "_", term.lower()).strip("_")[:60],
+                variable_name=term,
+                label=term,
+                dataset_label="Glossar der Statistik der BA",
+                theme="Arbeitsmarkt & Besch\u00e4ftigung",
+                description=summary,
+                spatial_levels=["Bundesl\u00e4nder", "Kreise", "Gemeinden"],
+                nuts_levels=["Bundesl\u00e4nder", "NUTS1", "Kreise", "NUTS3", "Gemeinden", "LAU"],
+                source_url="https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html",
+                indicator_url="https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html",
+                link_level="dataset",
+                access_modes=["direct file download"],
+                update_frequency="halbj\u00e4hrlich",
+                api_hint="Eintrag im Gesamtglossar der Statistik der BA (PDF, halbj\u00e4hrlich aktualisiert). "
+                         "Definiert, was die BA-Arbeitsmarktstatistiken z\u00e4hlen.",
+            )
+        )
+    if len(records) < 150:
+        print(f"[warn] ba glossary: only {len(records)} clean entries parsed")
+    return records
+
+
+# Record structure of the offeneregister.de company dump. The keys are the ones documented in
+# the annotated `de_companies_ocdata.jsonl` sample on https://offeneregister.de/daten/ (saved as
+# raw/daten.html), not invented: the dump itself is multi-GB and is never downloaded here.
+OFFENEREGISTER_FIELDS: List[Tuple[str, str, str]] = [
+    ("name", "Firmenname",
+     "Eingetragener Name des Unternehmens, inklusive Rechtsform."),
+    ("company_number", "Registernummer",
+     "Registerzeichen und -nummer, etwa \u201eM\u00fcnchen HRB 73315\u201c. Eindeutige Kennung eines "
+     "Unternehmens \u00fcber alle Ver\u00e4nderungen hinweg und damit der Schl\u00fcssel f\u00fcr Panels."),
+    ("native_company_number", "Registernummer in nationaler Schreibweise",
+     "Registernummer in der Schreibweise des Handelsregisters."),
+    ("registrar", "Registergericht",
+     "Zust\u00e4ndiges Amtsgericht des Registereintrags. Grobe regionale Zuordnung ohne Geocoding."),
+    ("federal_state", "Bundesland",
+     "Bundesland des Registergerichts."),
+    ("jurisdiction_code", "Rechtsraum",
+     "Code des Rechtsraums (de, de_by, de_nw, ...)."),
+    ("registered_address", "Gesch\u00e4ftsanschrift",
+     "Adresse des Unternehmens als Freitext. Geocodierbar und damit auf PLZ-, Gemeinde- oder "
+     "Kreisebene aggregierbar, etwa f\u00fcr Unternehmensdichte."),
+    ("registered_office", "Sitz der Gesellschaft",
+     "Ort des Gesellschaftssitzes laut Registereintrag."),
+    ("current_status", "Status des Unternehmens",
+     "Aktueller Registerstatus, etwa aktiv oder gel\u00f6scht. Grundlage f\u00fcr L\u00f6schungs- und "
+     "Bestandsanalysen."),
+    ("previous_names", "Fr\u00fchere Firmennamen",
+     "Liste fr\u00fcherer Namen mit Gültigkeitszeitraum. Erlaubt es, Umfirmierungen von "
+     "Neugr\u00fcndungen zu unterscheiden."),
+    ("officers", "Organe und Vertretungsberechtigte",
+     "Gesch\u00e4ftsf\u00fchrer, Vorst\u00e4nde, Prokuristen und Gesellschafter mit Position, Eintritts- und "
+     "Austrittsdatum sowie Wohnort. Grundlage f\u00fcr Verflechtungs- und Netzwerkanalysen."),
+    ("retrieved_at", "Abrufdatum",
+     "Zeitpunkt, zu dem der Registerauszug abgerufen wurde. Bestimmt den Datenstand."),
+    ("all_attributes", "Rohattribute des Registerauszugs",
+     "Unver\u00e4nderte Felder des Registerauszugs, etwa Kapital, Gegenstand des Unternehmens und "
+     "Rechtsform, soweit im Auszug enthalten."),
+]
+
+
+def flatten_offeneregister(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """offeneregister.de mirrors the German commercial register as open data. The dump is
+    multi-GB, so only the record structure is indexed: what the register records about a company,
+    which is what decides whether it is worth downloading."""
+    records: List[Dict[str, Any]] = []
+    for field, label, gloss in OFFENEREGISTER_FIELDS:
+        records.append(
+            make_record(
+                source_key="offeneregister",
+                source_label="Open Data Handelsregister (offeneregister.de)",
+                item_type="register_attribute",
+                item_id=f"offeneregister:{field}",
+                variable_name=field,
+                label=f"{label} (Handelsregister)",
+                dataset_label="offeneregister Unternehmensdaten",
+                theme="Wirtschaft und Unternehmen",
+                description=join_nonempty([
+                    gloss,
+                    "Merkmal im offenen Abzug des deutschen Handelsregisters (JSONL bzw. SQLite, "
+                    "mehrere Gigabyte, CC-BY). Adressgenau und damit auf PLZ-, Gemeinde- oder "
+                    "Kreisebene aggregierbar, etwa für Unternehmensdichte, Gründungen und "
+                    "Löschungen im Zeitverlauf.",
+                ]),
+                spatial_levels=["Adressen/Koordinaten", "PLZ", "Gemeinden", "Kreise"],
+                nuts_levels=["Adressen/Koordinaten", "PLZ", "Gemeinden", "LAU", "Kreise", "NUTS3"],
+                year_start=source["coverage_start_year"],
+                year_end=source["coverage_end_year"],
+                years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
+                source_url=source["url"],
+                indicator_url="https://offeneregister.de/daten/",
+                link_level="dataset",
+                access_modes=["direct file download", "machine-readable API"],
+                update_frequency=source["update_frequency"] or "laufend",
+                api_hint=f"Feld {field} in de_companies_ocdata.jsonl bzw. openregister.db von offeneregister.de.",
+            )
+        )
+    return records
+
+
+def flatten_destatis_mobility(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Destatis experimental statistic on regional mobility from mobile-network data. It was
+    discontinued in 2022, but the series stays citable, so its indicator groups are indexed from
+    the saved page with the discontinuation stated on every record."""
+    page_path = source["folder"] / "raw" / "portal.html"
+    if not page_path.exists():
+        return []
+    page = page_path.read_text(encoding="utf-8", errors="replace")
+    headings = [strip_tags(match) for match in re.findall(r"<h[23][^>]*>(.*?)</h[23]>", page, re.S)]
+    wanted = [h for h in dict.fromkeys(headings)
+              if re.search(r"mobilit|distanz|bewegung|verkehrsträger|tagesverlauf", h, re.I)
+              and not h.lower().startswith("mehr zum")]
+
+    records: List[Dict[str, Any]] = []
+    for heading in wanted:
+        records.append(
+            make_record(
+                source_key="destatis_mobilitaet",
+                source_label="Regionale Mobilität und Infektionsgeschehen (Destatis, experimentell)",
+                item_type="regional_indicator",
+                item_id=f"destatis_mobilitaet:{heading.lower()[:50]}",
+                variable_name=heading,
+                label=f"{heading} (Mobilfunkdaten)",
+                dataset_label="Mobilitätsindikatoren aus Mobilfunkdaten",
+                theme="Verkehr / Mobilität",
+                description=join_nonempty([
+                    f"Indikatorgruppe '{heading}' der experimentellen Statistik zur regionalen "
+                    "Mobilität, berechnet aus anonymisierten Mobilfunkdaten auf Kreisebene, "
+                    "wöchentlich für den Zeitraum 2020 bis 2022.",
+                    "Hinweis: Das Angebot wird nicht mehr aktualisiert. Die historische Reihe bleibt "
+                    "zitierbar und ist für die Pandemiejahre die einzige flächendeckende Quelle zu "
+                    "tatsächlicher Bewegung statt gemeldeter Pendlerwege.",
+                ]),
+                spatial_levels=["Kreise"],
+                nuts_levels=["Kreise", "NUTS3"],
+                year_start=2020,
+                year_end=2022,
+                years_text="2020-2022, wöchentlich (eingestellt)",
+                source_url=source["url"],
+                indicator_url=source["url"],
+                link_level="dataset",
+                access_modes=source["access_modes"],
+                update_frequency="eingestellt",
+                status="discontinued",
+                api_hint="Indikatorgruppe der EXSTAT-Seite 'Mobilitätsindikatoren auf Basis von Mobilfunkdaten'.",
+            )
+        )
+    return records
+
+
 FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "regionalatlas-deutschland": flatten_regionalatlas,
     "datenguide-abgeschaltet": lambda source: (flatten_datenguide_genesis(source)
@@ -2333,6 +2647,9 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "german-companies": flatten_german_companies,
     "unfallatlas": flatten_unfallatlas,
     "deutsche-bahn-infrastrukturregister": flatten_db_isr,
+    "arbeitsmarktstatistik-ba-karte": flatten_ba_glossary,
+    "open-data-handelsregister": flatten_offeneregister,
+    "destatis-regionale-mobilitaet-und-infektionsgesc": flatten_destatis_mobility,
     "breitband-monitor": lambda source: flatten_breitband(source) + flatten_breitband_raster(source),
     "arbeitsmarktreport-ba": flatten_ba_arbeitsmarktreport,
     "arbeitsmarkt-kommunal-ba": flatten_ba_arbeitsmarkt_kommunal,
