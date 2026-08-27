@@ -259,6 +259,30 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
     ],
     "laendermonitor-fruehkindliche-bildungssysteme": [
         {
+            "name": "Methodik_KiTa.pdf",
+            "url": "https://www.laendermonitor.de/fileadmin/files/laendermonitor/methodiktexte/aktuell/Methodik_KiTa.pdf",
+            "kind": "catalogue",
+            "note": "Methodik document: the per-indicator definitions behind the overview page.",
+        },
+        {
+            "name": "Methodik_KiTa_Personal_braucht_Prioritaet.pdf",
+            "url": "https://www.laendermonitor.de/fileadmin/files/laendermonitor/methodiktexte/aktuell/Methodik_KiTa_Personal_braucht_Prioritaet.pdf",
+            "kind": "catalogue",
+            "note": "Methodik document: the per-indicator definitions behind the overview page.",
+        },
+        {
+            "name": "Methodik_Kindertagespflege.pdf",
+            "url": "https://www.laendermonitor.de/fileadmin/files/laendermonitor/methodiktexte/aktuell/Methodik_Kindertagespflege.pdf",
+            "kind": "catalogue",
+            "note": "Methodik document: the per-indicator definitions behind the overview page.",
+        },
+        {
+            "name": "Methodik_Schulkindbetreuung.pdf",
+            "url": "https://www.laendermonitor.de/fileadmin/files/laendermonitor/methodiktexte/aktuell/Methodik_Schulkindbetreuung.pdf",
+            "kind": "catalogue",
+            "note": "Methodik document: the per-indicator definitions behind the overview page.",
+        },
+        {
             "name": "uebersicht-aller-indikatoren.html",
             "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
             "kind": "catalogue",
