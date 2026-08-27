@@ -45,12 +45,26 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-08-25: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 10,503 rows**
-(9,843 GeoDB records + 660 INKAR) from **21 sources**. Largest: Regionalstatistik/GENESIS 3,622,
-GENESIS-Online Bund 3,026, Zensus 2022 1,440, Gigabit-Grundbuch 632 (workbooks plus the raster
-schema), BA Arbeitsmarktreport 288, Regionalatlas 232, Migration & Integration 140,
-Deutschlandatlas 86, Open Data ÖPNV 77, BA Strukturdaten 68, Bundestagswahl 49,
-Bundes-Klinik-Atlas 41, Arbeitsmarkt kommunal 33, Unfallatlas 25, plus 26 portal records.
+State as of 2026-08-27: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 11,214 rows**
+(10,554 GeoDB records from 23 sources + 660 INKAR), 28 portal cards among them. Largest:
+Regionalstatistik/GENESIS 3,305, GENESIS-Online Bund 3,026, Zensus 2022 1,440, Gigabit-Grundbuch
+632, DB ISR 415, BA-Glossar 313, BA Arbeitsmarktreport 288, GTFS/NeTEx field schemas 246,
+Regionalatlas 232, Migration & Integration 141, Deutschlandatlas 86, Open Data ÖPNV 78,
+BA Strukturdaten 68, G-BA Qualitätsberichte 52, Bundestagswahl 50, Bundes-Klinik-Atlas 42,
+BA Arbeitsmarkt kommunal 34, Unfallatlas 26, Hochschulkompass 12, offeneregister 13,
+Ländermonitor 18, Destatis Mobilität 6. Tracker says 20 done, 3 partial, 6 open of 29 workbook rows.
+
+**A two-column PDF needs word coordinates, not a character offset.** The BA Gesamtglossar is a
+term/definition table whose column boundary MOVES between pages (measured at columns 23, 26 and 30)
+and whose long terms wrap onto further lines. A fixed `line[:30]` split produced 1,131 records of
+which 768 were fragments ("verm", "rese", "01.1"): plausible-looking rows, no error, and the labels
+are exactly what the embedding sees. `pdftotext -bbox-layout` gives per-word x/y, so the column
+split is measured per page from the two dominant line-x clusters. Two further traps behind it:
+`-bbox-layout` blocks are NOT table cells (they merge greedily down a column, so a block-level parse
+silently glued three rows' terms together), and a wrapped term is only recognisable lexically, since
+gap size alone is ambiguous: it sits one line-height below (~12pt vs ~15pt+ between rows) AND
+continues the line above it (trailing hyphen, lowercase start, dangling preposition, unclosed
+bracket). Sanity-check any PDF flattener by printing labels and asking whether each reads as a term.
 
 **Two bugs worth remembering, both invisible to API-level testing.**
 
@@ -170,6 +184,11 @@ Design decisions already taken:
   changed workbook fails loudly rather than producing a partial registry.
 
 ## Refreshing the index, and the "as of" date
+
+`SOEP_RAG_CACHE_DIR` must be set outside the container. The service defaults its cache to
+`/app/cache`, which exists only in the deploy image, so a script that loads the advisor on this box
+dies with `PermissionError: /app` at `load()`. `refresh_all.sh` sets it; any new script that calls
+`SOEPRagAdvisorService().load()` has to as well.
 
 `bash scripts/refresh_all.sh` is the whole chain in one command: fetch what is public, rebuild,
 re-embed on the GPU, run the retrieval gate, deploy, regenerate the tracker. `--no-deploy` stops
