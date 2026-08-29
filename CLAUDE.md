@@ -346,6 +346,45 @@ the old advisor, the old `inkar_rag_embeddings.npy`, and the old inkar site).
   `_dedup_key` gives non-SOEP sources a `(source_key, code, label)` identity, because codes are
   only unique within a source (`AI0104` exists in both Regionalatlas and the GENESIS catalogue).
 
+## The hard gate, and what it found (2026-08-29)
+
+`scripts/eval_geodb_search.py` is a smoke test: most of its queries share a word with the label
+they are meant to find. `scripts/eval_geodb_hard.py` is built so keyword overlap cannot decide
+the case: concept-only questions, lay phrasing, English question against a German record, two
+neighbouring concepts where naming the wrong one counts as a failure, constraints checked against
+the record's own fields, bare code lookups, and five negative controls the index genuinely cannot
+answer. Run it against the deployment, which is what a user meets:
+
+    python scripts/eval_geodb_hard.py --api https://geodb.geolab.soz.uni-bielefeld.de/api
+
+First run: 31 graded queries, hit@1 19, hit@3 28, hit@10 29, median 0.96 s. Three findings, in
+order of how much they matter:
+
+1. **The score cannot express "I have nothing".** All five impossible questions still produced a
+   confident-looking top hit ("Anteil der Haushalte mit einem Balkon" -> "Eigentümerquote", fused
+   score 0.83, higher than several correct answers). The cross-encoder score looked like the fix:
+   on four hand-picked keyword queries it separated real from impossible by three orders of
+   magnitude. Over all 36 queries it does not: conversational but perfectly answerable questions
+   ("gibt es hier genug Kita-Plätze", correct hit at rank 1) score 0.0008, below every impossible
+   one. So there is no usable abstention threshold in the current signals, and a "no good match"
+   banner cannot be built from them without producing false alarms on exactly the phrasing the
+   finder is for. Do not ship a threshold on the strength of a handful of easy queries.
+
+2. **Grid records are not tagged as grid.** The Breitband raster rows say "(Gitterzelle)" in the
+   label but carry `spatial_levels = [Weitere Gliederungen, Gemeinden, Kreise]`, so the spatial
+   filter cannot reach them and "Breitbanddaten als Rasterzellen" fails the constraint even
+   though the right record is rank 1. The fix belongs in the builder, not the ranker.
+
+3. **Bare code lookup is luck.** `AI1401` lands on its record, `INT251` does not, though both
+   codes sit in the indexed text and both records exist. The lexical signal only reweights
+   candidates the dense stage already retrieved, so a code that the embedding does not place near
+   its record is unreachable. An exact `variable_name` match pinned to rank 1 would settle it.
+
+A note on writing cases for this file: two of the first cases passed for the wrong reason
+("wie grün ist die Gemeinde" was answered with the Green party's vote share and accepted on the
+word "grün"). Give a case a `reject` pattern whenever a pun or a neighbouring concept could
+satisfy it.
+
 ## Handing a query over from the project site
 
 The finder reads `?q=...` on load, asks it once, and strips the parameter from the address bar
