@@ -39,7 +39,12 @@ df[] <- lapply(df, function(column) {
 # into a sliver and the table grows to thousands of pixels tall.
 # Column 2 needs room for single long German compounds ("Krankenhausverzeichnis"),
 # which tabularray cannot break: too narrow and they overflow into the next column.
-widths <- c(0.03, 0.265, 0.07, 0.04, 0.05, 0.135, 0.41)
+# The explanation column carries a two-sentence plain-German reason per source, so it gets
+# about half the page. Two failure modes to avoid, both seen while tuning this: too little width
+# here and the text wraps into very tall thin cells; too little width on the source NAME and the
+# name overflows into the status column ("Arbeitsmarktstatistikfertig"). Always look at the
+# rendered PNG after changing these.
+widths <- c(0.028, 0.245, 0.062, 0.032, 0.043, 0.115, 0.475)
 if (ncol(df) != length(widths)) widths <- rep(1 / ncol(df), ncol(df))
 t <- tt(df, notes = notes, width = widths)
 t <- format_tt(t, escape = TRUE)
