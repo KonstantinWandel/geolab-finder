@@ -53,6 +53,8 @@ def call(tok: str, path: str, timeout: int = 120, **params: str) -> Dict[str, An
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--sleep", type=float, default=0.4)
+    parser.add_argument("--recheck-empty", action="store_true",
+                        help="re-fetch tables whose stored level came back empty")
     args = parser.parse_args()
 
     tok = token()
@@ -73,7 +75,8 @@ def main() -> None:
         resolved = json.loads(OUT_PATH.read_text(encoding="utf-8"))
         print(f"[resume] {len(resolved)} already resolved", flush=True)
 
-    todo = [c for c in codes if c not in resolved]
+    todo = [c for c in codes if c not in resolved
+            or (args.recheck_empty and not (resolved[c].get("geo") or []))]
     print(f"[start] {len(todo)} of {len(codes)} tables to resolve", flush=True)
     for position, code in enumerate(todo, start=1):
         try:
@@ -82,13 +85,26 @@ def main() -> None:
             print(f"[warn] {code}: {type(exc).__name__} {exc}", flush=True)
             time.sleep(5)
             continue
+        # The GEO variable does not always sit directly under Columns/Rows: 18 tables
+        # (1000A-0002, the whole 1000X-2xxx and 1000X-3xxx family) carry GEOBL1/GEODL1 deeper in
+        # the structure, and looking only at those two blocks left them with no level at all.
         found: List[List[Any]] = []
-        for block in ("Columns", "Rows"):
-            for entry in structure.get(block) or []:
-                entry_code = str(entry.get("Code") or "")
-                if entry_code.startswith("GEO"):
-                    label, values = geo_vars.get(entry_code, (entry.get("Content", ""), entry.get("Values")))
+        seen_codes = set()
+
+        def walk(node: Any) -> None:
+            if isinstance(node, dict):
+                entry_code = str(node.get("Code") or "")
+                if entry_code.startswith("GEO") and entry_code not in seen_codes:
+                    seen_codes.add(entry_code)
+                    label, values = geo_vars.get(entry_code, (node.get("Content", ""), node.get("Values")))
                     found.append([entry_code, label, values])
+                for value in node.values():
+                    walk(value)
+            elif isinstance(node, list):
+                for value in node:
+                    walk(value)
+
+        walk(structure)
         resolved[code] = {"geo": found}
         if position % 50 == 0:
             OUT_PATH.write_text(json.dumps(resolved, ensure_ascii=False, indent=2), encoding="utf-8")
