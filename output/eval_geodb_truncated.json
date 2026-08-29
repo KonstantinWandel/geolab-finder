@@ -15,7 +15,8 @@
       "sources_in_top": [
         "breitband",
         "deutschlandatlas",
-        "inkar"
+        "inkar",
+        "wegweiser_kommune"
       ]
     },
     {
@@ -129,8 +130,8 @@
     {
       "query": "Ausländeranteil im Kreis",
       "rank": 1,
-      "top_source": "wegweiser_kommune",
-      "top_label": "Anteil Ausländer:innen - Ist-Daten",
+      "top_source": "inkar",
+      "top_label": "Ausländeranteil",
       "sources_in_top": [
         "ba_strukturdaten",
         "deutschlandatlas",
@@ -176,9 +177,11 @@
       "query": "Arbeitslosenquote auf Kreisebene",
       "rank": 1,
       "top_source": "regionalstatistik",
-      "top_label": "Arbeitslosenquote bez.auf alle abhäng. Erwerbsp.",
+      "top_label": "Arbeitslosenquote bez. auf alle Erwerbspers.",
       "sources_in_top": [
         "deutschlandatlas",
+        "inkar",
+        "regionalatlas",
         "regionalstatistik"
       ]
     },
@@ -212,7 +215,7 @@
       "query": "Angebotsmieten und Mietpreise",
       "rank": 1,
       "top_source": "inkar",
-      "top_label": "Angebotsmietpreise",
+      "top_label": "(SDG 11) Angebotsmietpreise",
       "sources_in_top": [
         "deutschlandatlas",
         "fdz_ruhr",
@@ -276,8 +279,8 @@
     {
       "query": "Schulabgänger ohne Abschluss",
       "rank": 1,
-      "top_source": "inkar",
-      "top_label": "Schulabgänger ohne Abschluss",
+      "top_source": "regionalatlas",
+      "top_label": "Anteil Schulabgänger/-innen ohne Hauptschulabschluss",
       "sources_in_top": [
         "deutschlandatlas",
         "inkar",
@@ -289,8 +292,8 @@
     {
       "query": "Pendler zwischen Wohnort und Arbeitsort",
       "rank": 1,
-      "top_source": "inkar",
-      "top_label": "Pendler mit Arbeitsweg 150 km und mehr",
+      "top_source": "regionalstatistik",
+      "top_label": "Einpendler(innen) über Gemeindegrenze (Arbeitsort)",
       "sources_in_top": [
         "inkar",
         "regionalstatistik"
@@ -318,7 +321,8 @@
         "bundes_klinik_atlas",
         "db_stada",
         "gba_qualitaetsbericht",
-        "inkar"
+        "inkar",
+        "regionalstatistik"
       ]
     },
     {
@@ -334,10 +338,9 @@
     {
       "query": "Kaufkraft und verfügbares Einkommen",
       "rank": 1,
-      "top_source": "inkar",
-      "top_label": "Kaufkraft",
+      "top_source": "wegweiser_kommune",
+      "top_label": "Kaufkraft - Ist-Daten",
       "sources_in_top": [
-        "ba_strukturdaten",
         "btw_strukturdaten",
         "inkar",
         "regionalatlas",
@@ -351,6 +354,7 @@
       "top_source": "regionalstatistik",
       "top_label": "Krankenhausbetten je 10 000 Einwohner",
       "sources_in_top": [
+        "gba_qualitaetsbericht",
         "inkar",
         "regionalatlas",
         "regionalstatistik"
@@ -403,10 +407,11 @@
       "query": "commuters into the district",
       "rank": 1,
       "top_source": "inkar",
-      "top_label": "sozialversicherungspflichtig Beschäftigte Einpendler",
+      "top_label": "Pendlersaldo",
       "sources_in_top": [
         "deutschlandatlas",
-        "inkar"
+        "inkar",
+        "wegweiser_kommune"
       ]
     },
     {
@@ -473,7 +478,7 @@
     },
     {
       "query": "Krankenhäuser mit Geburtshilfe",
-      "rank": 3,
+      "rank": 2,
       "top_source": "gba_qualitaetsbericht",
       "top_label": "Apparative Ausstattung",
       "sources_in_top": [
@@ -503,6 +508,7 @@
       "sources_in_top": [
         "deutschlandatlas",
         "inkar",
+        "regionalatlas",
         "regionalstatistik",
         "wegweiser_kommune"
       ]
@@ -536,8 +542,8 @@
     {
       "query": "Ärztliche Versorgung auf dem Land",
       "rank": 1,
-      "top_source": "inkar",
-      "top_label": "Entfernung zum Hausarzt",
+      "top_source": "deutschlandatlas",
+      "top_label": "Kinderärztliche Versorgung",
       "sources_in_top": [
         "deutschlandatlas",
         "inkar"
@@ -549,7 +555,7 @@
       "top_source": "regionalstatistik",
       "top_label": "Pflegebedürftige der Pflegeheime",
       "sources_in_top": [
-        "inkar",
+        "genesis_bund",
         "regionalatlas",
         "regionalstatistik",
         "wegweiser_kommune"
@@ -583,11 +589,12 @@
     {
       "query": "Fläche für Siedlung und Verkehr",
       "rank": 1,
-      "top_source": "regionalatlas",
-      "top_label": "Anteil Siedlungs- und Verkehrsfläche an Gesamtfläche",
+      "top_source": "regionalstatistik",
+      "top_label": "Siedlungs- und Verkehrsfläche",
       "sources_in_top": [
         "deutschlandatlas",
         "inkar",
+        "ioer_monitor",
         "regionalatlas",
         "regionalstatistik"
       ]
@@ -644,8 +651,8 @@
     {
       "query": "Mobilfunkabdeckung 5G",
       "rank": 1,
-      "top_source": "deutschlandatlas",
-      "top_label": "Mobile Breitbandverfügbarkeit mit 5G in % der Fläche im Jahr 2024",
+      "top_source": "breitband",
+      "top_label": "alle Mobilfunknetzbetreiber 5G (Fläche)",
       "sources_in_top": [
         "breitband",
         "deutschlandatlas"
@@ -680,6 +687,7 @@
       "top_source": "regionalstatistik",
       "top_label": "Sozialhilfeträger",
       "sources_in_top": [
+        "ba_glossar",
         "btw_strukturdaten",
         "genesis_bund",
         "inkar",
