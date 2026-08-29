@@ -546,6 +546,11 @@ class SOEPRagAdvisorService:
         source_url = self._as_text(row.get("source_url")) or (
             f"https://paneldata.org/soep-core/datasets/{dataset}/{variable}" if dataset and variable else ""
         )
+        # Second way in, for when the deep link into paneldata.org stops resolving: the dataset
+        # page, and failing that the corpus's own entry page. See the note in the GeoDB builder.
+        portal_url = self._as_text(row.get("portal_url")) or (
+            f"https://paneldata.org/soep-core/datasets/{dataset}" if dataset else "https://paneldata.org/"
+        )
         # Official v41 fields (absent in the older corpus, so everything below degrades
         # gracefully): English label, concept, topic path, dataset kind and raw flag.
         label_en = self._as_text(row.get("label_en"))
@@ -591,6 +596,7 @@ class SOEPRagAdvisorService:
             "rich_description": rich_description,
             "search_description": self._build_search_description(row, dataset, label),
             "source_url": source_url,
+            "portal_url": portal_url,
             "theme": topic_path or "SOEP survey variable",
             "sheet": "",
             "spatial_levels": spatial_levels,
@@ -675,7 +681,7 @@ class SOEPRagAdvisorService:
         for key in (
             "variable_name", "label", "dataset", "dataset_label", "theme", "stats_summary",
             "rich_description", "search_description", "source_url", "indicator_url",
-            "selector_url", "api_hint", "available_years_text", "embedding_context",
+            "selector_url", "portal_url", "api_hint", "available_years_text", "embedding_context",
         ):
             normalised[key] = self._as_text(normalised.get(key))
         normalised.setdefault("value_labels", "")

@@ -1195,3 +1195,14 @@ button, input, select, textarea,
   font-size: 0.9rem;
   color: var(--text-soft, inherit);
 }
+
+/* Second way in: the source's entry page, always beside the deep link. */
+.result-portal {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: underline;
+}
+
+.result-portal:hover {
+  color: var(--accent, #3b82f6);
+}

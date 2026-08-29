@@ -264,6 +264,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
     nuts_levels: (row.nuts_levels || []).join('; '),
     years: row.available_years_text || '',
     url: row.source_url || row.selector_url || row.indicator_url || '',
+    portal_url: row.portal_url || '',
     link_level: row.link_level || '',
     link_verified: row.link_verified === false ? 'no' : 'yes',
     description: row.rich_description || row.search_description || row.stats_summary || '',
@@ -460,6 +461,14 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                       </a>
                     ) : (
                       <span className="text-muted">{t('row.noLink')}</span>
+                    )}
+                    {/* A deep link into a statistical portal is the first thing to rot, so the
+                        entry page of the source is always offered beside it. */}
+                    {row.portal_url && row.portal_url !== href && (
+                      <a className="result-portal" href={row.portal_url} target="_blank"
+                         rel="noreferrer" title={t('row.portalTitle')}>
+                        {t('row.portal')}
+                      </a>
                     )}
                     {level && (
                       <span

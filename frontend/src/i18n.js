@@ -80,6 +80,8 @@ export const STRINGS = {
     'row.more': 'Show full description',
     'row.less': 'Show less',
     'row.open': 'Open at the source',
+    'row.portal': 'Source portal',
+    'row.portalTitle': "The source's entry page, for when the direct link stops working",
     'row.rank': 'Rank {n}',
 
     'portals.heading': 'Data portals to search in',
@@ -206,6 +208,8 @@ export const STRINGS = {
     'row.more': 'Vollständige Beschreibung',
     'row.less': 'Weniger anzeigen',
     'row.open': 'Bei der Quelle öffnen',
+    'row.portal': 'Portal der Quelle',
+    'row.portalTitle': 'Einstiegsseite der Quelle, falls der direkte Link einmal nicht mehr funktioniert',
     'row.rank': 'Rang {n}',
 
     'portals.heading': 'Datenportale zum Weitersuchen',

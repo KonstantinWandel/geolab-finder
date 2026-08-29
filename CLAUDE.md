@@ -454,6 +454,29 @@ After both fixes, on the deployment: hit@1 21 (was 19), hit@3 30 (was 28), hit@1
 misses at all (was two), negative controls unchanged. The standard gate went from 55 to 56 of 58
 at rank 1 with no misses.
 
+## Two ways in, always: the deep link and the source's entry page
+
+A deep link into a statistical portal is the first thing that rots. The portal gets rebuilt, the
+query string changes, and a perfectly good record turns into a dead end; the entry page of the same
+source changes far more slowly. So every record carries a `portal_url` beside its own link, set in
+one place in `build_geodb_metadata.py` (after the flattener runs, from the registry's `url`), and
+the UI shows it as a quiet "Portal der Quelle" next to the main link. 9,838 of 11,377 records have
+one; the rest are records whose own link already IS the entry page, where a second identical link
+would be noise.
+
+`PORTAL_OVERRIDES` exists because the registry records the address a source was catalogued under,
+which is not always where a reader should be sent:
+  * the Regionaldatenbank metadata came from the Datenguide project, so 3,138 records would have
+    pointed at `datengui.de`, which is switched off,
+  * the Deutschlandatlas was catalogued on one of its map pages rather than its entry page,
+  * `breitband-monitor.de` no longer serves a valid certificate at all (SNI mismatch, confirmed in
+    a real browser), and the Gigabit-Grundbuch is where that data lives now.
+
+Check the fallbacks the way they were checked here: **in a browser, not with urllib**. Of the 19
+distinct entry pages, plain `urlopen` flagged three, and two of those three (GENESIS-Online, the
+Deutschlandatlas) are perfectly fine in Chromium and only refuse scripted requests. A link checker
+that reports those as dead teaches people to ignore it.
+
 ## Handing a query over from the project site
 
 The finder reads `?q=...` on load, asks it once, and strips the parameter from the address bar
