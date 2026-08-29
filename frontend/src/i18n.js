@@ -263,6 +263,38 @@ export const STRINGS = {
   },
 }
 
+// Spatial levels sorted the way one zooms out, not alphabetically: an alphabetical list put
+// "Adressen/Koordinaten" next to "Bezirke" and "Bund", which reads as noise because the levels
+// are a nested hierarchy, and the user picks a level by how fine it is. Anything unknown keeps
+// its place at the end, before the catch-all bucket.
+export const SPATIAL_LEVEL_ORDER = [
+  'Adressen/Koordinaten',
+  'Rasterzellen',
+  'Ortsteile',
+  'Bezirke',
+  'PLZ',
+  'Gemeinden',
+  'LAU',
+  'Bundestagswahlkreise',
+  'Kreise',
+  'NUTS3',
+  'Regierungsbezirke',
+  'NUTS2',
+  'Bundesländer',
+  'NUTS1',
+  'Bund',
+  'NUTS0',
+  'Weitere Gliederungen',
+]
+
+export function sortSpatialLevels(levels) {
+  const rank = (level) => {
+    const position = SPATIAL_LEVEL_ORDER.indexOf(level)
+    return position === -1 ? SPATIAL_LEVEL_ORDER.length - 1 : position
+  }
+  return [...(levels || [])].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+}
+
 export function detectLanguage() {
   try {
     const stored = localStorage.getItem('geolab_lang')
