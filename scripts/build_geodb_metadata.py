@@ -3821,6 +3821,22 @@ PORTAL_URL_OVERRIDES = {
 }
 
 
+# The registry's URL is the address the source was catalogued under, which is not always the
+# place a reader should be sent when a deep link stops working. Two cases needed correcting:
+# the Regionaldatenbank metadata came from the Datenguide project, whose own site is switched
+# off, and the Deutschlandatlas was catalogued on one of its map pages rather than its entry
+# page. Keyed by registry slug.
+PORTAL_OVERRIDES: Dict[str, str] = {
+    "datenguide-abgeschaltet": "https://www.regionalstatistik.de/genesis/online",
+    "deutschlandatlas-erreichbarkeit-von-apotheken": "https://www.deutschlandatlas.bund.de/",
+    # breitband-monitor.de no longer serves a valid certificate (SNI mismatch, checked in a real
+    # browser on 2026-08-29); the Gigabit-Grundbuch is where that data lives now. It is also the
+    # records' own link, so those rows correctly end up with no separate fallback.
+    "breitband-monitor": "https://gigabitgrundbuch.bund.de/",
+    "breitbandatlas": "https://gigabitgrundbuch.bund.de/",
+}
+
+
 def portal_record(source: Dict[str, Any]) -> Dict[str, Any]:
     """One record per portal, so a concept query still routes to a search UI that has no
     machine-readable catalogue."""
@@ -4103,6 +4119,18 @@ def main() -> None:
             produced = [portal_record(source)]
         elif produced and slug not in NO_PORTAL_RECORD and flattener:
             produced.append(portal_record(source))
+        # Every record also carries the entry page of its own source. A deep link into a
+        # statistical portal is the first thing that rots: the portal gets rebuilt, the query
+        # string changes, and a perfectly good record becomes a dead end. The entry page changes
+        # far more slowly, so the finder can always offer a second way in. Only set where it
+        # actually differs from the record's own link, so a portal card does not link to itself
+        # twice.
+        portal = PORTAL_OVERRIDES.get(slug) or clean(source.get("url"))
+        if portal:
+            for record in produced:
+                own = record.get("indicator_url") or record.get("source_url") or ""
+                if record.get("link_level") != "portal" and portal.rstrip("/") != own.rstrip("/"):
+                    record["portal_url"] = portal
         aligned_cards += align_portal_labels(produced)
         counts[slug] = len(produced)
         records.extend(produced)
