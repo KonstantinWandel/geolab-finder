@@ -241,6 +241,7 @@ class SOEPRagAdvisorService:
         self._flag_penalty = float(os.getenv("GEOLAB_FLAG_PENALTY", "0.12"))
         # How much of a document the cross-encoder sees. 0 disables the truncation.
         self._rerank_doc_chars = int(os.getenv("SOEP_RAG_RERANK_DOC_CHARS", "480")) or 10 ** 9
+        self._filter_view_cache: Dict[str, Any] = {}
         self._exact_code_bonus = float(os.getenv("GEOLAB_EXACT_CODE_BONUS", "0.5"))
         self._code_token_bonus = float(os.getenv("GEOLAB_CODE_TOKEN_BONUS", "0.2"))
 
@@ -1028,8 +1029,13 @@ class SOEPRagAdvisorService:
         if not self._rows or self._embedder is None or self._embeddings is None:
             raise RuntimeError("Metadata RAG advisor not loaded.")
 
-        candidate_idx = [idx for idx, row in enumerate(self._rows) if self._passes_filters(row, filters)]
-        if not candidate_idx:
+        # The filter pass and the matrix slice used to run per query: a Python loop over every
+        # row (125,496 for SOEP) plus a fancy-index COPY of the embedding matrix, which for the
+        # default filters means copying about 100 MB on every keystroke-level request. The dense
+        # product itself is 1-24 ms, so this was the search cost, not the maths. Both are cached
+        # per filter signature; a session reuses one signature almost always.
+        candidate_idx, candidates = self._filtered_view(filters)
+        if candidates is None or not len(candidate_idx):
             return []
 
         q_vec = self._embedder.encode(
@@ -1038,8 +1044,6 @@ class SOEPRagAdvisorService:
             convert_to_numpy=True,
             normalize_embeddings=True,
         ).astype("float32")
-
-        candidates = self._embeddings[candidate_idx]
         score_vec = (candidates @ q_vec[0]).astype("float32")
         best_local_idx = np.argsort(score_vec)[::-1][: min(k, len(candidate_idx))]
 
@@ -1071,12 +1075,57 @@ class SOEPRagAdvisorService:
             + "3. For regional indicators, check the reported spatial level and year coverage before merging with survey or administrative data.\n"
         )
 
+    def _filtered_view(self, filters: Optional[Dict[str, Any]]):
+        """(row indices, embedding matrix) for a filter set, cached by signature.
+
+        Returns the untouched matrix when every row passes, so the common case copies nothing.
+        The cache is bounded: a handful of filter combinations covers real use, and each entry
+        costs one float32 matrix of the surviving rows.
+        """
+        try:
+            signature = json.dumps(filters or {}, sort_keys=True, default=str)
+        except (TypeError, ValueError):
+            signature = repr(filters)
+        cached = self._filter_view_cache.get(signature)
+        if cached is not None:
+            return cached
+
+        keep = [idx for idx, row in enumerate(self._rows) if self._passes_filters(row, filters)]
+        if len(keep) == len(self._rows):
+            view = (list(range(len(self._rows))), self._embeddings)
+        elif keep:
+            view = (keep, self._embeddings[keep])
+        else:
+            view = ([], None)
+        if len(self._filter_view_cache) >= 6:
+            self._filter_view_cache.pop(next(iter(self._filter_view_cache)))
+        self._filter_view_cache[signature] = view
+        return view
+
     def _get_reranker(self) -> CrossEncoder:
         if self._cross_enc is None:
             print(f"Loading reranker {self._reranker_name} on {self.retrieval_device}...")
             self._cross_enc = CrossEncoder(
                 self._reranker_name, max_length=int(os.getenv("SOEP_RAG_RERANKER_MAX_LENGTH", "256")), device=self.retrieval_device
             )
+            # Optional int8 dynamic quantisation of the cross-encoder, for the CPU deployment.
+            # Only the ENCODER submodule is quantised: replacing the whole module breaks
+            # sentence-transformers' call path (the model then receives the BatchEncoding as a
+            # positional argument and dies inside create_position_ids_from_input_ids).
+            # It changes the scores, so it is off unless asked for and must be checked against
+            # both retrieval gates rather than against score correlation.
+            if os.getenv("SOEP_RAG_RERANK_INT8", "0") == "1" and self.retrieval_device == "cpu":
+                import torch
+                inner = getattr(self._cross_enc.model, "roberta", None) or \
+                    getattr(self._cross_enc.model, "bert", None)
+                if inner is not None:
+                    quantised = torch.quantization.quantize_dynamic(
+                        inner, {torch.nn.Linear}, dtype=torch.qint8)
+                    if hasattr(self._cross_enc.model, "roberta"):
+                        self._cross_enc.model.roberta = quantised
+                    else:
+                        self._cross_enc.model.bert = quantised
+                    print("Reranker quantised to int8 (dynamic, encoder only).")
         return self._cross_enc
 
     @staticmethod
