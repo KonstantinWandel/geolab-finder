@@ -45,16 +45,28 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-08-27 (evening): **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with
-11,567 rows** (10,907 GeoDB records + 660 INKAR) from **36 workbook rows, 30 of which carry real
-records**. Largest: Regionalstatistik/GENESIS 3,305, GENESIS-Online Bund 3,026, Zensus 2022 1,440,
-Gigabit-Grundbuch 632, DB ISR 415, BA-Glossar 313, BA Arbeitsmarktreport 288, GTFS/NeTEx 246,
-Regionalatlas 232, Migration & Integration 141, DWD Klimadaten 137, Strukturdaten BTW 2021+2025 98,
-Deutschlandatlas 86 (83 with a link to their own map page), Open Data ÖPNV 78, BA Strukturdaten 68, G-BA 52, Bundes-Klinik-Atlas 42,
-Wahlergebnisse 38, DB StaDa 37, BA Arbeitsmarkt kommunal 34, FDZ Ruhr 28, OSM POI-Layer 26,
-Unfallatlas 26, BORIS-D 21, Ländermonitor 18, offeneregister 13, Hochschulkompass 12, IÖR-Monitor 7,
-Destatis Mobilität 6, Wegweiser Kommune 4. Tracker: 26 done, 5 partial, 5 open.
-Retrieval gate 2026-08-27: **58 queries, hit@1 53, hit@3 57, hit@10 58, no misses.**
+State as of 2026-08-29: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 12,037 rows**
+(11,377 GeoDB records + 660 INKAR) from **36 workbook rows, 31 of which carry real records**.
+Tracker: **29 done, 2 partial, 5 open**. Largest: Regionalstatistik/GENESIS 3,306,
+GENESIS-Online Bund 3,027, Zensus 2022 1,441, Gigabit-Grundbuch 633, DB ISR 416,
+Wegweiser Kommune 393, BA-Glossar 314, BA Arbeitsmarktreport 289, Open Data ÖPNV 324,
+Regionalatlas 233, Migration & Integration 141, DWD Klimadaten 137, Strukturdaten BTW 99,
+IÖR-Monitor 89, Deutschlandatlas 87, BA Strukturdaten 69, G-BA 52, Bundes-Klinik-Atlas 42,
+Wahlergebnisse 39, DB StaDa 38, BA Arbeitsmarkt kommunal 34, FDZ Ruhr 29, OSM POI-Layer 27,
+Unfallatlas 26, BORIS-D 22, Ländermonitor 18, offeneregister 14, Hochschulkompass 12,
+Destatis Mobilität 7.
+
+**Link precision is the quality number to watch**, and it moved most on 2026-08-29: 5,332 records
+open the exact table, 2,821 the dataset, 2,272 the statistic, 737 the indicator itself, and only
+**180 land on a portal** where the reader still has to search. It was 1,630 portal-level in the
+morning; `scripts/resolve_merkmal_statistics.py` resolved 1,429 of the 1,596 Regionalstatistik
+Merkmale that had no statistic code in their definition text, by asking
+`catalogue/statistics2variable` once per Merkmal.
+
+Retrieval gates 2026-08-29 (both run on CPU with the production reranker settings):
+GeoDB **58 queries, hit@1 55, hit@3 58, hit@10 58, no misses**; SOEP **59 queries, hit@1 49,
+hit@3 55, hit@10 59, no misses**. The SOEP gate (`scripts/eval_soep_search.py`) is new: the finder
+had none, so no change to it could be told apart from a regression.
 
 **Both finders are bilingual.** `frontend/src/i18n.js` holds the German and English interface text
 and a `makeTranslator(lang)` helper; German is the default whenever the browser asks for it, and

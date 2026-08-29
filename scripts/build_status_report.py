@@ -421,10 +421,12 @@ def write_deliverable_workbook(rows: List[Dict[str, Any]], stamp: str) -> Option
     # German thousands separator on the number only: replacing every comma in the sentence
     # turned "26 fertig, 5 teilweise" into "26 fertig. 5 teilweise".
     indexed_de = f"{indexed:,}".replace(",", ".")
+    entries_de = f"{indexed + len(rows):,}".replace(",", ".")
     intro = (
         f"Stand der Einbindung in den GeoDB-Finder (geodb.geolab.soz.uni-bielefeld.de), "
         f"Stand {stamp}. {len(rows)} Quellen: {done} fertig, {partial} teilweise, {open_} offen; "
-        f"{indexed_de} indexierte Merkmale und Datensätze plus je ein Portaleintrag. "
+        f"{indexed_de} indexierte Merkmale und Datensätze plus je ein Portaleintrag, "
+        f"{entries_de} Einträge insgesamt. "
         "Maschinell erzeugt von scripts/build_status_report.py. Alles auf diesem Blatt wurde "
         "vom Assistenten ergänzt (blau); das Originalblatt Tabelle1 ist unverändert, ergänzt "
         "nur um die neu aufgenommenen Quellen (ebenfalls blau)."
@@ -521,9 +523,17 @@ def write_progress_table(rows: List[Dict[str, Any]], stamp: str) -> Optional[Pat
     done = sum(1 for r in rows if r["state"] == "done")
     partial = sum(1 for r in rows if r["state"] == "partial")
     open_count = sum(1 for r in rows if r["state"] == "open")
-    total = sum(r["indexed"] + r["portal_record"] for r in rows)
+    # The sheet and this table used to quote different totals for one fact (one counted the
+    # portal cards, the other did not), which is how a handoff document ends up with two
+    # numbers for the same thing. Both now name the two parts explicitly.
+    indicators = sum(r["indexed"] for r in rows)
+    portals = sum(r["portal_record"] for r in rows)
+    indicators_de = f"{indicators:,}".replace(",", ".")
+    entries_total_de = f"{indicators + portals:,}".replace(",", ".")
     summary = (f"{len(rows)} Datenquellen: {done} fertig, {partial} teilweise, {open_count} offen; "
-               f"{total} indexierte Merkmale im Finder (geodb.geolab.soz.uni-bielefeld.de).")
+               f"{indicators_de} indexierte Merkmale und Datensätze plus {portals} Portaleinträge, "
+               f"{entries_total_de} Einträge insgesamt "
+               "(geodb.geolab.soz.uni-bielefeld.de).")
 
     rscript = shutil.which("Rscript") or "/home/researcher/miniconda3/envs/rstats/bin/Rscript"
     # The rstats env ships libfontconfig.so.1 but the loader does not look there unless told,
