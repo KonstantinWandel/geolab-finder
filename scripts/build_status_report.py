@@ -88,45 +88,186 @@ SOURCE_KEYS: Dict[str, List[str]] = {
 # `next` is the developer detail (English, shown in CHECKLIST.md); `de` is the short phrase
 # that goes into the German handoff table.
 OPEN_ITEMS: Dict[str, Dict[str, str]] = {
-    "regionalatlas-deutschland": {"de": "Nichts offen; Katalog bei Aktualisierung neu ziehen", "state": "done", "next": "Nothing outstanding. Re-fetch services.json when the atlas updates (it carries a timestamp per theme)."},
-    "breitband-monitor": {"de": "Eingebunden: Breitbandatlas, Mobilfunk-Monitoring und Rasterdaten (Gitterzellen)", "state": "done", "next": "632 indicators: the Breitbandatlas and Mobilfunk-Monitoring workbooks (use case x technology/bandwidth, Bund to Gemeinde) plus the two GeoPackages read at schema level (3.59 million grid cells x 168 coverage attributes, and 599,515 cells of mobile-operator counts). The GeoPackages themselves are never unpacked into the repo; scripts/extract_gpkg_schema.py writes a small schema JSON instead."},
-    "breitbandatlas": {"de": "Nachfolger Gigabitgrundbuch; Indikatorliste fehlt noch", "state": "open", "next": "The bmvi.de link in the workbook is dead; Gigabitgrundbuch is the successor. Needs the indicator/download page saved from a browser."},
-    "arbeitsmarktstatistik-ba-karte": {"de": "313 Glossarbegriffe eingebunden; die Karte selbst hat keinen maschinenlesbaren Katalog", "state": "done", "next": "313 concepts flattened from the BA Gesamtglossar, each with the BA's own definition, which is what a researcher searches for (Unterbeschaeftigung, Aktivierungsquote, Bedarfsgemeinschaft). The PDF is a two-column table whose column boundary moves between pages and whose long terms wrap, so it is parsed from real word coordinates (pdftotext -bbox-layout) with a lexical rule for wrapped terms; a fixed character split silently cut a quarter of the labels mid-word. The interactive map publishes no indicator catalogue of its own, and the BA data behind it is covered by the Arbeitsmarktreport, Strukturdaten and Arbeitsmarkt kommunal rows."},
-    "strukturdaten-und-indikatoren-ba": {"de": "Nichts offen; neueres Heft bei Bedarf", "state": "done", "next": "One booklet defines the series. Refresh with a newer heft when the BA publishes one."},
-    "arbeitsmarktreport-ba": {"de": "288 Merkmale aus 17 Blättern eingebunden, monatliche Reihe", "state": "done", "next": "288 indicators flattened from the 17 data sheets (Eckwerte, SGB II/III, Unterbeschäftigung, Alo_Bestand/Bewegungen, Arbeitsstellen, Berufe, Ausbildung, Beschäftigung, Grundsicherung). Labels that recur across sheets carry their sheet in brackets, since 'Bestand an Arbeitslosen: Insgesamt' means something different in Eckwerte and in Eckwerte SGB II."},
-    "arbeitsmarkt-kommunal-ba": {"de": "Gemeindescharfe Merkmale eingebunden; weitere Kreis-Hefte optional", "state": "done", "next": "33 indicators flattened from one district archive (one XLSX per municipality, sheet 'Daten'). The indicator set is identical across districts, so more archives add regions, not concepts."},
-    "migration-integration-in-regionen": {"de": "Nichts offen", "state": "done", "next": "Nothing outstanding."},
-    "krankenhausatlas-deutschland": {"de": "Stand 2016; praktisch ersetzt durch G-BA und Klinik-Atlas", "state": "open", "next": "Portal page only, and the atlas is at 2016. Superseded in practice by the G-BA Qualitätsberichte and the Bundes-Klinik-Atlas, both indexed."},
-    "krankenhausverzeichnis": {"de": "Schema mit Unterabschnitten eingebunden (52), Einzelberichte bewusst nicht", "state": "done", "next": "Schema sections indexed from the 2024 archive; the 2008-2024 archives are on disk (about 1.7 GB per year uncompressed, deliberately never extracted). Indexing the per-hospital rows would be a different product."},
-    "bundes-klinik-atlas": {"de": "Nichts offen; ersetzt die eingestellte Weisse Liste", "state": "done", "next": "Row renamed in the workbook on 2026-08-25: Weisse Liste is discontinued, the Bundes-Klinik-Atlas open-data export (IQTIG, 1,577 sites with coordinates) replaces it and is indexed."},
-    "arztsuche-bundesaerztekammer": {"de": "Nur Suchmaske, kein Export; nur Portaleintrag möglich", "state": "open", "next": "Search UI over the Landesärztekammer registers, no export. Portal-level record only unless a state chamber publishes a list."},
-    "deutschlandatlas-erreichbarkeit-von-apotheken": {"de": "86 von 86 Indikatoren mit Link auf die eigene Kartenseite", "state": "done", "next": "All 86 indicators are indexed from the PDF and XLSX with their official definitions, and all 86 now link to their own map page (62 distinct maps out of the 122 the index lists). 83 are matched by title; the last three share no words with their map title and are pinned by Indikatorenkuerzel (bquali_mabschl, bquali_oabschl, v_5g), keyed on the code because the label carries the reference year. Correction to what was written here before: this host does NOT answer 400 to every scripted request. It answers 307 to a cookie-check URL and serves the page to any client that keeps the cookie, so the fetcher and both link checks use a cookie jar. A real map answers HTTP 200 with about 124 KB, a bogus code 404 with 96 KB."},
-    "hochschulkompass": {"de": "Nichts offen; aktualisierte Liste einfach ersetzbar", "state": "done", "next": "Register attributes indexed. A refreshed hs_liste.txt is a drop-in replacement."},
-    "deutsche-bahn-infrastrukturregister": {"de": "Ohne Anmeldung eingebunden: Kartenebenen und WFS-Merkmale des Schienennetzes", "state": "done", "next": "No registration needed, and it does publish a machine-readable catalogue after all. The viewer is a MapStore2 app over a public GeoServer: WMS GetCapabilities lists the map themes (Streckenklasse, Elektrifizierung, ETCS, Gleisanzahl, Betriebsstellen, Bahnsteige, Tunnel, Bruecken, Bahnuebergaenge) and WFS DescribeFeatureType lists the attributes per feature type. Both are indexed, so this row went from one portal card to 436 records. German and English field names are paired where ISR publishes both. Optional next step: DB's StaDa station dataset for the Bahnhofsuche row."},
-    "deutsche-bahn-bahnhofsuche": {"de": "StaDa-API eingebunden: 37 Merkmale zu 5.408 Bahnhöfen", "state": "done", "next": "Resolved 2026-08-27 with the DB API Marketplace credentials: the StaDa station API returns all 5,408 stations, and 37 attribute records plus one dataset record are indexed (Bahnhofskategorie, Barrierefreiheit, Mobilitaetsservice, Ausstattung, Aufgabentraeger, amtlicher Gemeindeschluessel, WGS84 coordinates), each with the measured coverage across stations. The station rows themselves are not indexed, following the register rule. Note the auth trap: the marketplace needs BOTH headers, DB-Client-Id and DB-Api-Key; the key alone answers 401 'Invalid client id or secret', which reads like a wrong key rather than a missing one."},
-    "open-data-oepnv": {"de": "71 Datensätze und die Feldschemata von GTFS und NeTEx eingebunden", "state": "done", "next": "71 named datasets indexed from the public catalogue (Deutschlandweite Sollfahrplandaten GTFS/NeTEX, Deutschlandweite Haltestellendaten, plus Soll-Fahrplandaten/Haltestellen/Liniendaten per Verbund), each with its own deep link, plus the no-login OpenService API products. Downloading a dataset still needs the free account."},
-    "spielplatztreff-suchmaschine-fuer-spielplaetze": {"de": "Kein Export; OSM wäre die systematische Alternative", "state": "open", "next": "Crowd-sourced search UI, no export. Portal record only; OSM leisure=playground is the systematic alternative."},
-    "spielplatzkarte": {"de": "Kein Export; wie Spielplatztreff", "state": "open", "next": "Same as Spielplatztreff: map UI, no export."},
-    "destatis-regionale-mobilitaet-und-infektionsgesc": {"de": "Eingestellt (2020-2022); 6 Indikatorgruppen eingebunden, Einstellung auf jedem Datensatz vermerkt", "state": "done", "next": "Discontinued experimental statistic (2020-2022), kept because the series stays citable. The six published indicator groups (Mobilitaetsindikatoren, zurueckgelegte Distanzen, Bewegungen nach Verkehrstraeger, Tagesverlauf) are flattened from the saved EXSTAT page and every record states that the statistic ended."},
-    "datenguide-abgeschaltet": {"de": "Merkmalskatalog + 866 Regionaltabellen; Portal-Links von 1.596 auf 167 gesenkt", "state": "done", "next": "Two catalogues under this row: the Datenguide GENESIS Merkmalskatalog (2,757 Merkmale) and the live Regionaldatenbank table catalogue (129 statistics, 866 tables, each with a working table-level deep link). The API reports exactly 129 statistics, so that enumeration is complete. On 2026-08-29 the weakest links in the whole index were fixed: 1,596 Merkmale pointed at the portal home page because no statistic code appears in their definition text. catalogue/statistics2variable answers that directly, so scripts/resolve_merkmal_statistics.py asked once per Merkmal and resolved 1,429 of 1,596 (89.5%); portal-level records here fell to 167 and statistic-level rose from 843 to 2,272. Federal statistic links are marked unverified because that portal is a client-rendered SPA that answers a 2.5 KB shell for any code, real or invented."},
-    "inkar": {"de": "Ursprungsquelle des Finders", "state": "done", "next": "Already the finder's original source (660 indicators)."},
-    "german-companies": {"de": "Felder eingebunden; kein Bulk-Download möglich (Lookup-API)", "state": "done", "next": "API fields indexed and verified against live responses (samples in raw/). The endpoint is POST /lookup only, a record-linkage service: it resolves a company you already name. There is no bulk or search endpoint (every GET 404s, a city-only filter returns 0 rows), so the register cannot be downloaded through it, and the finder does not need it to. Key now lives in ~/kwandel/.config/secrets/."},
-    "open-data-handelsregister": {"de": "13 Registerfelder eingebunden; der Volldump wird bewusst nicht geladen", "state": "done", "next": "13 register fields indexed from the documented ocdata schema (Registernummer, Registergericht, Geschaeftsanschrift, Status, fruehere Firmennamen, Organe with entry and exit dates), so a query about company density, foundations, deletions or board networks routes here. The dump itself is multi-GB and is deliberately never downloaded: the address field is geocodable, which is what makes it a regional source."},
-    "laendermonitor-fruehkindliche-bildungssysteme": {"de": "17 Indikatoren mit offiziellen Methodik-Definitionen; die Portalliste lädt clientseitig", "state": "done", "next": "All 17 indicators carry their official definition, extracted from the four public Methodik PDFs, which are the authoritative definition set. The portal's own indicator overview is a JavaScript app whose list is not in the HTML, so 17 is what is publicly parseable. Those PDFs are also two-column, so they only read correctly in reading order (pdftotext WITHOUT -layout); with -layout every definition picks up half a sentence from the neighbouring column."},
-    "genesis-online-bund": {"de": "3.026 Tabellen über die API eingebunden, Tabellenlinks im Browser geprüft",
-        "state": "partial", "next": "3,026 tables enumerated over the REST API (331 statistics) and indexed with table-level links, confirmed by hand in a browser on 2026-08-25. Mostly Bund/Land depth: only 55 titles name Kreise or Gemeinden, which is why this stays partial for a regional finder."},
-    "zensus-2022": {"de": "1.440 Tabellen eingebunden, räumliche Ebene je Tabelle aufgelöst (1.407)",
-        "state": "partial", "next": "1,440 tables from 12 statistics indexed with table-level links, confirmed by hand in a browser on 2026-08-25. The regional level is encoded in the opaque table code rather than the title; resolved per table through metadata/table on 2026-08-27: 1,407 of 1,440 tables now carry their real level, and a repeated title carries it in the label, which is what tells the four 'Personen: Religion' tables (Bundeslaender, Landeskirche, Bistum, Wahlkreise) apart. Remaining: nearly every table also has a national column, so 'Bund' appears alongside the finer level."},
-    "unfallatlas": {"de": "Eingebunden: 25 Merkmale, Unfalljahre 2016-2025, punktgenau", "state": "done", "next": "Attributes of the geocoded accident records indexed (2016-2025, point level with WGS84 and UTM32 coordinates). The yearly CSV archives stay on disk; individual accidents are never indexed."},
-    "strukturdaten-bundestagswahl-2021": {"de": "Strukturdaten 2021 und 2025 eingebunden (je 49 Merkmale)", "state": "done", "next": "Both editions indexed: 49 indicators for the 2021 constituencies and 49 for 2025, kept separate because the same label is a different measurement under different constituency boundaries and reference dates. The indicator definitions come from the 2021 documentation page and carry over. Election RESULTS live in row 35 (Wahlergebnisse Bundeswahlleiterin)."},
-    "openstreetmap-poi-layer-overpass": {"de": "26 POI-Layer mit gemessenen Objektzahlen für Deutschland", "state": "done", "next": "26 POI layers indexed (Spielplaetze, Apotheken, Arztpraxen, Schulen, Kitas, Gotteshaeuser, Haltestellen, Sportanlagen, Ladesaeulen, ...), each with the Overpass query, a link to the tag's own wiki page and the measured object count for Germany. This is what closes rows 18/19 (playground portals) and complements row 12 (physician search), neither of which has an export. Counts come from taginfo.geofabrik.de, not Overpass: every Overpass mirror is refused at the network level from this host (connection refused, not a timeout), so a count query cannot run here even though the query in each record works elsewhere."},
-    "wegweiser-kommune-bertelsmann-stiftung": {"de": "393 Indikatoren über die offene Data-API eingebunden (CC0)", "state": "done", "next": "393 indicators indexed over the documented Data API, each with its explanation, calculation formula, source, unit, year range and finest region type, 67 of them population projections to 2040, which nothing else in this index has. This row was previously recorded as needing an account: it does not. /open-data documents an OpenAPI spec, the licence is CC0, and rest/indicator/list simply defaults to max=10, which is what made an unparameterised call look like a stub while the browse UI renders its tree client-side. A made-up friendly-url answers 404 on the API, so the identifiers are verified even though the human page is a SPA that renders 200 either way."},
-    "dwd-climate-data-center-cdc": {"de": "137 Klimaprodukte aus dem echten Verzeichnisbaum eingebunden", "state": "done", "next": "137 records: one per (1-km grid or station) x aggregation x variable, read from the open Apache directory tree, which IS the DWD catalogue. Covers temperature, precipitation, sunshine, radiation, frost/hot/ice/summer days, snow cover, soil moisture, evaporation, wind, phenology and the vieljaehrige Mittel. Every record links to the directory that holds the files, and the grids are aggregable to Gemeinde or Kreis level, which is what makes climate joinable with the Regionalstatistik. Documentation, obsolete duplicates and project bundles are skipped rather than dressed up as indicators."},
-    "boris-d-bodenrichtwerte": {"de": "5 Konzepte und 16 Länder; 14 Länder mit eigenem Dienst verlinkt", "state": "done", "next": "Indexed as 5 concepts (Bodenrichtwert, Bodenrichtwertzone, Entwicklungs-/Beitragszustand, Nutzungsart, Immobilienrichtwerte) plus one record per Bundesland. BORIS-D is a viewer over the sixteen Laender services and publishes no catalogue of its own, so scripts/resolve_boris_services.py reads the services out of the official GDI-DE catalogue (1,962 Bodenrichtwerte records; per Land the best candidate is fetched in full and its GetCapabilities URL taken). 14 of 16 Laender now link to their own WMS/WFS or Bodenrichtwert portal, all probed HTTP 200; Baden-Wuerttemberg and Berlin publish no landesweiten service in that catalogue and keep the BORIS-D link rather than a guessed one. Three matching traps are written into the script: two-letter Land codes match inside unrelated titles, 'Sachsen' is a substring of both 'Niedersachsen' and 'Sachsen-Anhalt', and Niedersachsen and Bremen share one joint system."},
-    "wahlergebnisse-bundeswahlleiterin": {"de": "38 Merkmale und Datensätze: Ergebnisse 2025, Zeitreihe ab 1949, Europawahl 2024", "state": "done", "next": "The result variables are read out of the 2025 kerg2 file itself: 4 system groups (Wahlberechtigte, Waehlende, Ungueltige, Gueltige) and one record per party that stood nationwide, plus dataset records for kerg/kerg2 2025, the results database since 1949, the Brief-/Urnenwahl series since 1957 and the Europawahl 2024 (which reaches Gemeinde level). Party lists that stood in a single Land are covered by the dataset records rather than one near-identical record each."},
-    "ioer-monitor-flaechennutzung": {"de": "Alle 88 Indikatoren eingebunden (13 Kategorien)", "state": "done", "next": "All 88 indicators indexed with their five-character code and category, read from the monitor's own public indicator list (linked from the 'Uebersicht der Geodienste' section of /indikatoren/). The earlier note here said the list sits behind the user area; that was wrong, only the SERVICE CALL needs a key. An unauthenticated monitor_api call answers a WMS ServiceException, so the records link to the indicator overview and carry the code plus the exact WMS/WFS/WCS call pattern instead of a per-indicator link that would not open for anyone."},
-    "rwi-geo-grid-rwi-geo-red-fdz-ruhr": {"de": "28 deutsche Datensätze mit DOI eingebunden (RWI-GEO-GRID, RWI-GEO-RED und weitere)", "state": "done", "next": "28 German datasets indexed with title, DOI, keywords and abstract, harvested from the da|ra detail pages because the portal lists every dataset only as a 'Details' link. Includes RWI-GEO-GRID (1-km socio-economic grid), RWI-GEO-RED (geocoded real-estate advertisements), RWI-GEO-KITA, the regional house-price indices and the PLZ-to-Gemeinde bridge. 7 non-German evaluation studies (Burkina Faso, Senegal, Rwanda, India) are skipped as out of scope. These are scientific-use files on application, which is exactly why they belong in a finder: the point is to learn the dataset exists before starting an application."},
-
+    "regionalatlas-deutschland": {
+        "de": "Vollständig eingebunden: alle 232 Indikatoren mit Beschreibung und direktem Link auf die passende Karte. Bei einer Aktualisierung des Atlas muss die Indikatorliste neu geladen werden.",
+        "state": "done",
+        "next": "Nothing outstanding. Re-fetch services.json when the atlas updates (it carries a timestamp per theme).",
+    },
+    "breitband-monitor": {
+        "de": "Vollständig eingebunden: 632 Merkmale aus den Tabellen zu Breitband- und Mobilfunkversorgung, dazu die Struktur der beiden Rasterdatensätze (3,6 Mio. Gitterzellen). Die Rasterdaten selbst bleiben beim Anbieter, wir verweisen nur darauf.",
+        "state": "done",
+        "next": "632 indicators: the Breitbandatlas and Mobilfunk-Monitoring workbooks (use case x technology/bandwidth, Bund to Gemeinde) plus the two GeoPackages read at schema level (3.59 million grid cells x 168 coverage attributes, and 599,515 cells of mobile-operator counts). The GeoPackages themselves are never unpacked into the repo; scripts/extract_gpkg_schema.py writes a small schema JSON instead.",
+    },
+    "breitbandatlas": {
+        "de": "Offen, inhaltlich aber abgedeckt: Die im Excel hinterlegte Adresse existiert nicht mehr. Der Nachfolger Gigabitgrundbuch ist als Zeile 2 vollständig eingebunden, diese Zeile ist damit doppelt.",
+        "state": "open",
+        "next": "The bmvi.de link in the workbook is dead; Gigabitgrundbuch is the successor. Needs the indicator/download page saved from a browser.",
+    },
+    "arbeitsmarktstatistik-ba-karte": {
+        "de": "Vollständig eingebunden: 313 Begriffe aus dem amtlichen Glossar der Bundesagentur, jeweils mit deren eigener Definition. Die interaktive Karte veröffentlicht keine Liste ihrer Indikatoren; die Daten dahinter stecken in den Zeilen 5, 6 und 7.",
+        "state": "done",
+        "next": "313 concepts flattened from the BA Gesamtglossar, each with the BA's own definition, which is what a researcher searches for (Unterbeschaeftigung, Aktivierungsquote, Bedarfsgemeinschaft). The PDF is a two-column table whose column boundary moves between pages and whose long terms wrap, so it is parsed from real word coordinates (pdftotext -bbox-layout) with a lexical rule for wrapped terms; a fixed character split silently cut a quarter of the labels mid-word. The interactive map publishes no indicator catalogue of its own, and the BA data behind it is covered by the Arbeitsmarktreport, Strukturdaten and Arbeitsmarkt kommunal rows.",
+    },
+    "strukturdaten-und-indikatoren-ba": {
+        "de": "Vollständig eingebunden: 68 Merkmale aus dem aktuellen Heft. Ein neueres Heft lässt sich jederzeit nachladen.",
+        "state": "done",
+        "next": "One booklet defines the series. Refresh with a newer heft when the BA publishes one.",
+    },
+    "arbeitsmarktreport-ba": {
+        "de": "Vollständig eingebunden: 288 Merkmale aus 17 Tabellenblättern. Gleichnamige Merkmale tragen ihr Blatt im Titel, weil etwa 'Bestand an Arbeitslosen' je nach Blatt etwas anderes meint.",
+        "state": "done",
+        "next": "288 indicators flattened from the 17 data sheets (Eckwerte, SGB II/III, Unterbeschäftigung, Alo_Bestand/Bewegungen, Arbeitsstellen, Berufe, Ausbildung, Beschäftigung, Grundsicherung). Labels that recur across sheets carry their sheet in brackets, since 'Bestand an Arbeitslosen: Insgesamt' means something different in Eckwerte and in Eckwerte SGB II.",
+    },
+    "arbeitsmarkt-kommunal-ba": {
+        "de": "Vollständig eingebunden: 33 gemeindescharfe Merkmale. Weitere Kreis-Hefte würden nur zusätzliche Regionen liefern, keine neuen Merkmale.",
+        "state": "done",
+        "next": "33 indicators flattened from one district archive (one XLSX per municipality, sheet 'Daten'). The indicator set is identical across districts, so more archives add regions, not concepts.",
+    },
+    "migration-integration-in-regionen": {
+        "de": "Vollständig eingebunden: 140 Merkmale zu Migration und Integration in den Regionen.",
+        "state": "done",
+        "next": "Nothing outstanding.",
+    },
+    "krankenhausatlas-deutschland": {
+        "de": "Offen und inhaltlich überholt: Die Daten stammen von 2016. Aktuelle Zahlen liefern die Zeilen 10 (Qualitätsberichte) und 11 (Klinik-Atlas), beide vollständig eingebunden.",
+        "state": "open",
+        "next": "Portal page only, and the atlas is at 2016. Superseded in practice by the G-BA Qualitätsberichte and the Bundes-Klinik-Atlas, both indexed.",
+    },
+    "krankenhausverzeichnis": {
+        "de": "Vollständig eingebunden: 52 Abschnitte, die beschreiben, was ein Qualitätsbericht über ein Krankenhaus enthält. Die Berichte selbst (rund 1,7 GB je Jahr, einer je Haus) werden bewusst nicht ausgewertet: gesucht wird nach Themen, nicht nach einzelnen Häusern.",
+        "state": "done",
+        "next": "Schema sections indexed from the 2024 archive; the 2008-2024 archives are on disk (about 1.7 GB per year uncompressed, deliberately never extracted). Indexing the per-hospital rows would be a different product.",
+    },
+    "bundes-klinik-atlas": {
+        "de": "Vollständig eingebunden: 41 Merkmale zu 1.577 Klinikstandorten mit Koordinaten. Ersetzt die eingestellte Weiße Liste.",
+        "state": "done",
+        "next": "Row renamed in the workbook on 2026-08-25: Weisse Liste is discontinued, the Bundes-Klinik-Atlas open-data export (IQTIG, 1,577 sites with coordinates) replaces it and is indexed.",
+    },
+    "arztsuche-bundesaerztekammer": {
+        "de": "Offen, weil die Quelle nichts hergibt: Die Bundesärztekammer bietet nur eine Suchmaske, keinen Datenexport. Als systematischen Ersatz enthält der Finder die Arzt- und Zahnarztstandorte aus OpenStreetMap (Zeile 30).",
+        "state": "open",
+        "next": "Search UI over the Landesärztekammer registers, no export. Portal-level record only unless a state chamber publishes a list.",
+    },
+    "deutschlandatlas-erreichbarkeit-von-apotheken": {
+        "de": "Vollständig eingebunden: alle 86 Indikatoren mit ihren amtlichen Definitionen, und alle 86 verlinken auf ihre eigene Kartenseite. Die Zeile deckt den gesamten Deutschlandatlas ab, nicht nur die Apothekenkarte.",
+        "state": "done",
+        "next": "All 86 indicators are indexed from the PDF and XLSX with their official definitions, and all 86 now link to their own map page (62 distinct maps out of the 122 the index lists). 83 are matched by title; the last three share no words with their map title and are pinned by Indikatorenkuerzel (bquali_mabschl, bquali_oabschl, v_5g), keyed on the code because the label carries the reference year. Correction to what was written here before: this host does NOT answer 400 to every scripted request. It answers 307 to a cookie-check URL and serves the page to any client that keeps the cookie, so the fetcher and both link checks use a cookie jar. A real map answers HTTP 200 with about 124 KB, a bogus code 404 with 96 KB.",
+    },
+    "hochschulkompass": {
+        "de": "Vollständig eingebunden: die Merkmale des Hochschulregisters. Eine aktualisierte Liste lässt sich einfach austauschen.",
+        "state": "done",
+        "next": "Register attributes indexed. A refreshed hs_liste.txt is a drop-in replacement.",
+    },
+    "deutsche-bahn-infrastrukturregister": {
+        "de": "Vollständig eingebunden: 415 Kartenebenen und Merkmale des Schienennetzes, unter anderem Elektrifizierung, Streckenklasse, Bahnsteige, Brücken und Bahnübergänge. Eine Anmeldung war entgegen der ursprünglichen Auskunft nicht nötig.",
+        "state": "done",
+        "next": "No registration needed, and it does publish a machine-readable catalogue after all. The viewer is a MapStore2 app over a public GeoServer: WMS GetCapabilities lists the map themes (Streckenklasse, Elektrifizierung, ETCS, Gleisanzahl, Betriebsstellen, Bahnsteige, Tunnel, Bruecken, Bahnuebergaenge) and WFS DescribeFeatureType lists the attributes per feature type. Both are indexed, so this row went from one portal card to 436 records. German and English field names are paired where ISR publishes both. Optional next step: DB's StaDa station dataset for the Bahnhofsuche row.",
+    },
+    "deutsche-bahn-bahnhofsuche": {
+        "de": "Vollständig eingebunden: 37 Merkmale zu allen 5.408 Personenbahnhöfen, darunter Bahnhofskategorie, Barrierefreiheit, Ausstattung, zuständiger Aufgabenträger und Koordinaten. Möglich durch die von Ihnen besorgten Zugangsdaten.",
+        "state": "done",
+        "next": "Resolved 2026-08-27 with the DB API Marketplace credentials: the StaDa station API returns all 5,408 stations, and 37 attribute records plus one dataset record are indexed (Bahnhofskategorie, Barrierefreiheit, Mobilitaetsservice, Ausstattung, Aufgabentraeger, amtlicher Gemeindeschluessel, WGS84 coordinates), each with the measured coverage across stations. The station rows themselves are not indexed, following the register rule. Note the auth trap: the marketplace needs BOTH headers, DB-Client-Id and DB-Api-Key; the key alone answers 401 'Invalid client id or secret', which reads like a wrong key rather than a missing one.",
+    },
+    "open-data-oepnv": {
+        "de": "Weitgehend eingebunden: 71 Datensätze und die Feldbeschreibungen der Fahrplanformate GTFS und NeTEx. Zum Herunterladen der Daten verlangt der Anbieter weiterhin ein kostenloses Konto; das Suchen und Finden funktioniert ohne.",
+        "state": "done",
+        "next": "71 named datasets indexed from the public catalogue (Deutschlandweite Sollfahrplandaten GTFS/NeTEX, Deutschlandweite Haltestellendaten, plus Soll-Fahrplandaten/Haltestellen/Liniendaten per Verbund), each with its own deep link, plus the no-login OpenService API products. Downloading a dataset still needs the free account.",
+    },
+    "spielplatztreff-suchmaschine-fuer-spielplaetze": {
+        "de": "Offen, weil die Quelle nichts hergibt: eine Suchmaschine ohne Datenexport. Ersatz sind die Spielplätze aus OpenStreetMap (Zeile 30), bundesweit rund 136.000 Stück.",
+        "state": "open",
+        "next": "Crowd-sourced search UI, no export. Portal record only; OSM leisure=playground is the systematic alternative.",
+    },
+    "spielplatzkarte": {
+        "de": "Offen wie Zeile 18: Kartenansicht ohne Datenexport, ersetzt durch die Spielplätze aus OpenStreetMap (Zeile 30).",
+        "state": "open",
+        "next": "Same as Spielplatztreff: map UI, no export.",
+    },
+    "destatis-regionale-mobilitaet-und-infektionsgesc": {
+        "de": "Vollständig eingebunden, die Statistik selbst ist aber eingestellt: Sie lief nur von 2020 bis 2022. Die 6 Indikatorgruppen bleiben zitierfähig; auf jedem Eintrag steht, dass die Reihe beendet ist.",
+        "state": "done",
+        "next": "Discontinued experimental statistic (2020-2022), kept because the series stays citable. The six published indicator groups (Mobilitaetsindikatoren, zurueckgelegte Distanzen, Bewegungen nach Verkehrstraeger, Tagesverlauf) are flattened from the saved EXSTAT page and every record states that the statistic ended.",
+    },
+    "datenguide-abgeschaltet": {
+        "de": "Vollständig eingebunden: der Merkmalskatalog der Regionaldatenbank (2.757 Merkmale) und 866 Regionaltabellen. Für 1.429 Merkmale wurde zusätzlich ermittelt, zu welcher Statistik sie gehören, sodass der Link nicht mehr auf der Startseite landet, sondern bei der richtigen Statistik.",
+        "state": "done",
+        "next": "Two catalogues under this row: the Datenguide GENESIS Merkmalskatalog (2,757 Merkmale) and the live Regionaldatenbank table catalogue (129 statistics, 866 tables, each with a working table-level deep link). The API reports exactly 129 statistics, so that enumeration is complete. On 2026-08-29 the weakest links in the whole index were fixed: 1,596 Merkmale pointed at the portal home page because no statistic code appears in their definition text. catalogue/statistics2variable answers that directly, so scripts/resolve_merkmal_statistics.py asked once per Merkmal and resolved 1,429 of 1,596 (89.5%); portal-level records here fell to 167 and statistic-level rose from 843 to 2,272. Federal statistic links are marked unverified because that portal is a client-rendered SPA that answers a 2.5 KB shell for any code, real or invented.",
+    },
+    "inkar": {
+        "de": "Die Ursprungsquelle des Finders: 660 Indikatoren, unverändert enthalten.",
+        "state": "done",
+        "next": "Already the finder's original source (660 indicators).",
+    },
+    "german-companies": {
+        "de": "Vollständig eingebunden: die Felder, die der Dienst je Unternehmen führt. Ein vollständiger Download ist nicht möglich, er beantwortet nur Anfragen zu einzelnen, namentlich bekannten Unternehmen.",
+        "state": "done",
+        "next": "API fields indexed and verified against live responses (samples in raw/). The endpoint is POST /lookup only, a record-linkage service: it resolves a company you already name. There is no bulk or search endpoint (every GET 404s, a city-only filter returns 0 rows), so the register cannot be downloaded through it, and the finder does not need it to. Key now lives in ~/kwandel/.config/secrets/.",
+    },
+    "open-data-handelsregister": {
+        "de": "Vollständig eingebunden: 13 Felder, die das Handelsregister je Unternehmen führt, unter anderem Registernummer, Anschrift, Status, frühere Namen und Organe. Der vollständige Datenabzug ist mehrere Gigabyte groß und wird bewusst nicht gespeichert.",
+        "state": "done",
+        "next": "13 register fields indexed from the documented ocdata schema (Registernummer, Registergericht, Geschaeftsanschrift, Status, fruehere Firmennamen, Organe with entry and exit dates), so a query about company density, foundations, deletions or board networks routes here. The dump itself is multi-GB and is deliberately never downloaded: the address field is geocodable, which is what makes it a regional source.",
+    },
+    "laendermonitor-fruehkindliche-bildungssysteme": {
+        "de": "Vollständig eingebunden: 17 Indikatoren mit den offiziellen Definitionen aus den Methodikpapieren. Die Indikatorliste der Website baut sich erst im Browser auf und ist maschinell nicht auslesbar; die Methodikpapiere sind die verbindliche Quelle.",
+        "state": "done",
+        "next": "All 17 indicators carry their official definition, extracted from the four public Methodik PDFs, which are the authoritative definition set. The portal's own indicator overview is a JavaScript app whose list is not in the HTML, so 17 is what is publicly parseable. Those PDFs are also two-column, so they only read correctly in reading order (pdftotext WITHOUT -layout); with -layout every definition picks up half a sentence from the neighbouring column.",
+    },
+    "genesis-online-bund": {
+        "de": "Teilweise, und zwar wegen der Quelle, nicht wegen der Einbindung: Alle 3.026 Tabellen sind erfasst und direkt verlinkt, aber nur 55 davon reichen bis auf Kreis- oder Gemeindeebene, der Rest endet bei Bund und Ländern. Für regionale Fragen ist Zeile 21 die passendere Quelle.",
+        "state": "partial",
+        "next": "3,026 tables enumerated over the REST API (331 statistics) and indexed with table-level links, confirmed by hand in a browser on 2026-08-25. Mostly Bund/Land depth: only 55 titles name Kreise or Gemeinden, which is why this stays partial for a regional finder.",
+    },
+    "zensus-2022": {
+        "de": "Teilweise, und zwar wegen der Quelle: Alle 1.440 Tabellen sind erfasst und verlinkt, für 1.407 ist die räumliche Ebene bestimmt. Nur 228 Tabellen sind feiner als Deutschland insgesamt, weil der Zensus viele Merkmale aus Datenschutzgründen nicht unterhalb der Länder veröffentlicht.",
+        "state": "partial",
+        "next": "1,440 tables from 12 statistics indexed with table-level links, confirmed by hand in a browser on 2026-08-25. The regional level is encoded in the opaque table code rather than the title; resolved per table through metadata/table on 2026-08-27: 1,407 of 1,440 tables now carry their real level, and a repeated title carries it in the label, which is what tells the four 'Personen: Religion' tables (Bundeslaender, Landeskirche, Bistum, Wahlkreise) apart. Remaining: nearly every table also has a national column, so 'Bund' appears alongside the finer level.",
+    },
+    "unfallatlas": {
+        "de": "Vollständig eingebunden: 25 Merkmale der punktgenau erfassten Straßenverkehrsunfälle, Unfalljahre 2016 bis 2025. Die einzelnen Unfälle werden nicht indexiert.",
+        "state": "done",
+        "next": "Attributes of the geocoded accident records indexed (2016-2025, point level with WGS84 and UTM32 coordinates). The yearly CSV archives stay on disk; individual accidents are never indexed.",
+    },
+    "strukturdaten-bundestagswahl-2021": {
+        "de": "Vollständig eingebunden: je 49 Merkmale für 2021 und 2025, getrennt geführt, weil sich Wahlkreiszuschnitt und Stichtage zwischen den beiden Wahlen unterscheiden. Die Wahlergebnisse selbst stehen in Zeile 34.",
+        "state": "done",
+        "next": "Both editions indexed: 49 indicators for the 2021 constituencies and 49 for 2025, kept separate because the same label is a different measurement under different constituency boundaries and reference dates. The indicator definitions come from the 2021 documentation page and carry over. Election RESULTS live in row 35 (Wahlergebnisse Bundeswahlleiterin).",
+    },
+    "openstreetmap-poi-layer-overpass": {
+        "de": "Vollständig eingebunden: 26 Ortstypen wie Spielplätze, Apotheken, Arzt- und Zahnarztpraxen, Schulen, Kitas, Haltestellen, Sportanlagen und Ladesäulen, jeweils mit fertiger Abfrage und der gemessenen Anzahl in Deutschland.",
+        "state": "done",
+        "next": "26 POI layers indexed (Spielplaetze, Apotheken, Arztpraxen, Schulen, Kitas, Gotteshaeuser, Haltestellen, Sportanlagen, Ladesaeulen, ...), each with the Overpass query, a link to the tag's own wiki page and the measured object count for Germany. This is what closes rows 18/19 (playground portals) and complements row 12 (physician search), neither of which has an export. Counts come from taginfo.geofabrik.de, not Overpass: every Overpass mirror is refused at the network level from this host (connection refused, not a timeout), so a count query cannot run here even though the query in each record works elsewhere.",
+    },
+    "wegweiser-kommune-bertelsmann-stiftung": {
+        "de": "Vollständig eingebunden: 393 Indikatoren mit Erläuterung, Berechnungsformel, Quelle und Zeitraum, darunter 67 Bevölkerungsprognosen bis 2040, die einzige Vorausberechnung in dieser Sammlung. Die Daten stehen unter einer freien Lizenz (CC0).",
+        "state": "done",
+        "next": "393 indicators indexed over the documented Data API, each with its explanation, calculation formula, source, unit, year range and finest region type, 67 of them population projections to 2040, which nothing else in this index has. This row was previously recorded as needing an account: it does not. /open-data documents an OpenAPI spec, the licence is CC0, and rest/indicator/list simply defaults to max=10, which is what made an unparameterised call look like a stub while the browse UI renders its tree client-side. A made-up friendly-url answers 404 on the API, so the identifiers are verified even though the human page is a SPA that renders 200 either way.",
+    },
+    "dwd-climate-data-center-cdc": {
+        "de": "Vollständig eingebunden: 137 Klimaprodukte, unter anderem Temperatur, Niederschlag, Hitze-, Frost- und Sommertage, Sonnenschein und Bodenfeuchte, sowohl als deutschlandweites 1-km-Raster als auch als Messreihen der Wetterstationen. Frei und ohne Anmeldung herunterladbar.",
+        "state": "done",
+        "next": "137 records: one per (1-km grid or station) x aggregation x variable, read from the open Apache directory tree, which IS the DWD catalogue. Covers temperature, precipitation, sunshine, radiation, frost/hot/ice/summer days, snow cover, soil moisture, evaporation, wind, phenology and the vieljaehrige Mittel. Every record links to the directory that holds the files, and the grids are aggregable to Gemeinde or Kreis level, which is what makes climate joinable with the Regionalstatistik. Documentation, obsolete duplicates and project bundles are skipped rather than dressed up as indicators.",
+    },
+    "boris-d-bodenrichtwerte": {
+        "de": "Weitgehend eingebunden: 5 Grundbegriffe und alle 16 Bundesländer. 14 Länder verweisen auf ihren eigenen Dienst; für Baden-Württemberg und Berlin führt das amtliche Verzeichnis keinen landesweiten Dienst, dort geht der Link auf das gemeinsame Portal BORIS-D.",
+        "state": "done",
+        "next": "Indexed as 5 concepts (Bodenrichtwert, Bodenrichtwertzone, Entwicklungs-/Beitragszustand, Nutzungsart, Immobilienrichtwerte) plus one record per Bundesland. BORIS-D is a viewer over the sixteen Laender services and publishes no catalogue of its own, so scripts/resolve_boris_services.py reads the services out of the official GDI-DE catalogue (1,962 Bodenrichtwerte records; per Land the best candidate is fetched in full and its GetCapabilities URL taken). 14 of 16 Laender now link to their own WMS/WFS or Bodenrichtwert portal, all probed HTTP 200; Baden-Wuerttemberg and Berlin publish no landesweiten service in that catalogue and keep the BORIS-D link rather than a guessed one. Three matching traps are written into the script: two-letter Land codes match inside unrelated titles, 'Sachsen' is a substring of both 'Niedersachsen' and 'Sachsen-Anhalt', and Niedersachsen and Bremen share one joint system.",
+    },
+    "wahlergebnisse-bundeswahlleiterin": {
+        "de": "Vollständig eingebunden: 38 Merkmale und Datensätze, nämlich das Ergebnis der Bundestagswahl 2025, die Zeitreihe aller Bundestagswahlen ab 1949 und die Europawahl 2024, die bis auf Gemeindeebene reicht.",
+        "state": "done",
+        "next": "The result variables are read out of the 2025 kerg2 file itself: 4 system groups (Wahlberechtigte, Waehlende, Ungueltige, Gueltige) and one record per party that stood nationwide, plus dataset records for kerg/kerg2 2025, the results database since 1949, the Brief-/Urnenwahl series since 1957 and the Europawahl 2024 (which reaches Gemeinde level). Party lists that stood in a single Land are covered by the dataset records rather than one near-identical record each.",
+    },
+    "ioer-monitor-flaechennutzung": {
+        "de": "Vollständig eingebunden: alle 88 Indikatoren zu Flächennutzung und Landschaftsqualität in 13 Kategorien. Die Karten- und Abrufdienste je Indikator verlangen ein kostenloses Nutzerkonto; die Indikatoren selbst sind frei einsehbar.",
+        "state": "done",
+        "next": "All 88 indicators indexed with their five-character code and category, read from the monitor's own public indicator list (linked from the 'Uebersicht der Geodienste' section of /indikatoren/). The earlier note here said the list sits behind the user area; that was wrong, only the SERVICE CALL needs a key. An unauthenticated monitor_api call answers a WMS ServiceException, so the records link to the indicator overview and carry the code plus the exact WMS/WFS/WCS call pattern instead of a per-indicator link that would not open for anyone.",
+    },
+    "rwi-geo-grid-rwi-geo-red-fdz-ruhr": {
+        "de": "Vollständig eingebunden: 28 deutsche Datensätze mit ihrer Kennung (DOI), darunter das sozioökonomische 1-km-Raster und die geocodierten Immobilienanzeigen. Die Daten selbst gibt es nur auf Antrag beim Forschungsdatenzentrum, genau deshalb ist es nützlich, sie hier überhaupt zu finden.",
+        "state": "done",
+        "next": "28 German datasets indexed with title, DOI, keywords and abstract, harvested from the da|ra detail pages because the portal lists every dataset only as a 'Details' link. Includes RWI-GEO-GRID (1-km socio-economic grid), RWI-GEO-RED (geocoded real-estate advertisements), RWI-GEO-KITA, the regional house-price indices and the PLZ-to-Gemeinde bridge. 7 non-German evaluation studies (Burkina Faso, Senegal, Rwanda, India) are skipped as out of scope. These are scientific-use files on application, which is exactly why they belong in a finder: the point is to learn the dataset exists before starting an application.",
+    },
 }
 
 
@@ -489,6 +630,22 @@ def write_deliverable_workbook(rows: List[Dict[str, Any]], stamp: str) -> Option
     return target
 
 
+# LaTeX will not break a German compound on its own here, so a name longer than the column
+# runs into the status cell ("Arbeitsmarktstatistikfertig"). These two get an explicit break
+# point for the printed table only; the workbook keeps the full name.
+TABLE_NAME_BREAKS = {
+    "Arbeitsmarktstatistik BA": "Arbeitsmarkt- statistik BA",
+    "Krankenhausverzeichnis": "Krankenhaus- verzeichnis",
+}
+
+
+def table_name(name: str) -> str:
+    for long_form, broken in TABLE_NAME_BREAKS.items():
+        if long_form in name:
+            return name.replace(long_form, broken)
+    return name
+
+
 def write_progress_table(rows: List[Dict[str, Any]], stamp: str) -> Optional[Path]:
     """A single presentable table of where every source stands, for handing on. Written as
     CSV and rendered to PDF/PNG through tinytable (one canonical table package, notes inside
@@ -515,7 +672,7 @@ def write_progress_table(rows: List[Dict[str, Any]], stamp: str) -> Optional[Pat
                 spelled += " (ungeprueft)"
             step = row["next_de"]
             writer.writerow([
-                row["position"], plain(row["name"]), STATE_DE[row["state"]],
+                row["position"], table_name(plain(row["name"])), STATE_DE[row["state"]],
                 len(row["files"]), row["indexed"] + row["portal_record"], spelled,
                 plain(row["next_de"]),
             ])
