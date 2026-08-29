@@ -1,0 +1,438 @@
+{
+  "summary": {
+    "queries": 59,
+    "hit@1": 42,
+    "hit@3": 43,
+    "hit@10": 46,
+    "misses": [
+      "Nettoerwerbseinkommen im letzten Monat",
+      "Bruttoerwerbseinkommen aus Haupttätigkeit",
+      "bedarfsgewichtetes Haushaltseinkommen",
+      "Bildungsjahre einer Person",
+      "berufliche Stellung",
+      "Beschäftigungsstatus und Erwerbsstatus",
+      "Nettovermögen des Haushalts",
+      "Big Five Persönlichkeitsmerkmale",
+      "Familienstand",
+      "Erhebungsjahr der Befragung",
+      "net labour income last month",
+      "wie zufrieden sind die Leute mit ihrem Leben",
+      "Einkommensarmut und Armutsgefährdung"
+    ]
+  },
+  "results": [
+    {
+      "query": "Nettoerwerbseinkommen im letzten Monat",
+      "rank": null,
+      "top_variable": "plc0014_h",
+      "top_label": "Nettoverdienst letzten Monat [harmonisiert]",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Bruttoerwerbseinkommen aus Haupttätigkeit",
+      "rank": null,
+      "top_variable": "plc0570",
+      "top_label": "Einkünfte aus Nebentätigkeit bzw. Nebenverdienst € Brutto letzter",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "monatliches Haushaltsnettoeinkommen",
+      "rank": 1,
+      "top_variable": "hlc0005_v2",
+      "top_label": "Monatliches HH-Netto-Einkommen (Euro) [2002-2023]",
+      "top_dataset": "hl"
+    },
+    {
+      "query": "bedarfsgewichtetes Haushaltseinkommen",
+      "rank": null,
+      "top_variable": "hlc0021_h",
+      "top_label": "Was waere ein gerade ausreichendes HH-Einkommen (Euro) [harmonisiert]",
+      "top_dataset": "hl"
+    },
+    {
+      "query": "Bildungsjahre einer Person",
+      "rank": null,
+      "top_variable": "lkalg037",
+      "top_label": "Lebenslauf: Schule / Studium im Alter von 37 Jahren",
+      "top_dataset": "lkal"
+    },
+    {
+      "query": "höchster Schulabschluss",
+      "rank": 1,
+      "top_variable": "lb1339_v2",
+      "top_label": "Höchster angestrebter Schulabschluss [2016-2021]",
+      "top_dataset": "biol"
+    },
+    {
+      "query": "berufliche Stellung",
+      "rank": null,
+      "top_variable": "plb0064_v4",
+      "top_label": "Berufliche Stellung Angestellte [2019-2021]",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Beruf nach ISCO-Klassifikation",
+      "rank": 1,
+      "top_variable": "p_isco88",
+      "top_label": "Aktueller Beruf [pber] (ISCO-88 COM, 4-Steller)",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Beruf nach KldB 2010",
+      "rank": 1,
+      "top_variable": "p_klba88_train",
+      "top_label": "Ausbildungsberuf (KlBA 88, aehnl. KldB88)",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "tatsächliche Arbeitszeit pro Woche",
+      "rank": 1,
+      "top_variable": "pgtatzeit",
+      "top_label": "Tatsächliche Arbeitszeit pro Woche",
+      "top_dataset": "pgen"
+    },
+    {
+      "query": "vereinbarte Wochenarbeitszeit",
+      "rank": 1,
+      "top_variable": "plc0455_v2",
+      "top_label": "Vereinbarte Arbeitszeit o. UeStd. Std./Wo. KA [2017-2020]",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Beschäftigungsstatus und Erwerbsstatus",
+      "rank": null,
+      "top_variable": "plb0022_v11",
+      "top_label": "Erwerbsstatus [2021-2023]",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "arbeitslos gemeldet",
+      "rank": 1,
+      "top_variable": "kalost1d008",
+      "top_label": "Arbeitslos gemeldet Aug im Vorjahr",
+      "top_dataset": "pkal"
+    },
+    {
+      "query": "Nettovermögen des Haushalts",
+      "rank": null,
+      "top_variable": "hlc0017",
+      "top_label": "Beurteilung des HH-Netto-Einkommens",
+      "top_dataset": "hl"
+    },
+    {
+      "query": "Wohnfläche der Wohnung in Quadratmetern",
+      "rank": 1,
+      "top_variable": "hlj0024",
+      "top_label": "Wohnflaeche in der Wohneinheit (qm)",
+      "top_dataset": "hl"
+    },
+    {
+      "query": "Miete pro Monat",
+      "rank": 5,
+      "top_variable": "hlj0017",
+      "top_label": "Privatunterkunft: Miete pro Monat in Euro",
+      "top_dataset": "hl"
+    },
+    {
+      "query": "Wohneigentum oder Mieter",
+      "rank": 6,
+      "top_variable": "hlf0001_v3",
+      "top_label": "Miete oder Eigentum (auch Altersheim) [1999-2023]",
+      "top_dataset": "hl"
+    },
+    {
+      "query": "allgemeiner Gesundheitszustand",
+      "rank": 1,
+      "top_variable": "ple0008",
+      "top_label": "Gesundheitszustand gegenwärtig",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Lebenszufriedenheit heute",
+      "rank": 1,
+      "top_variable": "plh0151",
+      "top_label": "Allgemeine Lebenszufriedenheit,heute",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Zufriedenheit mit dem Haushaltseinkommen",
+      "rank": 4,
+      "top_variable": "bjp_lmore272",
+      "top_label": "Zufriedenheit: ... mit der Haushaltstätigkeit",
+      "top_dataset": "more_local"
+    },
+    {
+      "query": "Rauchen und Zigarettenkonsum",
+      "rank": 1,
+      "top_variable": "ple0086_v2",
+      "top_label": "Rauchen: Anzahl Zigaretten pro Tag [2002, 2004, 2006, 2008, 2010, 2012, 2014, 20",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "wie oft wird Fleisch gegessen",
+      "rank": 1,
+      "top_variable": "ple0179",
+      "top_label": "Wie oft Fleisch",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Sport und körperliche Aktivität",
+      "rank": 1,
+      "top_variable": "bjp_lmore365",
+      "top_label": "Aktivitäten der letzten 2 Wochen: Sport",
+      "top_dataset": "more_local"
+    },
+    {
+      "query": "Big Five Persönlichkeitsmerkmale",
+      "rank": null,
+      "top_variable": "jl0367",
+      "top_label": "Persoenliche Eigenschaften: grob zu anderen",
+      "top_dataset": "jugendl"
+    },
+    {
+      "query": "Risikobereitschaft",
+      "rank": 1,
+      "top_variable": "plh0204_v2",
+      "top_label": "Persoenliche Risikobereitschaft [2004, 2006, 2008-2023]",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "allgemeines Vertrauen in andere Menschen",
+      "rank": 1,
+      "top_variable": "plm0502i01",
+      "top_label": "Vertrauen gegenueber Menschen",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Locus of Control, Kontrollüberzeugung",
+      "rank": 1,
+      "top_variable": "plh0374",
+      "top_label": "Locus of Control:Leben vom Verhalten bestimmt",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Pflegebedürftige Person im Haushalt",
+      "rank": 3,
+      "top_variable": "hle0025_v1",
+      "top_label": "Pflegeleistung von Person aus Haushalt [2022]",
+      "top_dataset": "hl"
+    },
+    {
+      "query": "Anzahl der Kinder einer Person",
+      "rank": 1,
+      "top_variable": "pld0172",
+      "top_label": "Anzahl Kinder",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Geburtsjahr der befragten Person",
+      "rank": 1,
+      "top_variable": "gebjahr",
+      "top_label": "Geburtsjahr -4Steller-",
+      "top_dataset": "ppathl"
+    },
+    {
+      "query": "Geschlecht der befragten Person",
+      "rank": 1,
+      "top_variable": "dl001_h",
+      "top_label": "Geschlecht der verstorbenen Person [harmonisiert]",
+      "top_dataset": "vpl"
+    },
+    {
+      "query": "Haushaltsgröße, Zahl der Personen",
+      "rank": 1,
+      "top_variable": "hhgrvollj",
+      "top_label": "Aktuelle Haushaltsgröße volljährig",
+      "top_dataset": "interviewer"
+    },
+    {
+      "query": "Familienstand",
+      "rank": null,
+      "top_variable": "bjp_lmore226",
+      "top_label": "Familienstand",
+      "top_dataset": "more_local"
+    },
+    {
+      "query": "Migrationshintergrund",
+      "rank": 1,
+      "top_variable": "migback",
+      "top_label": "Migrationshintergrund",
+      "top_dataset": "ppathl"
+    },
+    {
+      "query": "Staatsangehörigkeit",
+      "rank": 1,
+      "top_variable": "bjp_lmore67",
+      "top_label": "Staatsangehörigkeit seit Geburt?",
+      "top_dataset": "more_local"
+    },
+    {
+      "query": "Partner im Haushalt",
+      "rank": 1,
+      "top_variable": "partner",
+      "top_label": "Art der Partnerschaft",
+      "top_dataset": "ppathl"
+    },
+    {
+      "query": "Interesse an Politik",
+      "rank": 1,
+      "top_variable": "plh0007",
+      "top_label": "Interesse fuer Politik",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Parteineigung",
+      "rank": 1,
+      "top_variable": "plh0012_h",
+      "top_label": "Parteineigung [harmonisiert, 2023] [harmonisiert]",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Religionszugehörigkeit",
+      "rank": 1,
+      "top_variable": "plh0258_v15",
+      "top_label": "Religionszugehörigkeit [2022]",
+      "top_dataset": "biol"
+    },
+    {
+      "query": "Bundesland des Haushalts",
+      "rank": 1,
+      "top_variable": "hlf0638",
+      "top_label": "Bundesland der ersten privaten Wohnung",
+      "top_dataset": "hl"
+    },
+    {
+      "query": "Gewichtungsfaktor für Hochrechnungen",
+      "rank": 1,
+      "top_variable": "phrf0",
+      "top_label": "Hochrechnungsfaktor, nur fuer neue Stichproben (Welle 1)",
+      "top_dataset": "ppathl"
+    },
+    {
+      "query": "Erhebungsjahr der Befragung",
+      "rank": null,
+      "top_variable": "erstbefr",
+      "top_label": "Jahr der ersten Befragung, Netto=10-19",
+      "top_dataset": "ppathl"
+    },
+    {
+      "query": "net labour income last month",
+      "rank": null,
+      "top_variable": "ylc0011",
+      "top_label": "Arbeitsverdienst Netto Letzter Monat",
+      "top_dataset": "youthl"
+    },
+    {
+      "query": "years of education",
+      "rank": 1,
+      "top_variable": "d11109",
+      "top_label": "Number of Years of Education",
+      "top_dataset": "pequiv"
+    },
+    {
+      "query": "current self-rated health",
+      "rank": 1,
+      "top_variable": "m11126",
+      "top_label": "Current Self-Rated Health Status",
+      "top_dataset": "pequiv"
+    },
+    {
+      "query": "overall life satisfaction",
+      "rank": 1,
+      "top_variable": "p11101",
+      "top_label": "Overall life satisfaction",
+      "top_dataset": "pequiv"
+    },
+    {
+      "query": "household net wealth",
+      "rank": 1,
+      "top_variable": "w011he",
+      "top_label": "HH Net Overall Wealth imp.e",
+      "top_dataset": "hwealth"
+    },
+    {
+      "query": "actual weekly working hours",
+      "rank": 1,
+      "top_variable": "pgtatzeit",
+      "top_label": "Tatsächliche Arbeitszeit pro Woche",
+      "top_dataset": "pgen"
+    },
+    {
+      "query": "employment status of the individual",
+      "rank": 1,
+      "top_variable": "e11102",
+      "top_label": "Employment Status of Individual",
+      "top_dataset": "pequiv"
+    },
+    {
+      "query": "frequency of meat consumption",
+      "rank": 1,
+      "top_variable": "ple0179",
+      "top_label": "Wie oft Fleisch",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "political interest",
+      "rank": 1,
+      "top_variable": "plh0007",
+      "top_label": "Interesse fuer Politik",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "migration background of the respondent",
+      "rank": 1,
+      "top_variable": "migback",
+      "top_label": "Migrationshintergrund",
+      "top_dataset": "ppathl"
+    },
+    {
+      "query": "number of children in the household",
+      "rank": 1,
+      "top_variable": "d11107",
+      "top_label": "Number of Children in HH",
+      "top_dataset": "pequiv"
+    },
+    {
+      "query": "size of the dwelling in square metres",
+      "rank": 1,
+      "top_variable": "hlj0024",
+      "top_label": "Wohnflaeche in der Wohneinheit (qm)",
+      "top_dataset": "hl"
+    },
+    {
+      "query": "wie viel verdient jemand netto im Monat",
+      "rank": 1,
+      "top_variable": "plc0014_h",
+      "top_label": "Nettoverdienst letzten Monat [harmonisiert]",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "wie zufrieden sind die Leute mit ihrem Leben",
+      "rank": null,
+      "top_variable": "f22",
+      "top_label": "Zufrieden(10),unzufrieden(0) mit dem Leben",
+      "top_dataset": "abroad"
+    },
+    {
+      "query": "Bildungsabschluss der Eltern",
+      "rank": 1,
+      "top_variable": "plg0243",
+      "top_label": "Schulabschluss der Mutter",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Einkommensarmut und Armutsgefährdung",
+      "rank": null,
+      "top_variable": "plh0418i08",
+      "top_label": "Staatliche Verantwortung: Verringern von Einkommensungleichheiten zw. Arm und Re",
+      "top_dataset": "pl"
+    },
+    {
+      "query": "Wohnort in Ost- oder Westdeutschland",
+      "rank": 1,
+      "top_variable": "lr3368_ew",
+      "top_label": "2.Wohnort in Deutschland: In welchem Bundesland liegt Ort (Ost-West Version)",
+      "top_dataset": "biol"
+    }
+  ]
+}

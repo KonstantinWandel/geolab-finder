@@ -221,9 +221,14 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
     ],
     "wegweiser-kommune-bertelsmann-stiftung": [
         {"name": "portal.html", "url": "https://www.wegweiser-kommune.de/", "kind": "portal", "note": ""},
-        {"name": "statistik.html", "url": "https://www.wegweiser-kommune.de/statistik", "kind": "catalogue",
-         "note": "Liferay app: the indicator tree is loaded client-side, so only the theme level is "
-                 "readable from the HTML."},
+        {"name": "open_data.html", "url": "https://www.wegweiser-kommune.de/open-data", "kind": "documentation",
+         "note": "Names the OpenAPI spec and the CC0 licence."},
+        {"name": "wegweiser_catalogue.json",
+         "url": "https://www.wegweiser-kommune.de/data-api/rest",
+         "kind": "catalogue", "handler": "wegweiser_api",
+         "note": "393 indicators and 38 topics over the documented Data API "
+                 "(/openapi?format=JSON). No account, licence CC0. The browse UI loads its tree "
+                 "client-side, which is why this looked like an account-only source; it is not."},
     ],
     "dwd-climate-data-center-cdc": [
         {"name": "cdc_tree.json", "url": "https://opendata.dwd.de/climate_environment/CDC",
@@ -735,6 +740,39 @@ def fetch_deutschlandatlas_maps(url: str, target: Path) -> Dict[str, Any]:
             "maps": len(maps)}
 
 
+def fetch_wegweiser_api(url: str, target: Path) -> Dict[str, Any]:
+    """Wegweiser Kommune's documented Data API: the whole indicator catalogue in two calls.
+
+    The portal's own browse UI renders its indicator tree client-side, so the source looked like
+    it needed an account. It does not: /open-data documents an OpenAPI spec, the data is CC0, and
+    `rest/indicator/list?max=...` returns every indicator with its explanation, calculation
+    formula, source, unit, years and the finest region type it is published for. The default
+    `max` is 10, which is what makes an unparameterised call look like a stub.
+    """
+    started = time.time()
+
+    def get(path: str) -> Any:
+        request = urllib.request.Request(f"{url.rstrip('/')}/{path}", headers={
+            "User-Agent": UA, "Accept": "application/json"})
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+            return json.loads(response.read().decode("utf-8", "replace"))
+
+    indicators = get("indicator/list?max=2000")
+    topics = get("topic/list?max=2000")
+    payload = json.dumps({
+        "api": url,
+        "licence": "CC0 1.0 (Bertelsmann Stiftung, Wegweiser Kommune)",
+        "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "indicators": indicators,
+        "topics": [{k: v for k, v in topic.items() if k != "indicators"} for topic in topics],
+    }, ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "indicators": len(indicators), "topics": len(topics)}
+
+
 def sha256_of(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -936,6 +974,8 @@ def main() -> None:
                     result = fetch_genesapi_keys(artifact["url"], target)
                 elif artifact.get("handler") == "deutschlandatlas_maps":
                     result = fetch_deutschlandatlas_maps(artifact["url"], target)
+                elif artifact.get("handler") == "wegweiser_api":
+                    result = fetch_wegweiser_api(artifact["url"], target)
                 elif artifact.get("handler") == "taginfo_counts":
                     result = fetch_taginfo_counts(artifact["url"], target)
                 elif artifact.get("handler") == "dwd_tree":

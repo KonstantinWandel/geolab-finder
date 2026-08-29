@@ -3034,60 +3034,91 @@ def flatten_osm_poi(source: Dict[str, Any]) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Wegweiser Kommune
 # ---------------------------------------------------------------------------
-# The site is a Liferay app whose indicator tree loads client-side, so the products are named
-# here and every record links to the one page that does exist (/daten). Each entry is
-# (id, label, description).
-WEGWEISER_PRODUCTS: List[Tuple[str, str, str]] = [
-    ("indikatoren", "Kommunale Indikatoren (Wegweiser Kommune)",
-     "Rund 100 Indikatoren zu Demografie, Bildung, Arbeitsmarkt, Soziales, Finanzen und Wohnen "
-     "für alle Gemeinden ab 5.000 Einwohnern, Kreise und Bundesländer. Frei abrufbar und als "
-     "Tabelle exportierbar."),
-    ("bevoelkerungsprognose", "Bevölkerungsprognose bis 2040 (Wegweiser Kommune)",
-     "Kleinräumige Bevölkerungsvorausberechnung nach Alter und Geschlecht bis 2040 für Gemeinden "
-     "ab 5.000 Einwohnern. Die einzige Projektionsebene in dieser Sammlung: INKAR und die "
-     "amtliche Statistik liefern Bestände, keine kommunalen Prognosen."),
-    ("demografietypen", "Demografietypen der Kommunen (Wegweiser Kommune)",
-     "Typisierung der Kommunen nach demografischer Ausgangslage und Entwicklung (Demografietypen). "
-     "Erlaubt Vergleichsgruppen für Fallauswahl und Matching."),
-    ("kommunalprofile", "Kommunalprofile und Berichte (Wegweiser Kommune)",
-     "Zusammenfassende Profile je Kommune mit Zeitreihen und Vergleichswerten, als PDF und Tabelle."),
-]
+# The finest region type an indicator is published for, as the API names it.
+WEGWEISER_LEVELS: Dict[str, List[str]] = {
+    "KLEINE_GEMEINDE": ["Gemeinden", "Kreise", "Bundesländer"],
+    "GEMEINDE": ["Gemeinden", "Kreise", "Bundesländer"],
+    "KREISFREIE_STADT": ["Kreise", "Bundesländer"],
+    "KREIS": ["Kreise", "Bundesländer"],
+    "BUNDESLAND": ["Bundesländer"],
+}
+WEGWEISER_NUTS: Dict[str, List[str]] = {
+    "KLEINE_GEMEINDE": ["Gemeinden", "LAU", "Kreise", "NUTS3", "Bundesländer", "NUTS1"],
+    "GEMEINDE": ["Gemeinden", "LAU", "Kreise", "NUTS3", "Bundesländer", "NUTS1"],
+    "KREISFREIE_STADT": ["Kreise", "NUTS3", "Bundesländer", "NUTS1"],
+    "KREIS": ["Kreise", "NUTS3", "Bundesländer", "NUTS1"],
+    "BUNDESLAND": ["Bundesländer", "NUTS1"],
+}
 
 
 def flatten_wegweiser(source: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Wegweiser Kommune: indexed at product level.
+    """All 393 Wegweiser Kommune indicators, from its documented Data API.
 
-    The indicator tree is rendered client-side and /statistik redirects to /daten, so there is no
-    machine-readable indicator list to flatten. What is indexed is what the portal offers, above
-    all the municipal population projection to 2040, which nothing else here has.
+    This row was written down as needing an account because the browse UI renders its indicator
+    tree client-side. It does not: /open-data documents an OpenAPI spec, the data is CC0, and one
+    call returns every indicator with its explanation, its calculation formula, its source and
+    the finest region type it is published for. Each record keeps the formula, because for a
+    ratio indicator the denominator IS the definition.
     """
-    landing = "https://www.wegweiser-kommune.de/daten"
+    path = source["folder"] / "raw" / "wegweiser_catalogue.json"
+    if not path.exists():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    indicators = document.get("indicators") or []
+    if not indicators:
+        return []
+
     records: List[Dict[str, Any]] = []
-    for key, label, description in WEGWEISER_PRODUCTS:
+    for entry in indicators:
+        name = clean(entry.get("name")) or clean(entry.get("title"))
+        friendly = clean(entry.get("friendlyUrl"))
+        if not name or not friendly:
+            continue
+        years = [year for year in (entry.get("years") or []) if isinstance(year, int)]
+        topics = [clean(t) for t in (entry.get("topics") or []) if clean(t)]
+        minimum = clean(entry.get("minimumRegionType"))
+        unit = clean(entry.get("unit"))
+        # A projection indicator is the reason this source is here at all: nothing else in the
+        # index carries municipal population figures into the future.
+        projection = "prognose" in f"{friendly} {clean(entry.get('title'))}".lower()
         records.append(
             make_record(
                 source_key="wegweiser_kommune",
                 source_label="Wegweiser Kommune (Bertelsmann Stiftung)",
-                item_type="dataset",
-                item_id=f"wegweiser:{key}",
-                variable_name=key,
-                label=label,
-                dataset_label="Wegweiser Kommune",
-                theme="Bevölkerung & Kommunalentwicklung",
-                description=description,
-                spatial_levels=["Gemeinden", "Kreise", "Bundesländer"],
-                nuts_levels=["Gemeinden", "LAU", "Kreise", "NUTS3", "Bundesländer", "NUTS1"],
-                year_start=source["coverage_start_year"],
-                year_end=source["coverage_end_year"],
-                years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
-                source_url=source["url"],
-                indicator_url=landing,
-                link_level="dataset",
-                access_modes=source["access_modes"] or ["direct file download", "interactive map viewer"],
+                item_type="regional_indicator",
+                item_id=f"wegweiser:{clean(entry.get('id')) or friendly}",
+                variable_name=friendly,
+                label=clean(entry.get("title")) or name,
+                dataset_label=f"Wegweiser Kommune: {topics[0]}" if topics else "Wegweiser Kommune",
+                theme=topics[0] if topics else "Bevölkerung & Kommunalentwicklung",
+                description=join_nonempty([
+                    clean(entry.get("explanation")),
+                    f"Berechnung: {clean(entry.get('calculation'))}" if entry.get("calculation") else "",
+                    f"Einheit: {unit}." if unit else "",
+                    f"Quelle: {clean(entry.get('source'))}." if entry.get("source") else "",
+                    "Bevölkerungsvorausberechnung: Werte liegen als Prognose in die Zukunft vor, "
+                    "was sonst keine Quelle in diesem Index bietet." if projection else "",
+                    "Für Gemeinden ab 5.000 Einwohnern, Kreise und Bundesländer. Lizenz CC0.",
+                ]),
+                spatial_levels=WEGWEISER_LEVELS.get(minimum, ["Gemeinden", "Kreise", "Bundesländer"]),
+                nuts_levels=WEGWEISER_NUTS.get(minimum, ["Gemeinden", "LAU", "Kreise", "NUTS3",
+                                                         "Bundesländer", "NUTS1"]),
+                year_start=min(years) if years else source["coverage_start_year"],
+                year_end=max(years) if years else source["coverage_end_year"],
+                years_text=(f"{min(years)}-{max(years)}" if years else ""),
+                source_url=f"https://www.wegweiser-kommune.de/statistik/{friendly}",
+                indicator_url=f"https://www.wegweiser-kommune.de/statistik/{friendly}",
+                link_level="indicator",
+                # The identifier comes from the API's own catalogue and a made-up one answers 404
+                # there; the page itself is a SPA that renders 200 either way, so it is the id
+                # that is verified rather than the page size.
+                link_verified=True,
+                access_modes=["direct file download", "machine-readable API", "interactive map viewer"],
                 update_frequency=source["update_frequency"] or "jährlich",
-                api_hint="Abruf über wegweiser-kommune.de/daten (Auswahl von Kommune, Thema und "
-                         "Jahr, Export als XLSX/CSV). Keine offene API; der Indikatorenbaum wird "
-                         "clientseitig geladen.",
+                api_hint=f"Data API: /data-api/rest/indicator/get/{friendly} für die Beschreibung, "
+                         f"/data-api/rest/statistics/data/... für die Werte, Export als CSV/XLSX über "
+                         f"/data-api/rest/export/<friendly-url>.<format>. Spezifikation: "
+                         "wegweiser-kommune.de/openapi?format=JSON. Lizenz CC0, kein Konto nötig.",
             )
         )
     return records

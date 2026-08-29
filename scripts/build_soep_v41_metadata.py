@@ -139,6 +139,15 @@ def main() -> None:
     if args.limit:
         variables = variables.head(args.limit)
 
+    # Machine translations of the missing half of a label pair (scripts/translate_soep_labels.py).
+    # They never replace an official label: they are extra search text, marked as MT wherever
+    # they surface, because the official label is the authoritative wording.
+    translations: Dict[str, Dict[str, str]] = {}
+    translations_path = OUT_PATH.parent / "soep_label_translations.json"
+    if translations_path.exists():
+        translations = json.loads(translations_path.read_text(encoding="utf-8")).get("translations") or {}
+        print(f"[translations] {len(translations)} machine-translated labels available")
+
     records: List[Dict[str, Any]] = []
     for row in variables.itertuples(index=False):
         dataset = clean(getattr(row, "dataset", ""))
@@ -167,9 +176,15 @@ def main() -> None:
         description_en = clean(getattr(row, "description", ""))
         scale = next((q["scale"] for q in asked if q["scale"]), "") or carried.get("value_labels", "")
 
+        translated = translations.get(f"{dataset}/{name}", {})
+        label_de_mt = clean(translated.get("label_de_mt"))
+        label_en_mt = clean(translated.get("label_en_mt"))
+
         rich = join_nonempty([
             f"{label_de} ({name}) im Datensatz {dataset_de or dataset} ({dataset}).",
             f"English label: {label_en}." if label_en and label_en != label_de else "",
+            f"Deutsche Übersetzung (maschinell): {label_de_mt}." if label_de_mt else "",
+            f"English translation (machine): {label_en_mt}." if label_en_mt else "",
             f"Konzept: {concept_de or concept}." if (concept_de or concept) else "",
             f"Themenbereich: {path.get('de', '')}." if path.get("de") else "",
             f"Offizielle Erläuterung: {description_de}" if description_de else "",
@@ -184,6 +199,11 @@ def main() -> None:
             f"Variable: {name}",
             f"Label (de): {label_de}",
             f"Label (en): {label_en}",
+            # The translated side only exists where SOEP publishes the label in one language,
+            # which is the whole point: without it "Familienstand" cannot match pgfamstd, whose
+            # German label reads "Marital Status".
+            f"Label (de, machine translation): {label_de_mt}" if label_de_mt else "",
+            f"Label (en, machine translation): {label_en_mt}" if label_en_mt else "",
             f"Dataset: {dataset} ({dataset_de or dataset_en})",
             f"Concept: {concept_de} / {concept_en}" if (concept_de or concept_en) else "",
             f"Topic: {path.get('de', '')} / {path.get('en', '')}" if path else "",
@@ -198,6 +218,8 @@ def main() -> None:
             "variable_name": name,
             "label": label_de,
             "label_en": label_en,
+            "label_de_mt": label_de_mt,
+            "label_en_mt": label_en_mt,
             "value_labels": scale,
             "data_type": clean(getattr(row, "type", "")),
             "stats_summary": carried.get("stats_summary", ""),
