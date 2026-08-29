@@ -407,10 +407,10 @@ reports the margin table on every run, so a ranking change that flattens the fie
 
 *Finding 3, bare code lookup, was implemented and then removed on Konstantin's call*: a metadata
 finder is asked in words, and the path's one real cost was that a sentence containing a word which
-happens to also be a code pulled that record up ("Wie funktioniter der Abruf der Daten" -> the
+happens to also be a code pulled that record up ("Wie funktioniert der Abruf der Daten" -> the
 record named `ABRUF`). Consequence to know: typing a SOEP variable name is a coin flip, and it
 fails in the worst way. Of twelve real codes, seven land and five return a DIFFERENT variable whose
-code is one character away (`ple0179` "Wie oft Fleisch" -> `plb0179` "Altersteilzeit`; `plh0182` ->
+code is one character away (`ple0179` "Wie oft Fleisch" -> `plb0179` "Altersteilzeit"; `plh0182` ->
 `plh0162`). If that ever needs fixing, the narrow version is: single-token query, SOEP finder only.
 
 *Finding 2 was fixed.* The raster rows now carry the
