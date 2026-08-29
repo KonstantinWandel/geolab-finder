@@ -1183,3 +1183,15 @@ button, input, select, textarea,
 .results-toolbar {
   align-items: baseline;
 }
+
+/* "Nothing stands out" note above the result list. A note, not a warning: the results are
+   still shown, in the same order. */
+.results-flat {
+  margin: 0.75rem 0 0 0;
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid var(--muted, #94a3b8);
+  background: var(--surface-2, rgba(148, 163, 184, 0.08));
+  border-radius: 0 6px 6px 0;
+  font-size: 0.9rem;
+  color: var(--text-soft, inherit);
+}

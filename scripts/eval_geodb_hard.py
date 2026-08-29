@@ -125,6 +125,11 @@ CASES: List[Dict[str, Any]] = [
     dict(kind="code", query="Merkmal 12411 Bevölkerungsstand", accept=r"12411|bevölkerungsstand|bevölker"),
 
     # ---------- negative controls: the index does not hold these
+    #
+    # Every one was screened against the live index first and four candidates were thrown out
+    # because the finder answers them correctly: public toilets per station are in the DB StaDa
+    # records, and sleep duration, screen time and housework are all in the GENESIS
+    # Zeitverwendungserhebung. A "negative" the index can answer would poison the measurement.
     dict(kind="negative", query="Anteil vegetarisch lebender Personen je Kreis",
          reject=r"vegetar|ernährung"),
     dict(kind="negative", query="durchschnittliche Zahl der Katzen pro Haushalt",
@@ -133,8 +138,43 @@ CASES: List[Dict[str, Any]] = [
          reject=r"twitter|sentiment|social media"),
     dict(kind="negative", query="Zufriedenheit der Befragten mit ihrem Leben",
          reject=r"lebenszufriedenheit|zufriedenheit"),
-    dict(kind="negative", query="Anteil der Haushalte mit einem Balkon",
-         reject=r"balkon"),
+    dict(kind="negative", query="Anteil der Haushalte mit einem Balkon", reject=r"balkon"),
+    dict(kind="negative", query="Zahl der Parkbänke je Gemeinde", reject=r"parkbank|sitzbank"),
+    dict(kind="negative", query="Anzahl der Straßenlaternen pro Straße",
+         reject=r"laterne|straßenbeleuchtung"),
+    dict(kind="negative", query="Wie viele Menschen tragen ein Tattoo", reject=r"tattoo|tätowier"),
+    dict(kind="negative", query="Netflix-Abonnements je Haushalt", reject=r"netflix|streaming"),
+    dict(kind="negative", query="durchschnittlicher Kaffeekonsum je Einwohner", reject=r"kaffee"),
+    dict(kind="negative", query="Einsamkeit der Bevölkerung je Kreis", reject=r"einsamkeit|isolation"),
+    dict(kind="negative", query="Vertrauen in die Nachbarschaft", reject=r"vertrauen"),
+    dict(kind="negative", query="TikTok-Nutzung von Jugendlichen je Bundesland",
+         reject=r"tiktok|social media"),
+    dict(kind="negative", query="Arbeitslosigkeit in Frankreich je Département",
+         reject=r"frankreich|département|france"),
+    dict(kind="negative", query="Bevölkerung der Woiwodschaften in Polen",
+         reject=r"polen|woiwod|poland"),
+    dict(kind="negative", query="Anzahl der Grillabende im Sommer", reject=r"grill"),
+    dict(kind="negative", query="Lieblingsfarbe der Bevölkerung", reject=r"lieblingsfarbe|farbe"),
+    dict(kind="negative", query="Zahl der Hochzeiten auf Schlössern", reject=r"schloss|schlöss"),
+    dict(kind="negative", query="Anteil der Menschen mit Höhenangst", reject=r"höhenangst|phobie"),
+    dict(kind="negative", query="Big-Five-Persönlichkeitsmerkmale der Bevölkerung",
+         reject=r"persönlichkeit|big five"),
+    dict(kind="negative", query="Anzahl der Freundschaften pro Person",
+         reject=r"freundschaft|freunde"),
+    dict(kind="negative", query="wie zufrieden sind Menschen mit ihrem Arbeitsplatz",
+         reject=r"arbeitszufriedenheit|zufriedenheit"),
+    dict(kind="negative", query="Anteil der Menschen, die an Astrologie glauben",
+         reject=r"astrologie|horoskop"),
+    dict(kind="negative", query="durchschnittliche Bildschirmzeit am Smartphone",
+         reject=r"bildschirmzeit|smartphone"),
+    dict(kind="negative", query="Häufigkeit von Nachbarschaftsstreitigkeiten",
+         reject=r"nachbarschaftsstreit|streit"),
+    dict(kind="negative", query="politische Ideologie auf einer Links-Rechts-Skala",
+         reject=r"links-rechts|ideologie|selbsteinstufung"),
+    dict(kind="negative", query="Zahl der Schallplattenläden je Stadt",
+         reject=r"schallplatte|plattenladen"),
+    dict(kind="negative", query="Anteil der Menschen mit Angst vor Spinnen",
+         reject=r"spinne|arachno"),
 ]
 
 API_TIMEOUT = 120
@@ -210,6 +250,12 @@ def main() -> None:
             "top_label": top.get("label", ""), "top_source": top.get("source_key", ""),
             "top_score": top.get("score"), "top_link_level": top.get("link_level", ""),
         }
+        # Signal A from the abstention experiment: how far the top hit stands out from the
+        # middle of the list in reranker space. The absolute reranker score does not separate
+        # answerable from unanswerable queries; this margin does, so it is measured on every run.
+        rerank = sorted((float(r.get("rerank_score") or 0.0) for r in rows), reverse=True)
+        entry["margin"] = (rerank[0] - statistics.median(rerank)) if len(rerank) > 2 else 0.0
+
         if case["kind"] == "negative":
             # nothing here can be right; a hit on `reject` means it answered anyway
             entry["false_positive"] = bool(top and re.search(case["reject"], haystack(top), re.I))
@@ -248,6 +294,27 @@ def main() -> None:
         "seconds_median": round(statistics.median([r["seconds"] for r in results]), 2),
         "seconds_max": round(max(r["seconds"] for r in results), 2),
     }
+    # Where would a "nothing here stands out" hint fire, and what would it cost?
+    answerable = [r["margin"] for r in graded]
+    impossible = [r["margin"] for r in negatives]
+    if answerable and impossible:
+        best = None
+        for threshold in sorted({round(v, 4) for v in answerable + impossible}):
+            kept = sum(1 for v in answerable if v >= threshold)
+            caught = sum(1 for v in impossible if v < threshold)
+            balance = kept / len(answerable) + caught / len(impossible)
+            if best is None or balance > best[0]:
+                best = (balance, threshold, kept, caught)
+        _, threshold, kept, caught = best
+        summary["margin_signal"] = {
+            "threshold": threshold,
+            "answerable_kept": f"{kept}/{len(answerable)}",
+            "impossible_caught": f"{caught}/{len(impossible)}",
+            "false_alarm_rate": round(1 - kept / len(answerable), 3),
+            "answerable_median": round(statistics.median(answerable), 4),
+            "impossible_median": round(statistics.median(impossible), 4),
+        }
+
     print("\n" + json.dumps(summary, ensure_ascii=False, indent=2))
     if args.json_out:
         Path(args.json_out).write_text(json.dumps({"summary": summary, "results": results},
