@@ -1,4 +1,3 @@
-import bisect
 import json
 import time
 import os
@@ -295,8 +294,6 @@ class SOEPRagAdvisorService:
         self._rerank_doc_chars = int(os.getenv("SOEP_RAG_RERANK_DOC_CHARS", "480")) or 10 ** 9
         self._filter_view_cache: Dict[str, Any] = {}
         self._query_vec_cache: Dict[str, Any] = {}
-        self._name_index: Optional[Dict[str, List[int]]] = None
-        self._label_words: Optional[set] = None
         self._exact_code_bonus = float(os.getenv("GEOLAB_EXACT_CODE_BONUS", "0.5"))
         self._code_token_bonus = float(os.getenv("GEOLAB_CODE_TOKEN_BONUS", "0.2"))
 
@@ -1102,85 +1099,6 @@ class SOEPRagAdvisorService:
             self._query_vec_cache[formatted] = q_vec
         return q_vec
 
-    def _name_lookup(self) -> Dict[str, List[int]]:
-        """variable_name (lowercased) -> row indices, built once."""
-        if self._name_index is None:
-            index: Dict[str, List[int]] = {}
-            for position, row in enumerate(self._rows):
-                name = self._as_text(row.get("variable_name")).strip().lower()
-                if name:
-                    index.setdefault(name, []).append(position)
-            self._name_index = index
-        return self._name_index
-
-    def _label_vocabulary(self) -> set:
-        """Every word that occurs inside a record label, used to tell a code from a word."""
-        if self._label_words is None:
-            words: set = set()
-            for row in self._rows:
-                label = self._as_text(row.get("label"))
-                if label:
-                    words.update(part for part in re.split(r"[^\wäöüß]+", label.lower()) if part)
-            self._label_words = words
-        return self._label_words
-
-    def _exact_code_rows(self, query: str, filters: Optional[Dict[str, Any]],
-                         limit: int = 6) -> List[Dict[str, Any]]:
-        """Rows whose code the query names outright.
-
-        The exact-code prior in `_authority_delta` can only reweight candidates the dense stage
-        already retrieved, and the dense stage has no reason to place the string "INT251" next
-        to "Krankenhausbetten je 10 000 Einwohner": measured, `AI1401` found its record and
-        `INT251` did not, although both codes sit in the indexed text. So a code that names a
-        record exactly is fetched directly and joins the candidate set, where the prior can do
-        its work.
-
-        What counts as a code is decided by the data, not by its shape. Requiring a digit was the
-        first rule and it excluded half the SOEP codes: `ple0179` and `w011ha` have digits,
-        `pglabnet` and `sumkids` do not, and `pglabnet` was still unreachable. A token is treated
-        as a code when it matches a `variable_name` exactly AND is not a word of the corpus, that
-        is, it never appears inside any record's label. "pglabnet" appears in no label and is a
-        code; "bevölkerung" appears in thousands and is a word, so a one-word query for it keeps
-        going through the normal ranking instead of being pinned to whatever record happens to
-        carry that name.
-        """
-        tokens = {
-            token.strip(".,;:()[]")
-            for token in re.split(r"[\s,;/]+", (query or "").lower())
-            if len(token) >= 3
-        }
-        vocabulary = self._label_vocabulary()
-        tokens = {
-            token for token in tokens
-            if any(character.isdigit() for character in token) or token not in vocabulary
-        }
-        if not tokens:
-            return []
-        index = self._name_lookup()
-        matched = [position for token in tokens for position in index.get(token, [])]
-        if not matched:
-            return []
-
-        candidate_idx, _ = self._filtered_view(filters)
-        allowed = None
-        if candidate_idx is not None and len(candidate_idx) != len(self._rows):
-            allowed = candidate_idx          # sorted ascending, so bisect is enough
-
-        q_vec = self._query_vector(query)
-        out: List[Dict[str, Any]] = []
-        for position in matched[: limit * 4]:
-            if allowed is not None:
-                spot = bisect.bisect_left(allowed, position)
-                if spot >= len(allowed) or allowed[spot] != position:
-                    continue        # filtered away by the user's own choice; leave it out
-            row = dict(self._rows[position])
-            row["score"] = float(self._embeddings[position] @ q_vec[0])
-            row["exact_code_match"] = True
-            out.append(row)
-            if len(out) >= limit:
-                break
-        return out
-
     def _search(self, query: str, k: int, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         if not self._rows or self._embedder is None or self._embeddings is None:
             raise RuntimeError("Metadata RAG advisor not loaded.")
@@ -1540,9 +1458,6 @@ class SOEPRagAdvisorService:
 
         for q in set(splits):
             cands = self._search(q, max(k, int(os.getenv("SOEP_RAG_RERANK_CANDIDATES", "24"))), filters)
-            # A record whose code the query spells out is added even when the dense stage
-            # missed it; see _exact_code_rows.
-            cands = self._exact_code_rows(q, filters) + cands
             for cand in cands:
                 item_id = cand["item_id"]
                 if item_id not in all_unique_cands:
