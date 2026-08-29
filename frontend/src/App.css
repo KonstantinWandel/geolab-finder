@@ -453,11 +453,15 @@ tr:hover {
    scroll region in the middle holding filters + results. The page
    itself never scrolls; the table flows (no nested vscroll).
    ============================================================ */
-html, body { height: 100%; margin: 0; overflow: hidden; }
-#root { max-width: none; width: 100%; height: 100dvh; padding: 0; margin: 0; }
+/* ONE scrollbar, the browser's own. The previous layout pinned the app to 100dvh and then
+   nested three scroll contexts inside it (filter column, results column, results table), so
+   roughly two results were visible at a time and the table's horizontal scrollbar could only
+   be reached by scrolling the inner box to its bottom. */
+html, body { height: auto; margin: 0; overflow-x: hidden; overflow-y: auto; }
+#root { max-width: none; width: 100%; height: auto; padding: 0; margin: 0; }
 
-.app-container { height: 100dvh; overflow: hidden; }
-.main-content { min-height: 0; overflow: hidden; }
+.app-container { height: auto; min-height: 100dvh; overflow: visible; }
+.main-content { min-height: 0; overflow: visible; }
 .soep-view { min-height: 0; }
 
 .analysis-header,
@@ -467,24 +471,18 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .scroll-region {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding-right: 0.4rem;
 }
 
 /* Results table flows inside the one scroll region; only a horizontal
    scrollbar appears, and only when a table is genuinely too wide. */
+/* The results table was replaced by .result-list; these rules stay only for the legacy
+   Destatis table view, which no longer bounds its own height. */
 .table-scroll.metadata-table {
-  /* A bounded box, so the horizontal scrollbar sits at the bottom of what you are looking at
-     instead of at the bottom of a very tall table: with an unbounded height you had to scroll
-     the whole page down to reach it. Rows scroll vertically inside the box, and the header
-     row stays put. */
-  max-height: 70vh;
-  overflow: auto;
   max-width: 100%;
-  overscroll-behavior: contain;
+  overflow-x: auto;
 }
 
 .results-table thead th {
@@ -752,10 +750,18 @@ tr:hover { background: var(--surface-2); }
   gap: 1rem;
 }
 .left-col .filter-panel {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+  flex: 0 0 auto;
   align-content: start;
+}
+
+/* The query box and the filters follow the page instead of scrolling inside their own box. */
+.left-col {
+  position: sticky;
+  top: 0.75rem;
+  align-self: flex-start;
+  max-height: calc(100dvh - 1.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .left-col .chat-section { flex: 0 0 auto; }
 
@@ -769,15 +775,13 @@ tr:hover { background: var(--surface-2); }
 .right-col .chat-history-container {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
 }
 
 @media (max-width: 860px) {
   .two-col-body { flex-direction: column; }
-  .left-col { flex: 0 0 auto; }
+  .left-col { flex: 0 0 auto; position: static; max-height: none; overflow: visible; }
   .left-col .filter-panel { overflow-y: visible; }
   .right-col { flex: 1 1 auto; }
-  .right-col .chat-history-container { min-height: 55dvh; }
 }
 
 /* Form controls were overflowing their panel: width:100% + padding without
@@ -978,3 +982,204 @@ button, input, select, textarea,
 
 .portal-note { font-size: 0.8rem; }
 .portal-flag { font-size: 0.8rem; opacity: 0.8; }
+
+/* ============================================================
+   Result list. One block per hit, read top to bottom: what it is,
+   where it comes from, what it covers, what it says, where to get
+   it. No table, therefore no horizontal scrollbar, and the facts
+   that used to hide in narrow columns are on the surface.
+   ============================================================ */
+.result-list {
+  list-style: none;
+  margin: 0.75rem 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.result-item {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.3));
+  border-radius: 8px;
+  background: var(--surface-2, transparent);
+}
+
+.result-item:hover {
+  border-color: var(--accent, #3b82f6);
+}
+
+.result-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+}
+
+.result-select {
+  margin-top: 0.35rem;
+  flex: 0 0 auto;
+}
+
+.result-headline {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.result-label {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.35;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.result-ident {
+  margin-top: 0.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.result-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  background: var(--surface-3, rgba(148, 163, 184, 0.16));
+  color: var(--text-soft, inherit);
+}
+
+/* separators between source and dataset, so the line reads as one sentence */
+.result-ident .result-dataset::before {
+  content: "· ";
+}
+
+.result-rank {
+  flex: 0 0 auto;
+  text-align: right;
+  line-height: 1.2;
+}
+
+.result-rank-n {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent, #3b82f6);
+}
+
+.result-score {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.result-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.75rem;
+  margin: 0.6rem 0 0 1.9rem;
+}
+
+.result-facts > div {
+  min-width: 0;
+}
+
+.result-facts dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.result-facts dd {
+  margin: 0;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.result-desc {
+  margin: 0.6rem 0 0 1.9rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-soft, inherit);
+  /* three lines by default; the button below opens the rest */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.result-desc.is-open {
+  display: block;
+  overflow: visible;
+}
+
+.result-hint {
+  margin: 0.35rem 0 0 1.9rem;
+  font-size: 0.82rem;
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.7rem 0 0 1.9rem;
+}
+
+.result-link {
+  font-weight: 600;
+  color: var(--accent, #3b82f6);
+  text-decoration: none;
+}
+
+.result-link:hover {
+  text-decoration: underline;
+}
+
+.result-toggle {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .result-facts,
+  .result-desc,
+  .result-hint,
+  .result-actions {
+    margin-left: 0;
+  }
+}
+
+/* Flatten the wrapper around the hits. The result blocks are themselves cards, so the panel
+   they used to sit in only added a second frame ("box in box") and stole horizontal room. */
+.right-col .execution-result.glass-panel {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0 !important;
+  overflow: visible;
+}
+
+/* The query echo becomes one slim line instead of a full panel. */
+.right-col .glass-panel:has(> strong) {
+  padding: 0.5rem 0.75rem !important;
+  background: transparent !important;
+  border: none;
+  border-left: 3px solid var(--accent, #3b82f6);
+  border-radius: 0;
+  margin-bottom: 0.75rem !important;
+}
+
+.results-toolbar {
+  align-items: baseline;
+}
