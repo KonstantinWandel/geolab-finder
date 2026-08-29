@@ -1,0 +1,699 @@
+{
+  "summary": {
+    "queries": 58,
+    "hit@1": 55,
+    "hit@3": 58,
+    "hit@10": 58,
+    "misses": []
+  },
+  "results": [
+    {
+      "query": "Breitbandverfügbarkeit auf Gemeindeebene",
+      "rank": 1,
+      "top_source": "deutschlandatlas",
+      "top_label": "Breitbandversorgung (mindestens 1.000 Mbit/s)",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Ärztedichte je Einwohner",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Ärztedichte je 10 000 Einwohner",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Krankenhausbetten je Einwohner",
+      "rank": 1,
+      "top_source": "inkar",
+      "top_label": "Krankenhausbetten je 1000 Einwohner",
+      "sources_in_top": [
+        "bundes_klinik_atlas",
+        "gba_qualitaetsbericht",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Krankenhäuser mit Stroke Unit",
+      "rank": 1,
+      "top_source": "bundes_klinik_atlas",
+      "top_label": "StrokeUnit (Notfallversorgung)",
+      "sources_in_top": [
+        "bundes_klinik_atlas",
+        "gba_qualitaetsbericht",
+        "inkar"
+      ]
+    },
+    {
+      "query": "Pflegepersonal je Klinik",
+      "rank": 1,
+      "top_source": "bundes_klinik_atlas",
+      "top_label": "PflegePersonalQuotient (StrukturDaten)",
+      "sources_in_top": [
+        "bundes_klinik_atlas",
+        "gba_qualitaetsbericht",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Qualitätsindikatoren der Krankenhäuser",
+      "rank": 1,
+      "top_source": "gba_qualitaetsbericht",
+      "top_label": "Qualitaetssicherung",
+      "sources_in_top": [
+        "gba_qualitaetsbericht",
+        "inkar"
+      ]
+    },
+    {
+      "query": "Erreichbarkeit der nächsten Apotheke",
+      "rank": 1,
+      "top_source": "deutschlandatlas",
+      "top_label": "Erreichbarkeit von Apotheken",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "geoportal",
+        "inkar",
+        "osm_poi",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Pkw-Dichte je 1000 Einwohner",
+      "rank": 1,
+      "top_source": "regionalatlas",
+      "top_label": "Pkw-Bestand je 1.000 EW am 01.01.",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Betreuungsquote Kinder unter drei Jahren",
+      "rank": 1,
+      "top_source": "regionalatlas",
+      "top_label": "Betreuungsquote 0 bis 2 Jahre am 01.03.",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Strukturdaten der Bundestagswahlkreise",
+      "rank": 1,
+      "top_source": "btw_strukturdaten",
+      "top_label": "Gemeinden am 31.12.2023 (Anzahl) [2025]",
+      "sources_in_top": [
+        "btw_strukturdaten"
+      ]
+    },
+    {
+      "query": "Ausländeranteil im Kreis",
+      "rank": 1,
+      "top_source": "inkar",
+      "top_label": "Ausländeranteil",
+      "sources_in_top": [
+        "ba_strukturdaten",
+        "deutschlandatlas",
+        "inkar",
+        "migration_integration",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Studierende und Hochschulstandorte",
+      "rank": 1,
+      "top_source": "hochschulkompass",
+      "top_label": "Ort (Hausanschrift) (Hochschulverzeichnis)",
+      "sources_in_top": [
+        "hochschulkompass",
+        "inkar",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "ÖPNV Haltestellen und Fahrpläne",
+      "rank": 1,
+      "top_source": "opendata_oepnv",
+      "top_label": "Haltestellen und Stationen",
+      "sources_in_top": [
+        "opendata_oepnv"
+      ]
+    },
+    {
+      "query": "Unternehmen und Gewerbeanmeldungen",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Gewerbeanmeldungen",
+      "sources_in_top": [
+        "genesis_bund",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Arbeitslosenquote auf Kreisebene",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Arbeitslosenquote bez. auf alle Erwerbspers.",
+      "sources_in_top": [
+        "inkar",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Bruttoinlandsprodukt je Einwohner",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Bruttoinlandsprodukt je Einwohner",
+      "sources_in_top": [
+        "ba_strukturdaten",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Anteil der Waldfläche",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Anteil Waldfläche an Gesamtfläche",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "ioer_monitor",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Angebotsmieten und Mietpreise",
+      "rank": 1,
+      "top_source": "inkar",
+      "top_label": "Angebotsmietpreise",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "fdz_ruhr",
+        "inkar",
+        "regionalstatistik",
+        "wegweiser_kommune",
+        "zensus2022"
+      ]
+    },
+    {
+      "query": "Lebenserwartung bei Geburt",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Lebenserwartung bei Geburt - Frauen",
+      "sources_in_top": [
+        "genesis_bund",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Spielplätze in der Umgebung",
+      "rank": 2,
+      "top_source": "osm_poi",
+      "top_label": "Spielplätze (OpenStreetMap)",
+      "sources_in_top": [
+        "geoportal",
+        "inkar",
+        "osm_poi",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Personalschlüssel in Kindertagesstätten",
+      "rank": 1,
+      "top_source": "laendermonitor",
+      "top_label": "Kindertagespflege | Personal | Personalschlüssel",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "laendermonitor",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Bevölkerungsdichte je Quadratkilometer",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Bevölkerungsdichte (Einwohner je qkm)",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Schulabgänger ohne Abschluss",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Anteil Schulabgänger ohne Hauptschulabschluss",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Pendler zwischen Wohnort und Arbeitsort",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Einpendler(innen) über Gemeindegrenze (Arbeitsort)",
+      "sources_in_top": [
+        "inkar",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Wohnfläche je Einwohner",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Durchschnittliche Wohnfläche je Einwohner",
+      "sources_in_top": [
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune",
+        "zensus2022"
+      ]
+    },
+    {
+      "query": "Barrierefreiheit von Krankenhäusern",
+      "rank": 1,
+      "top_source": "gba_qualitaetsbericht",
+      "top_label": "Barrierefreiheit",
+      "sources_in_top": [
+        "bundes_klinik_atlas",
+        "gba_qualitaetsbericht",
+        "inkar",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Erneuerbare Energien und Flächennutzung",
+      "rank": 1,
+      "top_source": "ioer_monitor",
+      "top_label": "Anteil Photovoltaik-Freiflächenanlagen an Gebietsfläche (IÖR-Monitor)",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "ioer_monitor"
+      ]
+    },
+    {
+      "query": "Kaufkraft und verfügbares Einkommen",
+      "rank": 1,
+      "top_source": "wegweiser_kommune",
+      "top_label": "Kaufkraft - Ist-Daten",
+      "sources_in_top": [
+        "btw_strukturdaten",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "hospital beds per inhabitant",
+      "rank": 1,
+      "top_source": "inkar",
+      "top_label": "Krankenhausbetten je 1000 Einwohner",
+      "sources_in_top": [
+        "bundes_klinik_atlas",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "broadband availability 1000 Mbit households",
+      "rank": 1,
+      "top_source": "breitband",
+      "top_label": "FTTB/H ≥ 1000 Mbit/s (Privathaushalte)",
+      "sources_in_top": [
+        "breitband",
+        "deutschlandatlas",
+        "inkar"
+      ]
+    },
+    {
+      "query": "population by age and sex",
+      "rank": 3,
+      "top_source": "regionalatlas",
+      "top_label": "Gesamtquotient",
+      "sources_in_top": [
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "dwellings by year of construction",
+      "rank": 1,
+      "top_source": "zensus2022",
+      "top_label": "Gebäude: Baujahr (Jahrzwanzigste) [Deutschland]",
+      "sources_in_top": [
+        "genesis_bund",
+        "regionalstatistik",
+        "zensus2022"
+      ]
+    },
+    {
+      "query": "road accidents involving cyclists",
+      "rank": 1,
+      "top_source": "unfallatlas",
+      "top_label": "Unfall mit Fahrradbeteiligung",
+      "sources_in_top": [
+        "genesis_bund",
+        "regionalstatistik",
+        "unfallatlas"
+      ]
+    },
+    {
+      "query": "commuters into the district",
+      "rank": 1,
+      "top_source": "inkar",
+      "top_label": "sozialversicherungspflichtig Beschäftigte Binnenpendler",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar"
+      ]
+    },
+    {
+      "query": "share of foreigners",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Anteil Ausländer an der Gesamtbevölkerung",
+      "sources_in_top": [
+        "ba_strukturdaten",
+        "deutschlandatlas",
+        "inkar",
+        "migration_integration",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "municipal debt per inhabitant",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Schulden beim nicht-öffentlichen Bereich je Einw.",
+      "sources_in_top": [
+        "inkar",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "gross domestic product per capita",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "BIP je Einwohner (jeweilige Preise)",
+      "sources_in_top": [
+        "genesis_bund",
+        "inkar",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "childcare coverage under three",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Betreute Kinder von unter 3 Jahren und Betreuungsquoten nach Art der Kindertagesbetreuung - Stichtag - regionale Ebenen",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Anteil Erneuerbarer Energien",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Anteil erneuerbarer Energien am Bruttostromverbrauch - Jahr - regionale Tiefe: Bundesländer",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "ioer_monitor",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Krankenhäuser mit Geburtshilfe",
+      "rank": 2,
+      "top_source": "regionalstatistik",
+      "top_label": "Patientenzugang in Krankenhäusern",
+      "sources_in_top": [
+        "gba_qualitaetsbericht",
+        "inkar",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Zahl der Beschäftigten nach Wirtschaftszweig",
+      "rank": 1,
+      "top_source": "ba_glossar",
+      "top_label": "Wirtschaftszweig",
+      "sources_in_top": [
+        "ba_glossar",
+        "genesis_bund",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Wanderungssaldo je 1000 Einwohner",
+      "rank": 1,
+      "top_source": "wegweiser_kommune",
+      "top_label": "Wanderungssaldo - Wanderungen nach Ziel und Herkunft",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Wahlbeteiligung",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Wahlbeteiligung",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wahlergebnisse"
+      ]
+    },
+    {
+      "query": "Bodenrichtwerte und Grundstückspreise",
+      "rank": 1,
+      "top_source": "boris_d",
+      "top_label": "Bodenrichtwert (zonal und lagetypisch)",
+      "sources_in_top": [
+        "boris_d",
+        "genesis_bund",
+        "inkar",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Ärztliche Versorgung auf dem Land",
+      "rank": 1,
+      "top_source": "deutschlandatlas",
+      "top_label": "Hausärztliche Versorgung",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar"
+      ]
+    },
+    {
+      "query": "Pflegebedürftige und Pflegeheime",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Pflegebedürftige der Pflegeheime",
+      "sources_in_top": [
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Zahl der Studierenden",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Studierende je 100 000 Einwohner",
+      "sources_in_top": [
+        "genesis_bund",
+        "hochschulkompass",
+        "inkar",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Kriminalität und Straftaten",
+      "rank": 1,
+      "top_source": "wegweiser_kommune",
+      "top_label": "Straftaten - Ist-Daten",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "genesis_bund",
+        "inkar",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Fläche für Siedlung und Verkehr",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Siedlungs- und Verkehrsfläche",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "ioer_monitor",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Durchschnittsalter der Bevölkerung",
+      "rank": 1,
+      "top_source": "regionalatlas",
+      "top_label": "Durchschnittsalter der Bevölkerung",
+      "sources_in_top": [
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Zahl der Gewerbeanmeldungen",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Gewerbeanmeldungen (ohne Automatenaufsteller)",
+      "sources_in_top": [
+        "genesis_bund",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Erwerbstätigenquote von Frauen",
+      "rank": 1,
+      "top_source": "inkar",
+      "top_label": "Erwerbstätigenquote Frauen",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    },
+    {
+      "query": "Anteil Ein-Personen-Haushalte",
+      "rank": 1,
+      "top_source": "regionalatlas",
+      "top_label": "Anteil Einpersonenhaushalte",
+      "sources_in_top": [
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune",
+        "zensus2022"
+      ]
+    },
+    {
+      "query": "Mobilfunkabdeckung 5G",
+      "rank": 1,
+      "top_source": "breitband",
+      "top_label": "Vodafone 5G SA (Fläche)",
+      "sources_in_top": [
+        "breitband",
+        "deutschlandatlas"
+      ]
+    },
+    {
+      "query": "Reisezeit zum nächsten Oberzentrum",
+      "rank": 1,
+      "top_source": "deutschlandatlas",
+      "top_label": "Erreichbarkeit zentraler Orte (ÖV)",
+      "sources_in_top": [
+        "deutschlandatlas",
+        "inkar"
+      ]
+    },
+    {
+      "query": "Zahl der Übernachtungen im Tourismus",
+      "rank": 1,
+      "top_source": "regionalatlas",
+      "top_label": "Übernachtungen je EW",
+      "sources_in_top": [
+        "genesis_bund",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Sozialhilfe und Grundsicherung",
+      "rank": 1,
+      "top_source": "regionalstatistik",
+      "top_label": "Sozialhilfeträger",
+      "sources_in_top": [
+        "btw_strukturdaten",
+        "genesis_bund",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik"
+      ]
+    },
+    {
+      "query": "Schulabbrecherquote",
+      "rank": 1,
+      "top_source": "wegweiser_kommune",
+      "top_label": "Verhältnis der Schulabbrecher:innenquote von Ausländer:innen zur Schulabbrecher:innenquote gesamt - Ist-Daten",
+      "sources_in_top": [
+        "ba_glossar",
+        "inkar",
+        "regionalatlas",
+        "regionalstatistik",
+        "wegweiser_kommune"
+      ]
+    }
+  ]
+}

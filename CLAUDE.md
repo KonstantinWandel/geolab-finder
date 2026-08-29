@@ -379,9 +379,42 @@ in the URL and never print it.
 - `/opt/geolab/CLAUDE.md` on the VM holds the deployment notes, including the open TLS item
   (the cert is Let's Encrypt staging and `*.soz` does not cover the `.geolab.soz` names)
 
-Capacity: 4 vCPU, 15 GB RAM, CPU only. A single query takes about 5 s; five simultaneous queries
-take about 17 s each. Staggered classroom use is fine. More vCPUs or a small GPU is the only real
-lever if it needs to be snappy under burst.
+Capacity: 4 vCPU, 15 GB RAM, CPU only.
+
+**Query latency, measured and tuned 2026-08-29: about 1.7 s for a new query and 1.15 s for a
+repeat, down from 6.7 s (GeoDB) and 8.4 s (SOEP).** Profile a query before optimising it: the
+first two guesses here were both wrong. The dense product, the obvious suspect, is 1 ms for GeoDB
+and 24 ms for SOEP. What the time actually went on:
+
+1. *The cross-encoder, and its cost scales with document length.* 16 real documents rerank in
+   12.9 s untruncated, 4.6 s at 800 characters, 2.1 s at 400, 1.2 s at 256. Documents here are
+   median 510 characters with a p90 of 2,895, so a few long ones set the pace for every query.
+   The rerank document is now cut to `SOEP_RAG_RERANK_DOC_CHARS` (480), front-loaded so name,
+   label and theme survive whole and only the description is trimmed.
+2. *A per-query filter pass that also COPIED the embedding matrix.* `_search` rebuilt a Python
+   row list over all 125,496 SOEP rows and then fancy-indexed the embeddings, about 100 MB copied
+   per request under the default filters. Both are cached per filter signature.
+3. *`OMP_NUM_THREADS=2` on the SOEP unit only*, left from when three services shared the box.
+   That one line made every SOEP model stage twice as slow as the identical GeoDB stage.
+
+**int8 helps the reranker and HURTS the bi-encoder.** Dynamic quantisation gives 1.80x on the
+cross-encoder (2,463 -> 1,366 ms for 16 documents) with no measurable precision cost on either
+gate, and 0.47x on the query encoder (454 -> 959 ms), because a single ~30-token sequence is too
+small for the quantised GEMMs to pay for their overhead. Quantise only the ENCODER submodule
+(`model.roberta` / `model.bert`): replacing the whole module breaks sentence-transformers' call
+path, which then hands the tokenised batch in positionally and dies inside
+`create_position_ids_from_input_ids`. int8 scores are not faithful (correlation 0.85 to fp32, the
+top-5 order changes) and not deterministic between runs, which is why it has to be judged on the
+gates and not on score correlation.
+
+**The rerank width and depth were swept against both gates**, 8-16 candidates by 320-480
+characters: hit@10 never moved, hit@1 and hit@3 moved by at most 1, and no configuration produced
+a miss. 10 candidates at 480 characters is best-or-tied on both and about 40% cheaper than 16.
+Query vectors are cached (256 entries), which is what makes a repeat 500 ms faster.
+
+Next lever if it needs to be faster still: ONNX Runtime for the cross-encoder, worth roughly
+1.5-2.5x on that stage, at the cost of installing onnxruntime plus optimum on the VM and
+exporting the model. Not done: it is a live service and the current numbers are usable.
 
 ## Hard-won rules
 
