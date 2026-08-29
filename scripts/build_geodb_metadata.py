@@ -321,6 +321,15 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     bund_codes = statistic_codes(DATA_SOURCES / "28-genesis-online-bund" / "raw"
                                 / "genesis_catalogue_destatis.json")
 
+    # Mining the statistic out of the definition text only works where Destatis wrote one in.
+    # For the rest, `catalogue/statistics2variable` answers the same question directly, and
+    # scripts/resolve_merkmal_statistics.py asks it once per Merkmal. Without this, 1,596 of
+    # the 3,305 records here (15% of the whole index) linked to the portal home page.
+    resolved_statistics: Dict[str, Dict[str, Any]] = {}
+    resolved_path = source["folder"] / "raw" / "merkmal_statistics.json"
+    if resolved_path.exists():
+        resolved_statistics = json.loads(resolved_path.read_text(encoding="utf-8")).get("merkmale") or {}
+
     german: Dict[str, Dict[str, Any]] = {}
     english: Dict[str, Dict[str, Any]] = {}
     for path in keys_dir.glob("*.json"):
@@ -379,13 +388,29 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
         if not statistic_code:
             statistic_code = next((c for c, _ in statistics if c in bund_codes), "")
             held_by = "federal" if statistic_code else "unknown"
+        if held_by == "unknown":
+            # Nothing in the text; use what the API said this Merkmal belongs to.
+            api_entry = resolved_statistics.get(code) or {}
+            api_statistics = api_entry.get("statistics") or []
+            if api_statistics:
+                statistic_code = clean(api_statistics[0].get("code"))
+                held_by = "regional" if api_entry.get("instance") == "regionalstatistik" else "federal"
+                if not statistic_names:
+                    statistic_names = "; ".join(
+                        f"{clean(item.get('code'))} {clean(item.get('label'))}"
+                        for item in api_statistics[:4])
         if held_by == "regional":
+            # Verified against a deliberately bogus code: a real statistic answers about 12.7 KB,
+            # code 99999 answers 8.9 KB.
             url = f"https://www.regionalstatistik.de/genesis/online/statistic/{statistic_code}"
             link_ok, level = True, "statistic"
         elif held_by == "federal":
-            # Same federal portal as the GENESIS table links, confirmed by hand on 2026-08-25.
+            # Same federal portal as the GENESIS table links, confirmed by hand in a browser on
+            # 2026-08-25. It is a client-rendered SPA, so the response is a 2.5 KB shell whatever
+            # the code is: the link works for a human but cannot be probed from here, and saying
+            # otherwise would be the difference between checking and assuming.
             url = f"https://www-genesis.destatis.de/datenbank/online/statistic/{statistic_code}"
-            link_ok, level = True, "statistic"
+            link_ok, level = False, "statistic"
         else:
             url = "https://www.regionalstatistik.de/genesis/online"
             link_ok, level = True, "portal"
@@ -810,6 +835,18 @@ def _deutschlandatlas_maps(folder: Path) -> List[Dict[str, str]]:
     return json.loads(path.read_text(encoding="utf-8")).get("maps") or []
 
 
+# Three indicators whose wording shares no words with their map's title, so no threshold can
+# match them without also creating false matches elsewhere. Keyed by Indikatorenkuerzel (stable)
+# rather than by label (changes with the reference year). Both URLs verified: HTTP 200 at 124/113
+# KB against 96 KB for a bogus code.
+DEUTSCHLANDATLAS_MAP_OVERRIDES: Dict[str, str] = {
+    "bquali_mabschl": "https://www.deutschlandatlas.bund.de/DE/Karten/Wie-wir-arbeiten/050/_node.html",
+    "bquali_oabschl": "https://www.deutschlandatlas.bund.de/DE/Karten/Wie-wir-arbeiten/050/_node.html",
+    "v_5g": "https://www.deutschlandatlas.bund.de/DE/Karten/Wie-wir-uns-vernetzen/"
+            "Mobile-Breitbandverfuegbarkeit-Karte/_node.html",
+}
+
+
 def _match_map(label: str, maps: List[Dict[str, str]]) -> Optional[Dict[str, str]]:
     """Best map page for an indicator label.
 
@@ -960,6 +997,8 @@ def flatten_deutschlandatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
             f"Gebietsstand: {info['gebietsstand']}" if info.get("gebietsstand") else "",
         ])
         match = _match_map(label, maps)
+        if not match and code in DEUTSCHLANDATLAS_MAP_OVERRIDES:
+            match = {"url": DEUTSCHLANDATLAS_MAP_OVERRIDES[code], "title": label}
         if match:
             matched_maps += 1
         records.append(
@@ -3298,8 +3337,18 @@ def flatten_boris(source: Dict[str, Any]) -> List[Dict[str, Any]]:
             )
         )
 
+    # Per-Land service endpoints, resolved from the GDI-DE catalogue by
+    # scripts/resolve_boris_services.py. 14 of 16 Laender publish one there; Baden-Wuerttemberg
+    # and Berlin do not, and keep the BORIS-D portal link rather than a guessed one.
+    services_path = source["folder"] / "raw" / "boris_services.json"
+    services: Dict[str, Any] = {}
+    if services_path.exists():
+        services = json.loads(services_path.read_text(encoding="utf-8")).get("states") or {}
+
     for state in GERMAN_STATES:
         count = sum(1 for title in titles if state.lower() in title.lower())
+        service = services.get(state) or {}
+        endpoint = service.get("capabilities") or service.get("portal") or ""
         records.append(
             make_record(
                 source_key="boris_d",
@@ -3313,23 +3362,31 @@ def flatten_boris(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 description=f"Bodenrichtwerte und Bodenrichtwertzonen für {state}, geführt vom "
                             "zuständigen Gutachterausschuss bzw. der Landesvermessung und über "
                             "BORIS-D gebündelt. "
-                            + (f"Im Geodatenkatalog sind dazu {count} Metadatensätze verzeichnet "
-                               "(Stichprobe der ersten 500 Treffer)." if count else
-                               "Im ausgewerteten Katalogauszug ohne eigenen Treffer; der Zugang "
-                               "läuft über das Landesportal."),
+                            + (f"Im Geodatenkatalog des Bundes und der Länder sind dazu {count} "
+                               "Metadatensätze verzeichnet. " if count else "")
+                            + (f"Eigener Dienst des Landes: {service.get('title', '')}"
+                               + (f" ({service.get('organisation')})." if service.get("organisation") else ".")
+                               if endpoint else
+                               "Für dieses Land führt der Geodatenkatalog keinen landesweiten "
+                               "Dienst; der Zugang läuft über BORIS-D."),
                 spatial_levels=["Adressen/Koordinaten", "Gemeinden", "Kreise", "Bundesländer"],
                 nuts_levels=["Adressen/Koordinaten", "Gemeinden", "LAU", "Kreise", "NUTS3",
                              "Bundesländer", "NUTS1"],
                 year_start=source["coverage_start_year"],
                 year_end=source["coverage_end_year"],
                 years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
-                source_url=portal,
-                indicator_url=portal,
-                link_level="portal",
+                source_url=endpoint or portal,
+                indicator_url=endpoint or portal,
+                # A Land with its own service gets a dataset-level link that was probed (all 14
+                # answered HTTP 200); the two without keep the portal link.
+                link_level="dataset" if endpoint else "portal",
+                link_verified=True,
                 access_modes=source["access_modes"] or ["interactive map viewer"],
                 update_frequency=source["update_frequency"] or "jährlich",
-                api_hint=f"In BORIS-D das Land {state} wählen; die Landesdienste sind zusätzlich "
-                         "im Geodatenkatalog (gdk.gdi-de.org) mit WMS/WFS-Adresse verzeichnet.",
+                api_hint=(f"Landesdienst: {endpoint}. " if endpoint else "")
+                         + f"Alternativ in BORIS-D das Land {state} wählen. Die Landesdienste "
+                         "sind im Geodatenkatalog (gdk.gdi-de.org) mit WMS/WFS-Adresse "
+                         "verzeichnet; Nutzungsbedingungen und Entgelte unterscheiden sich je Land.",
             )
         )
     return records
@@ -3510,55 +3567,79 @@ def flatten_wahlergebnisse(source: Dict[str, Any]) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # IÖR-Monitor
 # ---------------------------------------------------------------------------
-IOER_THEMES: List[Tuple[str, str, str]] = [
-    ("flaechennutzung", "Flächennutzung und Flächenanteile",
-     "Anteile von Siedlungs-, Verkehrs-, Landwirtschafts-, Wald- und Wasserflächen an der "
-     "Gebietsfläche, aus Geobasisdaten (ATKIS) berechnet und damit unabhängig von der "
-     "Flächenerhebung nach Nutzungsart."),
-    ("flaechenneuinanspruchnahme", "Flächenneuinanspruchnahme",
-     "Zunahme der Siedlungs- und Verkehrsfläche je Zeitraum, absolut und je Einwohner. Der "
-     "Indikator hinter dem 30-Hektar-Ziel der Nachhaltigkeitsstrategie."),
-    ("bodenversiegelung", "Bodenversiegelung und Flächenproduktivität",
-     "Versiegelte Fläche und ihr Anteil an der Siedlungs- und Verkehrsfläche sowie "
-     "Flächenproduktivität (Wertschöpfung je Fläche)."),
-    ("siedlungsstruktur", "Siedlungsstruktur und Dichte",
-     "Siedlungsdichte, Einwohner und Arbeitsplätze je Siedlungsfläche, Gebäude- und "
-     "Wohnungsdichte."),
-    ("freiraum", "Freiraum und Landschaftsqualität",
-     "Freiraumanteil, unzerschnittene Freiraumflächen, Landschaftszerschneidung durch Verkehr "
-     "und Anteil naturnaher Flächen."),
-    ("erreichbarkeit", "Ausstattung, Erreichbarkeiten und Einwirkbereiche",
-     "Erreichbarkeit von Grünflächen, Ausstattung mit Infrastruktur und Einwirkbereiche von "
-     "Lärm- und Emissionsquellen."),
-    ("flaechenumwidmung", "Flächenumwidmung",
-     "Umwidmung zwischen Nutzungsarten im Zeitverlauf, etwa Landwirtschaft zu Siedlung."),
-]
+# What each indicator category covers, so a record says more than its own name. The indicators
+# themselves are NOT hand-written: they are read from the monitor's own public list.
+IOER_CATEGORIES: Dict[str, str] = {
+    "N": "Nachhaltigkeit: Flächenneuinanspruchnahme und Flächenverbrauch, die Indikatoren hinter "
+         "dem 30-Hektar-Ziel der Nachhaltigkeitsstrategie.",
+    "S": "Siedlung: Anteile von Siedlungs-, Industrie- und Gewerbeflächen an der Gebietsfläche, "
+         "aus Geobasisdaten (ATKIS) berechnet und damit unabhängig von der Flächenerhebung nach "
+         "Nutzungsart.",
+    "F": "Freiraum: Freiraumanteile, unzerschnittene Freiräume und ihre Entwicklung.",
+    "V": "Verkehr: Verkehrsflächen, Straßennetzdichte und Erschließung.",
+    "G": "Gebäude: Gebäudebestand, Wohn- und Mischnutzflächen.",
+    "B": "Bevölkerung: Einwohnerdichten bezogen auf Siedlungs- und Freiraumflächen.",
+    "D": "Zersiedelung: Dispersion und Durchdringung der Landschaft mit Siedlung.",
+    "U": "Landschaftsqualität: Hemerobie, naturbetonte Flächen und Landschaftszerschneidung.",
+    "L": "Landschafts- und Naturschutz: Anteile geschützter Flächen.",
+    "O": "Ökosystemleistungen: Regulations- und Erholungsleistungen der Landschaft.",
+    "E": "Energie: Flächen für erneuerbare Energien.",
+    "X": "Relief: Hangneigung und Reliefenergie.",
+    "M": "Materiallager: im Gebäudebestand gebundene Materialmengen.",
+}
 
 
 def flatten_ioer(source: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """IÖR-Monitor, indexed at indicator-group level.
+    """IÖR-Monitor: all 88 indicators, from the monitor's own public indicator list.
 
-    The monitor publishes about 90 indicators, but the table that names them sits behind the
-    app's user area (the API needs a personal key and the WMS needs a per-indicator mapfile
-    name), so what is indexed here are the indicator groups the public pages do name, plus the
-    service note. Everything else about this row would be guesswork.
+    The list was assumed to be behind the user area; it is not. The "Übersicht der Geodienste"
+    section of /indikatoren/ links a public PDF with every indicator, its five-character code and
+    its category, and the codes are what address the WMS/WCS/WFS services. The service CALL still
+    needs a personal key (an unauthenticated call answers a WMS ServiceException), so the records
+    link to the indicator overview page and carry the code and the call pattern instead of a
+    per-indicator link that would not open for anyone.
     """
+    pdf = source["folder"] / "raw" / "indikatoren_liste.pdf"
+    if not pdf.exists():
+        return []
+    text = _pdf_text(pdf, layout=True)
+    if not text:
+        return []
+
     landing = "https://www.ioer-monitor.de/indikatoren/"
     records: List[Dict[str, Any]] = []
-    for key, label, description in IOER_THEMES:
+    category = ""
+    category_letter = ""
+    for line in text.splitlines():
+        stripped = line.strip()
+        heading = re.match(r"^([A-ZÄÖÜ][A-Za-zÄÖÜäöüß/ -]{3,40})\s*\(([A-Z])\)$", stripped)
+        if heading:
+            category, category_letter = heading.group(1).strip(), heading.group(2)
+            continue
+        found = re.match(r"^([A-Z][0-9]{2}[A-Z]{2})\s+(.+)$", stripped)
+        if not found:
+            continue
+        code, name = found.group(1), " ".join(found.group(2).split())
+        if len(name) < 5:
+            continue
         records.append(
             make_record(
                 source_key="ioer_monitor",
                 source_label="IÖR-Monitor (Leibniz-Institut für ökologische Raumentwicklung)",
-                item_type="indicator_group",
-                item_id=f"ioer:{key}",
-                variable_name=key,
-                label=f"{label} (IÖR-Monitor)",
-                dataset_label="IÖR-Monitor Indikatorengruppen",
+                item_type="regional_indicator",
+                item_id=f"ioer:{code}",
+                variable_name=code,
+                label=f"{name} (IÖR-Monitor)",
+                dataset_label=f"IÖR-Monitor: {category}" if category else "IÖR-Monitor",
                 theme="Flächennutzung & Umwelt",
-                description=description + " Verfügbar von der Rasterebene (bis 100 m) bis zu "
-                            "Gemeinden, Kreisen und Ländern; Abruf als Karte, Tabelle oder über "
-                            "WMS, WFS und WCS.",
+                description=join_nonempty([
+                    name + ".",
+                    IOER_CATEGORIES.get(category_letter, ""),
+                    "Verfügbar von der Rasterebene (bis 100 m) bis zu Gemeinden, Kreisen und "
+                    "Ländern, als Karte, Tabelle und über WMS, WFS und WCS. Der IÖR-Monitor "
+                    "berechnet seine Indikatoren aus Geobasisdaten (ATKIS, LBM-DE) und ist damit "
+                    "unabhängig von der amtlichen Flächenerhebung nach Nutzungsart.",
+                ]),
                 spatial_levels=["Rasterzellen", "Gemeinden", "Kreise", "Bundesländer"],
                 nuts_levels=["Rasterzellen", "Gemeinden", "LAU", "Kreise", "NUTS3",
                              "Bundesländer", "NUTS1"],
@@ -3570,9 +3651,10 @@ def flatten_ioer(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 link_level="dataset",
                 access_modes=source["access_modes"] or ["interactive map viewer", "machine-readable API"],
                 update_frequency=source["update_frequency"] or "jährlich",
-                api_hint="Auswahl im IÖR-Monitor unter Indikatoren; OGC-Dienste (WMS/WFS/WCS) "
-                         "werden je Indikator im Nutzerbereich mit persönlichem Schlüssel "
-                         "bereitgestellt. Nutzungsbedingungen: Namensnennung IÖR.",
+                api_hint=f"Indikatorkürzel {code}. Die Geodienste werden je Indikator über "
+                         f"monitor.ioer.de/monitor_api/user?id={code}&service=wms|wfs|wcs&key=<Schlüssel> "
+                         "abgerufen; der Schlüssel stammt aus dem kostenlosen Nutzerbereich des "
+                         "IÖR-Monitors. Nutzungsbedingungen: Namensnennung IÖR.",
             )
         )
     return records
