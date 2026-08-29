@@ -346,6 +346,26 @@ the old advisor, the old `inkar_rag_embeddings.npy`, and the old inkar site).
   `_dedup_key` gives non-SOEP sources a `(source_key, code, label)` identity, because codes are
   only unique within a source (`AI0104` exists in both Regionalatlas and the GENESIS catalogue).
 
+## Handing a query over from the project site
+
+The finder reads `?q=...` on load, asks it once, and strips the parameter from the address bar
+(`SOEPRagAdvisor.jsx`). That is what lets a search box on the GeoLAB site drop a visitor straight
+into a finished result list instead of an empty input, and it needs no JavaScript on the sending
+side: a plain `<form method="get" action="https://geodb.geolab.soz.uni-bielefeld.de/">` with an
+input named `q` is enough. The site's own navbar magnifier is Quarto's page search (33 sections of
+site text) and never reaches the index, which is exactly the confusion the box removes.
+
+A landing page carrying such a box is staged, unlisted, at
+`https://geodb.geolab.soz.uni-bielefeld.de/preview-home.html`; its source is
+`geolab_regiohub/_preview/` (regenerate with `_preview/make_preview.py`). The site build ignores
+`_preview/`, so it cannot publish itself by accident.
+
+Frontends are built with the `nodejs` env, which is not on PATH by default:
+`PATH=$HOME/miniconda3/envs/nodejs/bin:$PATH VITE_APP_MODE=inkar VITE_PAGE_TITLE="GeoDB Geodata
+Index" node node_modules/.bin/vite build --outDir dist-inkar --emptyOutDir` (and `soep` /
+`dist-soep` / "SOEP Variable Finder" for the other). The live sites before the handover are kept
+in `/opt/geolab/backups/pre_qhandover_20260829/`.
+
 ## Branding
 
 The site is a Universität Bielefeld / Leibniz-Gemeinschaft project and says so: page title
