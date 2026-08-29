@@ -385,7 +385,35 @@ A note on writing cases for this file: two of the first cases passed for the wro
 word "grün"). Give a case a `reject` pattern whenever a pun or a neighbouring concept could
 satisfy it.
 
-**Findings 2 and 3 were fixed on 2026-08-29; finding 1 stands.** The raster rows now carry the
+**Where the three findings stand (2026-08-29).**
+
+*Finding 1, the missing "I have nothing":* the negative set was grown from 5 to 27 queries, each
+screened against the live index first (four candidates were thrown out because the finder answers
+them: public toilets per station, sleep duration, screen time and housework are all in the index).
+On five negatives the margin between the top hit and the median of the list looked decisive; on 27
+it is merely useful, and the honest table at the deployment's own top_k of 12 is:
+
+| threshold | answerable kept | impossible caught | false alarms |
+|---|---|---|---|
+| 0.005 | 29/31 | 12/27 | 6.5% |
+| 0.015 | 26/31 | 18/27 | 16.1% |
+| 0.050 | 21/31 | 23/27 | 32.3% |
+
+Shipped at **0.015 as a note, never a filter**: nothing is hidden and nothing is reordered, and the
+five answerable queries that trip it ("gibt es hier genug Kita-Plätze", "ist die Gegend eher arm
+oder reich") genuinely have a flat field, so the sentence is true even when it is a false alarm.
+The absolute cross-encoder score remains useless for this, for the reason below. `eval_geodb_hard.py`
+reports the margin table on every run, so a ranking change that flattens the field shows up.
+
+*Finding 3, bare code lookup, was implemented and then removed on Konstantin's call*: a metadata
+finder is asked in words, and the path's one real cost was that a sentence containing a word which
+happens to also be a code pulled that record up ("Wie funktioniter der Abruf der Daten" -> the
+record named `ABRUF`). Consequence to know: typing a SOEP variable name is a coin flip, and it
+fails in the worst way. Of twelve real codes, seven land and five return a DIFFERENT variable whose
+code is one character away (`ple0179` "Wie oft Fleisch" -> `plb0179` "Altersteilzeit`; `plh0182` ->
+`plh0162`). If that ever needs fixing, the narrow version is: single-token query, SOEP finder only.
+
+*Finding 2 was fixed.* The raster rows now carry the
 `Rasterzellen` level, which already existed for `ioer_monitor`, `dwd_cdc` and `fdz_ruhr` and was
 missing only here (169 breitband rows changed, no other record touched, row count unchanged; the
 embeddings had to be recomputed because `spatial_levels` are part of the embedded document and the

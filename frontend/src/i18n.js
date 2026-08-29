@@ -60,6 +60,7 @@ export const STRINGS = {
     'results.generatorOff': 'disabled',
     'results.retrievalOnly': 'retrieval-only',
     'results.portalsOnly': 'No indicator-level hit for this question. The portals below are the places to look.',
+    'results.flat': 'No hit stands out from the rest. These are the nearest records in the index, so check whether any of them really measures what you asked for.',
 
     'col.select': 'Select',
     'col.record': 'Record',
@@ -185,6 +186,7 @@ export const STRINGS = {
     'results.generatorOff': 'deaktiviert',
     'results.retrievalOnly': 'nur Retrieval',
     'results.portalsOnly': 'Kein Treffer auf Indikatorebene. Die Portale unten sind die Stellen, an denen zu suchen ist.',
+    'results.flat': 'Kein Treffer hebt sich von den übrigen ab. Die Liste zeigt die nächstgelegenen Datensätze; prüfen Sie, ob einer davon wirklich Ihr Konzept misst.',
 
     'col.select': 'Auswahl',
     'col.record': 'Merkmal',

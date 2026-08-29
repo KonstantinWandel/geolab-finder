@@ -331,6 +331,22 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
       const allRows = result.recommended_variables || []
       const rows = allRows.filter((row) => row.source_key !== 'geoportal')
       const portalRows = allRows.filter((row) => row.source_key === 'geoportal')
+      // How far the top hit stands out from the middle of the list, in cross-encoder space.
+      // The absolute reranker score cannot tell an answerable question from an unanswerable
+      // one (a conversational query with a correct rank-1 hit scores below every impossible
+      // one), the margin can. Measured over 31 answerable and 27 impossible queries at this
+      // top_k: below 0.015 it catches 18 of the 27 impossible ones and speaks up on 5 of the
+      // 31 answerable ones, where the field really is flat. It is a note, never a filter:
+      // nothing is hidden or reordered.
+      const rerankScores = allRows
+        .map((row) => Number(row.rerank_score))
+        .filter((value) => Number.isFinite(value))
+        .sort((a, b) => b - a)
+      const median = rerankScores.length
+        ? rerankScores[Math.floor(rerankScores.length / 2)]
+        : 0
+      const flatField = rerankScores.length > 2 && rerankScores[0] - median < 0.015
+
       const selectedCount = rows.filter((row, idx) => selectedRows[`${i}:${row.item_id || row.variable_name || idx}`]).length
       return (
         <div key={i} className="execution-result glass-panel" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
@@ -351,6 +367,9 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             })}
           </p>
 
+          {flatField && rows.length > 0 && (
+            <p className="results-flat">{t('results.flat')}</p>
+          )}
           {rows.length === 0 && portalRows.length > 0 && (
             <p className="text-muted" style={{ marginTop: '0.4rem' }}>
               {t('results.portalsOnly')}
