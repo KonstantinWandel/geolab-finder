@@ -239,6 +239,8 @@ class SOEPRagAdvisorService:
         self._auth_bio = float(os.getenv("GEOLAB_AUTHORITY_BIO_PENALTY", "0.05"))
         self._auth_sub = float(os.getenv("GEOLAB_AUTHORITY_SUBSAMPLE_PENALTY", "0.06"))
         self._flag_penalty = float(os.getenv("GEOLAB_FLAG_PENALTY", "0.12"))
+        # How much of a document the cross-encoder sees. 0 disables the truncation.
+        self._rerank_doc_chars = int(os.getenv("SOEP_RAG_RERANK_DOC_CHARS", "480")) or 10 ** 9
         self._exact_code_bonus = float(os.getenv("GEOLAB_EXACT_CODE_BONUS", "0.5"))
         self._code_token_bonus = float(os.getenv("GEOLAB_CODE_TOKEN_BONUS", "0.2"))
 
@@ -1326,11 +1328,19 @@ class SOEPRagAdvisorService:
             rerank_ids = []
             for item_id in ids:
                 cand = all_unique_cands[item_id]
-                doc_text = (
-                    f"{cand.get('variable_name', '')} - {cand.get('label', '')}. "
-                    f"{cand.get('theme', '')}. {cand.get('search_description') or cand.get('rich_description', '')}. "
-                    f"{cand.get('available_years_text', '')}. {', '.join(cand.get('spatial_levels') or [])}"
-                )
+                # The cross-encoder is the whole query cost on a 4-vCPU box, and its cost scales
+                # with document length: measured on the VM, reranking 16 real documents takes
+                # 12.9 s untruncated, 2.1 s at 400 characters and 1.2 s at 256. Metadata
+                # documents here are median 510 characters but p90 is 2,895, and the
+                # discriminating part (name, label, theme) is at the FRONT, so the description
+                # is what gets cut, not the identity of the record.
+                head = (f"{cand.get('variable_name', '')} - {cand.get('label', '')}. "
+                        f"{cand.get('theme', '')}. ")
+                tail = (f". {cand.get('available_years_text', '')}. "
+                        f"{', '.join(cand.get('spatial_levels') or [])}")
+                body = str(cand.get('search_description') or cand.get('rich_description', ''))
+                budget = max(0, self._rerank_doc_chars - len(head) - len(tail))
+                doc_text = head + body[:budget] + tail
                 pairs.append((q, doc_text))
                 rerank_ids.append(item_id)
             if pairs:

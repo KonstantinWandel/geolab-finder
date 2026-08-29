@@ -15,6 +15,7 @@ the pattern matches the family (`plh0212`..) rather than one arbitrary member.
 
 Run (loads the model, so give it a minute):
   GEOLAB_APP_MODE=soep SOEP_METADATA_ROOT=$PWD/soep_metadata_output \
+  SOEP_RAG_METADATA_PATH=$PWD/soep_metadata_output/soep_v41_metadata.json \
   SOEP_RAG_CACHE_DIR=$PWD/soep_metadata_output/cache SOEP_RAG_DEVICE=cuda \
   python scripts/eval_soep_search.py
 """
@@ -53,7 +54,7 @@ CASES = [
     ("vereinbarte Wochenarbeitszeit", r"^(pgvebzeit|plb0176|plc0455)", r"vereinbarte arbeitszeit"),
     ("Beschäftigungsstatus und Erwerbsstatus", r"^(pgemplst|pglfs|e11102)$", None),
     ("arbeitslos gemeldet", r"^(plb0021|pab0004|e11103)", r"arbeitslos gemeldet"),
-    ("Nettovermögen des Haushalts", r"^(w011h|w0111)", r"net overall wealth|nettoverm"),
+    ("Nettovermögen des Haushalts", r"^(w011h[a-e]|w0111[a-e])$", None),
     ("Wohnfläche der Wohnung in Quadratmetern", r"^(hgsize|hlf0019)", r"wohnfl"),
     ("Miete pro Monat", r"^(hlj0028|hgrent|hlf00)", r"^miete|bruttokaltmiete|rent"),
     ("Wohneigentum oder Mieter", r"^(hgowner|plc0342)", r"eigentüm|wohneigentum|owner"),
@@ -95,7 +96,7 @@ CASES = [
     ("years of education", r"^(d11109|pgbilzeit)$", None),
     ("current self-rated health", r"^(ple0008|m11126)$", None),
     ("overall life satisfaction", r"^(p11101|plh0182|plh0151)$", None),
-    ("household net wealth", r"^(w011h|w0111)", r"net overall wealth"),
+    ("household net wealth", r"^(w011h[a-e]|w0111[a-e])$", None),
     ("actual weekly working hours", r"^(pgtatzeit|plb0186)", r"actual work"),
     ("employment status of the individual", r"^(e11102|pgemplst|pglfs)$", None),
     ("frequency of meat consumption", r"^(ple0179|hlf0192)$", None),
@@ -127,13 +128,25 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--json-out", default="")
+    parser.add_argument("--any-corpus", action="store_true",
+                        help="allow a corpus other than v41 (normally a mistake)")
     parser.add_argument("--include-raw", action="store_true",
                         help="also search the raw questionnaire files (off, like the UI default)")
     args = parser.parse_args()
 
     service = SOEPRagAdvisorService()
     service.load()
-    print(f"rows={len(service._rows)} model={service.model_name} reranker={service._reranker_name}\n")
+    path = str(service.metadata_path or "")
+    print(f"rows={len(service._rows)} corpus={path} model={service.model_name} "
+          f"reranker={service._reranker_name}\n")
+    # Without SOEP_RAG_METADATA_PATH the service falls back to the pre-v41 file (22,097 rows)
+    # and every number here would describe a corpus nobody serves. Production sets the variable
+    # in its systemd unit; this refuses to produce numbers for the wrong corpus.
+    if not args.any_corpus and "v41" not in path:
+        raise SystemExit(
+            f"loaded {path or 'no metadata'} ({len(service._rows)} rows), which is not the v41 "
+            "corpus. Set SOEP_RAG_METADATA_PATH=$PWD/soep_metadata_output/soep_v41_metadata.json "
+            "(or pass --any-corpus deliberately).")
 
     results = []
     for query, name_pattern, label_pattern in CASES:
