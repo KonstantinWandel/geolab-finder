@@ -294,6 +294,8 @@ class SOEPRagAdvisorService:
         self._rerank_doc_chars = int(os.getenv("SOEP_RAG_RERANK_DOC_CHARS", "480")) or 10 ** 9
         self._filter_view_cache: Dict[str, Any] = {}
         self._query_vec_cache: Dict[str, Any] = {}
+        self._name_index: Optional[Dict[str, List[int]]] = None
+        self._label_words: Optional[set] = None
         self._exact_code_bonus = float(os.getenv("GEOLAB_EXACT_CODE_BONUS", "0.5"))
         self._code_token_bonus = float(os.getenv("GEOLAB_CODE_TOKEN_BONUS", "0.2"))
 
@@ -1099,6 +1101,63 @@ class SOEPRagAdvisorService:
             self._query_vec_cache[formatted] = q_vec
         return q_vec
 
+    def _soep_code_rows(self, query: str, filters: Optional[Dict[str, Any]],
+                        limit: int = 4) -> List[Dict[str, Any]]:
+        """The record a one-word SOEP query names outright.
+
+        Deliberately narrow, because the wide version was worse than the problem. SOEP variable
+        names are the working currency of the corpus: they are what papers, do-files and the
+        SOEPcompanion quote, so they get typed into the finder. Without this, seven of twelve
+        real codes land and the other five return a DIFFERENT variable one character away
+        (`ple0179` "Wie oft Fleisch" -> `plb0179` "Altersteilzeit"), which is a plausible wrong
+        answer rather than a missing one.
+
+        Three conditions, all of them necessary:
+          * only the SOEP deployment. GeoDB codes (INT251, AI1401) are internal to the
+            statistical offices and nobody types them.
+          * only a one-word query. A code inside a sentence is a word: an earlier version pulled
+            up the record named `ABRUF` for "Wie funktioniert der Abruf der Daten".
+          * only a token that is not itself a word of the corpus, so a query for "Bevölkerung"
+            keeps going through the normal ranking even if some row carries that name.
+        """
+        if self.app_mode != "soep":
+            return []
+        token = (query or "").strip().strip(".,;:()[]").lower()
+        if not token or len(token) < 4 or re.search(r"[\s,;/]", token):
+            return []
+
+        if self._name_index is None:
+            index: Dict[str, List[int]] = {}
+            words: set = set()
+            for position, row in enumerate(self._rows):
+                name = self._as_text(row.get("variable_name")).strip().lower()
+                if name:
+                    index.setdefault(name, []).append(position)
+                for part in re.split(r"[^\wäöüß]+", self._as_text(row.get("label")).lower()):
+                    if part:
+                        words.add(part)
+            self._name_index, self._label_words = index, words
+
+        if token not in self._name_index or (
+                token in self._label_words and not any(c.isdigit() for c in token)):
+            return []
+
+        candidate_idx, _ = self._filtered_view(filters)
+        allowed = None
+        if candidate_idx is not None and len(candidate_idx) != len(self._rows):
+            allowed = set(candidate_idx)
+        q_vec = self._query_vector(query)
+        out: List[Dict[str, Any]] = []
+        for position in self._name_index[token][: limit * 3]:
+            if allowed is not None and position not in allowed:
+                continue        # the user's own filter excludes it; leave it out
+            row = dict(self._rows[position])
+            row["score"] = float(self._embeddings[position] @ q_vec[0])
+            out.append(row)
+            if len(out) >= limit:
+                break
+        return out
+
     def _search(self, query: str, k: int, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         if not self._rows or self._embedder is None or self._embeddings is None:
             raise RuntimeError("Metadata RAG advisor not loaded.")
@@ -1458,6 +1517,8 @@ class SOEPRagAdvisorService:
 
         for q in set(splits):
             cands = self._search(q, max(k, int(os.getenv("SOEP_RAG_RERANK_CANDIDATES", "24"))), filters)
+            # A one-word query that names a SOEP variable is that variable; see _soep_code_rows.
+            cands = self._soep_code_rows(q, filters) + cands
             for cand in cands:
                 item_id = cand["item_id"]
                 if item_id not in all_unique_cands:
