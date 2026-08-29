@@ -58,3 +58,7 @@ data_sources/*/raw/*
 # facts they hold (source names, URLs, coverage, status) are published through
 # data_sources/registry/geo_sources.json and data_sources/CHECKLIST.md instead.
 Geospatial_Data_Sources*.xlsx
+
+# Exported model artefacts (ONNX graphs). Rebuilt by the export step, never committed:
+# the repo is code-only and GitHub rejects files over 100 MB anyway.
+models/
