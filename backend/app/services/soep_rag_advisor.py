@@ -36,6 +36,18 @@ NOISE_DATASETS = {
 BIOGRAPHY_DATASETS = {"biol", "bioagel"}                                     # biography spells (mild)
 SUBSAMPLE_DATASETS = {
     "jugendl", "youthl", "childl", "kidlong", "biopupil", "p_pupil", "refugspell",
+    # Added 2026-08-29 after the first SOEP retrieval baseline: these small special-population
+    # instruments were in no category at all, so they carried no penalty and beat the canonical
+    # variable on plain queries. Measured misses: "Familienstand" answered from `more_local`
+    # (the MORE mentoring study) instead of pgen, "Geschlecht der befragten Person" from `vpl`
+    # (the questionnaire about DECEASED persons), "wie zufrieden sind die Leute mit ihrem Leben"
+    # from `abroad` (people who emigrated). Like every entry here the penalty is skipped when
+    # the query is actually about that population.
+    "more_local", "more_docu", "cog_refu", "abroad", "vpl",
+    "lee2person", "lee2brutto", "migspell",
+    # Spell/calendar files: they restate a status month by month, which is lexically close to
+    # the substantive item ("Bildungsjahre" answered from the life-course calendar `lkal`).
+    "pkal", "lkal", "gkal", "artkalen", "lifespell", "pbiospe",
 }
 # If the query itself is about a subsample, the subsample penalty is skipped so a
 # genuinely relevant youth/child/refugee variable is never buried.
@@ -44,6 +56,11 @@ SUBSAMPLE_QUERY_TOKENS = {
     "school", "jugend", "jugendliche", "jugendlich", "schüler", "schueler",
     "child", "children", "childhood", "kind", "kinder", "kita",
     "refugee", "refugees", "geflüchtet", "geflüchtete", "flucht", "migrant", "migration",
+    "verstorben", "verstorbene", "deceased", "death", "gestorben",
+    "ausgewandert", "emigrant", "emigrants", "abroad", "ausland",
+    "mentor", "mentoring", "mentee", "more",
+    "kalender", "calendar", "spell", "spells", "verlauf", "monatlich", "monthly",
+    "betrieb", "betriebe", "establishment", "employer", "arbeitgeber",
 }
 
 # --- Sample / questionnaire groups ----------------------------------------
