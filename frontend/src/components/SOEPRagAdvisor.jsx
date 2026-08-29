@@ -75,6 +75,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
 
   const [chatHistory, setChatHistory] = useState([])
   const [selectedRows, setSelectedRows] = useState({})
+  const [expandedRows, setExpandedRows] = useState({})
   const messagesEndRef = useRef(null)
   const latestMsgRef = useRef(null)
 
@@ -302,17 +303,6 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
     setSelectedRows((current) => ({ ...current, [key]: !current[key] }))
   }
 
-  const renderSourceLink = (row) => {
-    const href = row.source_url || row.selector_url || row.indicator_url
-    if (!href) return <span className="text-muted">{t('row.noLink')}</span>
-    const label = row.source_key === 'inkar' ? 'INKAR' : t('row.codebook')
-    return (
-      <a href={href} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>
-        {label}
-      </a>
-    )
-  }
-
   const renderMessage = (msg, i) => {
     if (msg.role === 'user') {
       return (
@@ -366,77 +356,111 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
               {t('results.portalsOnly')}
             </p>
           )}
-          <div className="table-scroll metadata-table">
-            <table className="results-table">
-              <thead>
-                <tr>
-                  <th>{t('col.select')}</th>
-                  <th>{t('col.record')}</th>
-                  <th>{t('col.source')}</th>
-                  <th>{t('col.score')}</th>
-                  <th>{t('col.coverage')}</th>
-                  <th>{t('col.why')}</th>
-                  <th>{t('col.link')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, idx) => (
-                  <tr key={`${row.item_id || row.variable_name}-${idx}`}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(selectedRows[`${i}:${row.item_id || row.variable_name || idx}`])}
-                        onChange={() => toggleRow(i, row, idx)}
-                        aria-label={t('row.selectAria', { name: row.variable_name || row.label || '' })}
-                      />
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: 'bold' }}>{row.variable_name}</div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{row.label}</div>
-                      {row.source_key !== 'soep' && row.theme && <div className="mini-chip">{row.theme}</div>}
-                      {row.link_level && linkLevel(row.link_level) && (
-                        <div
-                          className="mini-chip"
-                          title={row.link_verified === false
-                            ? t('link.unverified', { label: linkLevel(row.link_level).label })
-                            : linkLevel(row.link_level).label}
-                        >
-                          {linkLevel(row.link_level).short}{row.link_verified === false ? '*' : ''}
-                        </div>
-                      )}
-                      {row.source_key === 'soep' && sampleGroupLabel(row.sample_group) && (
-                        <div className="mini-chip">{sampleGroupLabel(row.sample_group)}</div>
-                      )}
-                      {row.also_in_datasets?.length > 0 && (
-                        <div className="text-muted" style={{ fontSize: '0.8rem', marginTop: '2px' }}>
-                          {t('row.alsoIn', { datasets: row.also_in_datasets.join(', ') })}
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <div>{row.source_label}</div>
-                      <div className="text-muted">{datasetOptionLabel(row.dataset_label || row.dataset)}</div>
-                    </td>
-                    <td>{formatScore(row.score)}</td>
-                    <td>
-                      <div>{row.available_years_text || t('row.noYears')}</div>
-                      <div className="text-muted">{(row.nuts_levels || []).join(', ') || (row.spatial_levels || []).join(', ') || t('row.noLevel')}</div>
-                    </td>
-                    <td>
-                      <details className="why-useful" style={{ cursor: 'pointer' }}>
-                        <summary style={{ fontWeight: 'bold', color: 'var(--accent)', outline: 'none' }}>{t('row.context')}</summary>
-                        <div style={{ marginTop: '0.5rem', lineHeight: '1.4', fontSize: '0.9rem', color: 'var(--text-soft)' }}>
-                          {row.rich_description || row.stats_summary || row.label || t('row.noDescription')}
-                          {row.api_hint && <p className="text-muted">{row.api_hint}</p>}
-                        </div>
-                      </details>
-                    </td>
-                    <td>{renderSourceLink(row)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* One result per block, read top to bottom. The seven-column table this replaces
+              needed 1040px of width, so it carried its own horizontal scrollbar inside its own
+              vertical scrollbar inside the page, and about two results were visible at a time. */}
+          <ol className="result-list">
+            {rows.map((row, idx) => {
+              const rowKey = `${i}:${row.item_id || row.variable_name || idx}`
+              const href = row.source_url || row.selector_url || row.indicator_url
+              const level = row.link_level ? linkLevel(row.link_level) : null
+              const levels = (row.nuts_levels || []).join(', ') || (row.spatial_levels || []).join(', ')
+              const description = row.rich_description || row.stats_summary || ''
+              const expanded = Boolean(expandedRows[rowKey])
+              return (
+                <li className="result-item" key={`${row.item_id || row.variable_name}-${idx}`}>
+                  <div className="result-head">
+                    <input
+                      type="checkbox"
+                      className="result-select"
+                      checked={Boolean(selectedRows[rowKey])}
+                      onChange={() => toggleRow(i, row, idx)}
+                      aria-label={t('row.selectAria', { name: row.variable_name || row.label || '' })}
+                    />
+                    <div className="result-headline">
+                      <h4 className="result-label">{row.label || row.variable_name}</h4>
+                      <div className="result-ident">
+                        <code className="result-code">{row.variable_name}</code>
+                        <span className="result-source">{row.source_label}</span>
+                        {(row.dataset_label || row.dataset) && (
+                          <span className="result-dataset">{datasetOptionLabel(row.dataset_label || row.dataset)}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="result-rank" title={t('col.score')}>
+                      <span className="result-rank-n">{idx + 1}</span>
+                      <span className="result-score">{formatScore(row.score)}</span>
+                    </div>
+                  </div>
+
+                  <dl className="result-facts">
+                    <div>
+                      <dt>{t('col.coverage')}</dt>
+                      <dd>{row.available_years_text || t('row.noYears')}</dd>
+                    </div>
+                    {/* SOEP variables have no spatial level at all, so the field is left out
+                        rather than filled with "no spatial level" on every single row. */}
+                    {levels && (
+                      <div>
+                        <dt>{t('filter.spatialLevel')}</dt>
+                        <dd>{levels}</dd>
+                      </div>
+                    )}
+                    {row.theme && (
+                      <div>
+                        <dt>{t('filter.theme')}</dt>
+                        <dd title={row.theme}>{shortenPath(row.theme)}</dd>
+                      </div>
+                    )}
+                    {row.source_key === 'soep' && sampleGroupLabel(row.sample_group) && (
+                      <div>
+                        <dt>{t('filter.sampleGroup')}</dt>
+                        <dd>{sampleGroupLabel(row.sample_group)}</dd>
+                      </div>
+                    )}
+                  </dl>
+
+                  {description && (
+                    <p className={expanded ? 'result-desc is-open' : 'result-desc'}>{description}</p>
+                  )}
+                  {/* The API hint is a long technical note (Overpass query, INKAR code); it
+                      belongs with the full description, not in the default view. */}
+                  {expanded && row.api_hint && <p className="result-hint text-muted">{row.api_hint}</p>}
+                  {row.also_in_datasets?.length > 0 && (
+                    <p className="result-hint text-muted">
+                      {t('row.alsoIn', { datasets: row.also_in_datasets.join(', ') })}
+                    </p>
+                  )}
+
+                  <div className="result-actions">
+                    {href ? (
+                      <a className="result-link" href={href} target="_blank" rel="noreferrer">
+                        {row.source_key === 'inkar' ? 'INKAR' : t('row.open')} &rarr;
+                      </a>
+                    ) : (
+                      <span className="text-muted">{t('row.noLink')}</span>
+                    )}
+                    {level && (
+                      <span
+                        className="mini-chip"
+                        title={row.link_verified === false
+                          ? t('link.unverified', { label: level.label })
+                          : level.label}
+                      >
+                        {level.label}{row.link_verified === false ? '*' : ''}
+                      </span>
+                    )}
+                    {(row.api_hint || description.length > 240) && (
+                      <button type="button" className="result-toggle"
+                              onClick={() => setExpandedRows((c) => ({ ...c, [rowKey]: !c[rowKey] }))}>
+                        {expanded ? t('row.less') : t('row.more')}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
 
           {portalRows.length > 0 && (
             <div className="portal-block">

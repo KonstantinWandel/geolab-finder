@@ -76,6 +76,10 @@ export const STRINGS = {
     'row.noLevel': 'No spatial level',
     'row.noLink': 'No link',
     'row.codebook': 'codebook',
+    'row.more': 'Show full description',
+    'row.less': 'Show less',
+    'row.open': 'Open at the source',
+    'row.rank': 'Rank {n}',
 
     'portals.heading': 'Data portals to search in',
     'portals.discontinued': 'no longer updated',
@@ -197,6 +201,10 @@ export const STRINGS = {
     'row.noLevel': 'Keine räumliche Ebene',
     'row.noLink': 'Kein Link',
     'row.codebook': 'Codebook',
+    'row.more': 'Vollständige Beschreibung',
+    'row.less': 'Weniger anzeigen',
+    'row.open': 'Bei der Quelle öffnen',
+    'row.rank': 'Rang {n}',
 
     'portals.heading': 'Datenportale zum Weitersuchen',
     'portals.discontinued': 'wird nicht mehr aktualisiert',
