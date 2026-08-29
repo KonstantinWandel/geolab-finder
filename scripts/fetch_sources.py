@@ -249,8 +249,13 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
     "ioer-monitor-flaechennutzung": [
         {"name": "portal.html", "url": "https://www.ioer-monitor.de/", "kind": "portal", "note": ""},
         {"name": "indikatoren.html", "url": "https://www.ioer-monitor.de/indikatoren/", "kind": "catalogue",
-         "note": "Theme level only. The full ~90-indicator table and the WMS/WCS/WFS URLs sit "
-                 "behind the app's user area, which needs a personal key."},
+         "note": "The section 'Übersicht der Geodienste' links the public indicator list below."},
+        {"name": "indikatoren_liste.pdf",
+         "url": "https://www.ioer-monitor.de/fileadmin/user_upload/monitor/pdf/Indikatoren_IOER-Monitor.pdf",
+         "kind": "catalogue",
+         "note": "All 88 indicators with their five-character code and category. The codes address "
+                 "the WMS/WCS/WFS services directly, but the service call needs a personal key, so "
+                 "the records link at dataset level and carry the code."},
     ],
     "rwi-geo-grid-rwi-geo-red-fdz-ruhr": [
         {"name": "portal.html", "url": "https://fdz.rwi-essen.de/", "kind": "portal", "note": ""},
