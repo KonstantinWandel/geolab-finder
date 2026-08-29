@@ -199,6 +199,33 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
     }
   }
 
+  // A question handed over in the URL (`?q=...`) is asked once, on load. That is what lets a
+  // search box on the GeoLAB site lead straight into the finder with the search already run,
+  // instead of dropping the visitor on an empty input. The parameter is removed from the
+  // address bar afterwards so a reload does not silently ask it again.
+  const handoverRef = useRef(null)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const handover = (params.get('q') || '').trim().slice(0, 300)
+      if (!handover) return
+      handoverRef.current = handover
+      setQuestion(handover)
+      const url = new URL(window.location.href)
+      url.searchParams.delete('q')
+      window.history.replaceState({}, '', url.toString())
+    } catch (e) {
+      console.error(e)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (handoverRef.current && question === handoverRef.current && !loading) {
+      handoverRef.current = null
+      handleAsk()
+    }
+  }, [question])
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
