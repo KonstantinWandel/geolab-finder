@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { makeTranslator, shortenPath, datasetLabel } from '../i18n'
+import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '../i18n'
 
 // The project site carries the imprint, the privacy statement and the attribution list.
 const GEOLAB_SITE = 'https://lwc-soep-regiohub.pages.ub.uni-bielefeld.de/geolab'
@@ -364,7 +364,9 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
               const rowKey = `${i}:${row.item_id || row.variable_name || idx}`
               const href = row.source_url || row.selector_url || row.indicator_url
               const level = row.link_level ? linkLevel(row.link_level) : null
-              const levels = (row.nuts_levels || []).join(', ') || (row.spatial_levels || []).join(', ')
+              // finest first here too, so the reader sees at once how far down the data goes
+              const levels = sortSpatialLevels(row.nuts_levels).join(', ')
+                || sortSpatialLevels(row.spatial_levels).join(', ')
               const description = row.rich_description || row.stats_summary || ''
               const expanded = Boolean(expandedRows[rowKey])
               return (
@@ -541,7 +543,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
               <label>{t('filter.spatialLevel')}</label>
               <select value={filters.spatial_level} onChange={(e) => updateFilter('spatial_level', e.target.value)}>
                 <option value="Any">{t('filter.anyLevel')}</option>
-                {(filterOptions?.spatial_levels || []).map((level) => (
+                {sortSpatialLevels(filterOptions?.spatial_levels).map((level) => (
                   <option key={level} value={level}>{spatialLevelLabel(level)}</option>
                 ))}
               </select>

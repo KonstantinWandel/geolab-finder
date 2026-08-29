@@ -48,6 +48,10 @@ SPATIAL_MAP: Dict[str, Dict[str, List[str]]] = {
     "Bezirksregionen / Ortsteile": {"spatial": ["Ortsteile"], "nuts": ["Ortsteile"]},
     "PLZ": {"spatial": ["PLZ"], "nuts": ["PLZ"]},
     "Adressen / Koordinaten": {"spatial": ["Adressen/Koordinaten"], "nuts": ["Adressen/Koordinaten"]},
+    # Grid cells are their own level and the finest one in the index. They used to be filed
+    # under "Weitere Gliederungen", so the label said "(Gitterzelle)" while the spatial filter
+    # could not reach a single raster record.
+    "Rasterzellen": {"spatial": ["Rasterzellen"], "nuts": ["Rasterzellen"]},
     "weitere räumliche Gliederungen": {"spatial": ["Weitere Gliederungen"], "nuts": []},
 }
 
@@ -2059,8 +2063,9 @@ def flatten_breitband_raster(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                             f"Nutzungshinweis der Quelle: {readme}" if readme else "",
                         ]),
                         unit="Prozent" if bandwidth else "",
-                        spatial_levels=["Weitere Gliederungen", "Gemeinden", "Kreise"],
-                        nuts_levels=["Weitere Gliederungen", "Gemeinden", "LAU", "Kreise", "NUTS3"],
+                        spatial_levels=["Rasterzellen", "Weitere Gliederungen", "Gemeinden", "Kreise"],
+                        nuts_levels=["Rasterzellen", "Weitere Gliederungen", "Gemeinden", "LAU",
+                                     "Kreise", "NUTS3"],
                         year_start=2025,
                         year_end=2025,
                         years_text="Stand 31.12.2025",

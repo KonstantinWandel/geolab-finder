@@ -385,6 +385,24 @@ A note on writing cases for this file: two of the first cases passed for the wro
 word "grün"). Give a case a `reject` pattern whenever a pun or a neighbouring concept could
 satisfy it.
 
+**Findings 2 and 3 were fixed on 2026-08-29; finding 1 stands.** The raster rows now carry the
+`Rasterzellen` level, which already existed for `ioer_monitor`, `dwd_cdc` and `fdz_ruhr` and was
+missing only here (169 breitband rows changed, no other record touched, row count unchanged; the
+embeddings had to be recomputed because `spatial_levels` are part of the embedded document and the
+cache is matched by row count, so a stale vector would have been reused silently). Codes now reach
+their record through `_exact_code_rows`: a query token that matches a `variable_name` exactly is
+fetched directly and joins the candidate set, where the existing exact-code prior ranks it.
+
+What counts as a code is decided by the data. The first rule required a digit and left `pglabnet`,
+`sumkids` and every other digit-free SOEP name broken, so a token is now treated as a code when it
+matches a `variable_name` AND never appears inside any record's label. "pglabnet" is in no label
+and is pinned; "bevölkerung" is in thousands and keeps going through normal ranking. Building that
+vocabulary costs 0.36 s once for the 125k-row SOEP corpus, the name index 0.56 s, both lazy.
+
+After both fixes, on the deployment: hit@1 21 (was 19), hit@3 30 (was 28), hit@10 31 (was 29), no
+misses at all (was two), negative controls unchanged. The standard gate went from 55 to 56 of 58
+at rank 1 with no misses.
+
 ## Handing a query over from the project site
 
 The finder reads `?q=...` on load, asks it once, and strips the parameter from the address bar
