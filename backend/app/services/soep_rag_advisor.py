@@ -1,4 +1,5 @@
 import json
+import time
 import os
 import re
 from pathlib import Path
@@ -242,6 +243,7 @@ class SOEPRagAdvisorService:
         # How much of a document the cross-encoder sees. 0 disables the truncation.
         self._rerank_doc_chars = int(os.getenv("SOEP_RAG_RERANK_DOC_CHARS", "480")) or 10 ** 9
         self._filter_view_cache: Dict[str, Any] = {}
+        self._query_vec_cache: Dict[str, Any] = {}
         self._exact_code_bonus = float(os.getenv("GEOLAB_EXACT_CODE_BONUS", "0.5"))
         self._code_token_bonus = float(os.getenv("GEOLAB_CODE_TOKEN_BONUS", "0.2"))
 
@@ -1038,12 +1040,23 @@ class SOEPRagAdvisorService:
         if candidates is None or not len(candidate_idx):
             return []
 
-        q_vec = self._embedder.encode(
-            [self._format_query(query)],
-            batch_size=1,
-            convert_to_numpy=True,
-            normalize_embeddings=True,
-        ).astype("float32")
+        # Encoding one short query costs about 450 ms on the 4-vCPU deployment, and a session
+        # repeats the same query constantly (a filter change, a second source, a demo shown
+        # twice). The vector depends only on the query text, so it is cached; int8 was tried on
+        # this model and is 2x SLOWER, because a single ~30-token sequence is too small for the
+        # quantised GEMMs to pay for their overhead.
+        formatted = self._format_query(query)
+        q_vec = self._query_vec_cache.get(formatted)
+        if q_vec is None:
+            q_vec = self._embedder.encode(
+                [formatted],
+                batch_size=1,
+                convert_to_numpy=True,
+                normalize_embeddings=True,
+            ).astype("float32")
+            if len(self._query_vec_cache) >= 256:
+                self._query_vec_cache.pop(next(iter(self._query_vec_cache)))
+            self._query_vec_cache[formatted] = q_vec
         score_vec = (candidates @ q_vec[0]).astype("float32")
         best_local_idx = np.argsort(score_vec)[::-1][: min(k, len(candidate_idx))]
 
@@ -1363,6 +1376,10 @@ class SOEPRagAdvisorService:
 
         all_unique_cands: Dict[str, Dict[str, Any]] = {}
         split_cand_map = {q: [] for q in set(splits)}
+        # Per-stage timing, off unless asked for. Without it, "the query takes 3.5 s" is all one
+        # knows, and the first guess at which stage owns it was wrong twice.
+        timing = {} if os.getenv("SOEP_RAG_TIMING") == "1" else None
+        stage_start = time.time()
 
         for q in set(splits):
             cands = self._search(q, max(k, int(os.getenv("SOEP_RAG_RERANK_CANDIDATES", "24"))), filters)
@@ -1371,6 +1388,10 @@ class SOEPRagAdvisorService:
                 if item_id not in all_unique_cands:
                     all_unique_cands[item_id] = cand
                 split_cand_map[q].append(item_id)
+
+        if timing is not None:
+            timing["retrieve_ms"] = int((time.time() - stage_start) * 1000)
+            stage_start = time.time()
 
         for q, ids in split_cand_map.items():
             pairs = []
@@ -1419,6 +1440,10 @@ class SOEPRagAdvisorService:
                     delta = self._authority_delta(q, cand)
                     cand["authority_delta"] = max(cand.get("authority_delta", float("-inf")), delta)
                     cand["score"] = cand["fused_score"] + cand["authority_delta"]
+
+        if timing is not None:
+            timing["rerank_fuse_ms"] = int((time.time() - stage_start) * 1000)
+            stage_start = time.time()
 
         recommended: List[Dict[str, Any]] = []
         seen_final = set()
@@ -1469,6 +1494,10 @@ class SOEPRagAdvisorService:
         response_mode = "local-llm+rtrvr" if answer_text else "retrieval-only"
         if not answer_text:
             answer_text = self._fallback_answer(splits, recommended, datasets_found)
+
+        if timing is not None:
+            timing["assemble_ms"] = int((time.time() - stage_start) * 1000)
+            print(f"[timing] {timing} query={question[:48]!r}", flush=True)
 
         return {
             "answer": answer_text,
