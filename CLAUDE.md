@@ -405,15 +405,38 @@ oder reich") genuinely have a flat field, so the sentence is true even when it i
 The absolute cross-encoder score remains useless for this, for the reason below. `eval_geodb_hard.py`
 reports the margin table on every run, so a ranking change that flattens the field shows up.
 
-*Finding 3, bare code lookup, was implemented and then removed on Konstantin's call*: a metadata
-finder is asked in words, and the path's one real cost was that a sentence containing a word which
-happens to also be a code pulled that record up ("Wie funktioniert der Abruf der Daten" -> the
-record named `ABRUF`). Consequence to know: typing a SOEP variable name is a coin flip, and it
-fails in the worst way. Of twelve real codes, seven land and five return a DIFFERENT variable whose
-code is one character away (`ple0179` "Wie oft Fleisch" -> `plb0179` "Altersteilzeit"; `plh0182` ->
-`plh0162`). If that ever needs fixing, the narrow version is: single-token query, SOEP finder only.
+*Finding 3, bare code lookup, ended up narrow, in `_soep_code_rows`.* The wide version was worse
+than the problem: a sentence containing a word which happens to also be a code pulled that record
+up ("Wie funktioniert der Abruf der Daten" -> the record named `ABRUF`). What ships is gated three
+ways, and all three matter: SOEP deployment only (GeoDB codes are internal to the statistical
+offices and nobody types them), one-word query only (a code inside a sentence is a word), and the
+token must not be a word of the corpus (so "Bevölkerung" keeps going through normal ranking). It
+earns its place because the failure it removes is the bad kind: of twelve real SOEP codes typed
+bare, seven landed and five returned a DIFFERENT variable one character away (`ple0179` "Wie oft
+Fleisch" -> `plb0179` "Altersteilzeit"; `plh0182` -> `plh0162`), which reads as an answer. All
+twelve now land on their own record.
 
-*Finding 2 was fixed.* The raster rows now carry the
+*Finding 2 was fixed, and the audit that followed it lives in `scripts/audit_geodb_facets.py`.*
+It looks for records whose own text names a spatial level their facets do not carry. Read its
+output with the boilerplate in mind: 1,934 raw hits, of which only the 169 breitband raster rows
+were real. Zensus and the breitband municipal workbook repeat a source-level sentence ("je nach
+Merkmal bis auf Gitterzellenebene", "zusätzlich liegen Rasterdaten vor") on every record, which
+says nothing about the individual row.
+
+What the audit did turn up, and what was done with it:
+  * 33 Zensus tables had no spatial level at all, because `resolve_zensus_levels.py` only looked at
+    `Structure.Columns` and `Structure.Rows` while those tables carry GEOBL1/GEODL1 deeper in the
+    structure. The resolver now walks the whole structure; 1,440 of 1,440 tables are resolved and
+    the only records left without a level are the three portal cards, which have none by nature.
+  * 3,086 records carry no year (2,440 Regionalstatistik Merkmale, 313 BA glossary entries, 246
+    transit format descriptions). Left as is: for a glossary term or a data-format description
+    there is no year, and `_passes_filters` only applies a year filter to rows that have both
+    bounds, so nothing is silently dropped.
+  * 15 sources carry one hard-coded level combination for every record. Left as is: some are simply
+    true (`migration_integration` is Kreis-only), and for the BA glossary the levels describe where
+    the defined statistic is published, which is what a user filtering by level wants to find.
+  * Zensus grid tables are not indexed as their own records. Open, and a bigger job: the regional
+    level sits in the table code, so it needs its own fetch pass. The raster rows now carry the
 `Rasterzellen` level, which already existed for `ioer_monitor`, `dwd_cdc` and `fdz_ruhr` and was
 missing only here (169 breitband rows changed, no other record touched, row count unchanged; the
 embeddings had to be recomputed because `spatial_levels` are part of the embedded document and the
