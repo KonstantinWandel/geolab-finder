@@ -1258,3 +1258,14 @@ button, input, select, textarea,
 @media (max-width: 640px) {
   .result-fallback { margin-left: 0; }
 }
+
+/* The precision chip states where the link lands. It is a label, not a button: in the tinted
+   pill of .mini-chip it read as something to click, which is how a reader ended up following it
+   instead of the link. */
+.result-actions .link-chip {
+  background: transparent;
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.45));
+  color: var(--muted);
+  font-weight: 400;
+  cursor: default;
+}
