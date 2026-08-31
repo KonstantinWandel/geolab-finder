@@ -62,3 +62,4 @@ Geospatial_Data_Sources*.xlsx
 # Exported model artefacts (ONNX graphs). Rebuilt by the export step, never committed:
 # the repo is code-only and GitHub rejects files over 100 MB anyway.
 models/
+data_sources/registry/*.pre_*

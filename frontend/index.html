@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>%VITE_PAGE_TITLE%</title>
     <meta name="description" content="%VITE_PAGE_DESCRIPTION%" />
+    <!-- The build passes VITE_PAGE_DESCRIPTION per deployment; without it the raw
+         placeholder was served to visitors and to link previews. -->
   </head>
   <body>
     <div id="root"></div>
