@@ -73,9 +73,6 @@ values and no microdata are stored in or served by the finders.
 Where a source requires attribution for the reuse of its information, that wording is reproduced
 below. Please cite the original source, not the finder, when you use the data itself.
 
-*Generated on {stamp} from the project's source registry, so this list matches what is actually
-indexed.*
-
 """
 
 
@@ -102,7 +99,6 @@ def main() -> None:
     lines: List[str] = [HEADER.format(
         geodb_rows=f"{sum(counts.values()):,}".replace(",", " "),
         geodb_sources=len([k for k in counts if k != "soep"]),
-        stamp=args.date,
     )]
 
     lines.append("## Indexed sources\n")
