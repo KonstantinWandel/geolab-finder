@@ -1,0 +1,364 @@
+{
+  "checked": "2026-08-31",
+  "results": [
+    {
+      "slug": "regionalatlas-deutschland",
+      "name": "Regionalatlas Deutschland",
+      "url": "https://regionalatlas.statistikportal.de/",
+      "status": 200,
+      "final_url": "https://regionalatlas.statistikportal.de/",
+      "moved": false,
+      "error": "",
+      "title": "Regionalatlas Deutschland | Kartenanwendung"
+    },
+    {
+      "slug": "breitband-monitor",
+      "name": "Breitband-Monitor",
+      "url": "https://gigabitgrundbuch.bund.de/",
+      "status": 200,
+      "final_url": "https://gigabitgrundbuch.bund.de/GIGA/DE/_Home/start.html",
+      "moved": false,
+      "error": "",
+      "title": "Gigabit-Grundbuch"
+    },
+    {
+      "slug": "breitbandatlas",
+      "name": "Breitbandatlas",
+      "url": "https://gigabitgrundbuch.bund.de/",
+      "status": 200,
+      "final_url": "https://gigabitgrundbuch.bund.de/GIGA/DE/_Home/start.html",
+      "moved": false,
+      "error": "",
+      "title": "Gigabit-Grundbuch"
+    },
+    {
+      "slug": "arbeitsmarktstatistik-ba-karte",
+      "name": "Arbeitsmarktstatistik BA - Karte",
+      "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Statistiken/Statistiken-nach-Regionen/Politische-Gebietsstruktur-Nav.html",
+      "status": 200,
+      "final_url": "https://statistik.arbeitsagentur.de/DE/Navigation/Statistiken/Statistiken-nach-Regionen/Politische-Gebietsstruktur-Nav.html",
+      "moved": false,
+      "error": "",
+      "title": "Bund, Länder und Kreise - Statistik der Bundesagentur für Arbeit"
+    },
+    {
+      "slug": "strukturdaten-und-indikatoren-ba",
+      "name": "Strukturdaten und -indikatoren - BA",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+      "status": 200,
+      "final_url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+      "moved": false,
+      "error": "",
+      "title": "Einzelausgaben - Statistik der Bundesagentur für Arbeit"
+    },
+    {
+      "slug": "arbeitsmarktreport-ba",
+      "name": "Arbeitsmarktreport BA",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+      "status": 200,
+      "final_url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+      "moved": false,
+      "error": "",
+      "title": "Einzelausgaben - Statistik der Bundesagentur für Arbeit"
+    },
+    {
+      "slug": "arbeitsmarkt-kommunal-ba",
+      "name": "Arbeitsmarkt kommunal - BA",
+      "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+      "status": 200,
+      "final_url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+      "moved": false,
+      "error": "",
+      "title": "Einzelausgaben - Statistik der Bundesagentur für Arbeit"
+    },
+    {
+      "slug": "migration-integration-in-regionen",
+      "name": "Migration & Integration in Regionen",
+      "url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+      "status": 200,
+      "final_url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+      "moved": false,
+      "error": "",
+      "title": "Karte: Statistiken zu Ausländern und Schutzsuchenden (Flüchtlingen) – Statistisc"
+    },
+    {
+      "slug": "krankenhausatlas-deutschland",
+      "name": "Krankenhausatlas Deutschland",
+      "url": "https://krankenhausatlas.statistikportal.de/",
+      "status": 200,
+      "final_url": "https://krankenhausatlas.statistikportal.de/",
+      "moved": false,
+      "error": "",
+      "title": "Krankenhausatlas | Kartenanwendung"
+    },
+    {
+      "slug": "krankenhausverzeichnis",
+      "name": "Krankenhausverzeichnis",
+      "url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+      "status": 200,
+      "final_url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+      "moved": false,
+      "error": "",
+      "title": "Startseite | Deutsches Krankenhaus Verzeichnis"
+    },
+    {
+      "slug": "bundes-klinik-atlas",
+      "name": "Bundes-Klinik-Atlas (vormals Fachärztesuche - Weisse Liste)",
+      "url": "https://bundes-klinik-atlas.de/open-data/",
+      "status": 200,
+      "final_url": "https://bundes-klinik-atlas.de/open-data/",
+      "moved": false,
+      "error": "",
+      "title": "Der Bundes-Klink-Atlas und Open Data | Bundes-Klinik-Atlas"
+    },
+    {
+      "slug": "arztsuche-bundesaerztekammer",
+      "name": "Arztsuche - Bundesärztekammer",
+      "url": "https://www.bundesaerztekammer.de/service/arztsuche/",
+      "status": 200,
+      "final_url": "https://www.bundesaerztekammer.de/arztsuche",
+      "moved": false,
+      "error": "",
+      "title": "Arztsuche - Bundesärztekammer"
+    },
+    {
+      "slug": "deutschlandatlas-erreichbarkeit-von-apotheken",
+      "name": "Deutschlandatlas - Erreichbarkeit von Apotheken",
+      "url": "https://www.deutschlandatlas.bund.de/",
+      "status": 200,
+      "final_url": "https://www.deutschlandatlas.bund.de/DE/Home/home_node.html",
+      "moved": false,
+      "error": "",
+      "title": "Der Deutschlandatlas - Gleichwertige Lebensverhältnisse in Kartenform - Startsei"
+    },
+    {
+      "slug": "hochschulkompass",
+      "name": "Hochschulkompass",
+      "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
+      "status": null,
+      "final_url": "",
+      "moved": false,
+      "error": "TimeoutError: Page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"http"
+    },
+    {
+      "slug": "deutsche-bahn-infrastrukturregister",
+      "name": "Deutsche Bahn - Infrastrukturregister",
+      "url": "https://geovdbn.deutschebahn.com/isr",
+      "status": 200,
+      "final_url": "https://geoviewer.deutschebahn.com/maps/?context-ISR#/",
+      "moved": true,
+      "error": "",
+      "title": "DB MapCloud"
+    },
+    {
+      "slug": "deutsche-bahn-bahnhofsuche",
+      "name": "Deutsche Bahn - Bahnhofsuche",
+      "url": "https://www.bahnhof.de/bahnhof-de",
+      "status": 200,
+      "final_url": "https://www.bahnhof.de/",
+      "moved": false,
+      "error": "",
+      "title": "bahnhof.de"
+    },
+    {
+      "slug": "open-data-oepnv",
+      "name": "Open Data - ÖPNV",
+      "url": "https://www.opendata-oepnv.de/ht/de/willkommen",
+      "status": 200,
+      "final_url": "https://www.opendata-oepnv.de/ht/de/willkommen",
+      "moved": false,
+      "error": "",
+      "title": "Willkommen - OpenData ÖPNV"
+    },
+    {
+      "slug": "spielplatztreff-suchmaschine-fuer-spielplaetze",
+      "name": "Spielplatztreff - Suchmaschine für Spielplätze",
+      "url": "https://www.spielplatztreff.de/",
+      "status": 200,
+      "final_url": "https://www.spielplatztreff.de/",
+      "moved": false,
+      "error": "",
+      "title": "Spielplatztreff | Finde schöne Spielplätze in deiner Nähe"
+    },
+    {
+      "slug": "spielplatzkarte",
+      "name": "Spielplatzkarte",
+      "url": "https://spielplatznet.de/karte.htm",
+      "status": 200,
+      "final_url": "https://spielplatznet.de/karte.htm",
+      "moved": false,
+      "error": "",
+      "title": "Deutschlandweite Spielplatzkarte | spielplatznet.de"
+    },
+    {
+      "slug": "destatis-regionale-mobilitaet-und-infektionsgesc",
+      "name": "Destatis - Regionale Mobilität und Infektionsgeschehen",
+      "url": "https://www.destatis.de/DE/Service/EXSTAT/Datensaetze/mobilitaetsindikatoren-mobilfunkdaten.html",
+      "status": 200,
+      "final_url": "https://www.destatis.de/DE/Service/EXSTAT/Datensaetze/mobilitaetsindikatoren-mobilfunkdaten.html",
+      "moved": false,
+      "error": "",
+      "title": "Experimentelle Daten - Mobilitätsindikatoren mit Mobilfunkdaten - Statistisches "
+    },
+    {
+      "slug": "datenguide-abgeschaltet",
+      "name": "Datenguide (abgeschaltet)",
+      "url": "https://www.regionalstatistik.de/genesis/online",
+      "status": 200,
+      "final_url": "https://www.regionalstatistik.de/genesis/online",
+      "moved": false,
+      "error": "",
+      "title": "Regionaldatenbank Deutschland: Regionaldatenbank Deutschland"
+    },
+    {
+      "slug": "inkar",
+      "name": "INKAR",
+      "url": "https://www.inkar.de/",
+      "status": 200,
+      "final_url": "https://www.inkar.de/",
+      "moved": false,
+      "error": "",
+      "title": "INKAR - BBSR"
+    },
+    {
+      "slug": "german-companies",
+      "name": "German Companies",
+      "url": "https://rapidapi.com/Implisense/api/german-company-data",
+      "status": 200,
+      "final_url": "https://rapidapi.com/Implisense/api/german-company-data",
+      "moved": false,
+      "error": "",
+      "title": "German Company Data"
+    },
+    {
+      "slug": "open-data-handelsregister",
+      "name": "Open Data Handelsregister",
+      "url": "https://offeneregister.de/",
+      "status": 200,
+      "final_url": "https://offeneregister.de/",
+      "moved": false,
+      "error": "",
+      "title": "OffeneRegister.de"
+    },
+    {
+      "slug": "laendermonitor-fruehkindliche-bildungssysteme",
+      "name": "Ländermonitor Frühkindliche Bildungssysteme",
+      "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+      "status": 200,
+      "final_url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+      "moved": false,
+      "error": "",
+      "title": "Regionale-Daten"
+    },
+    {
+      "slug": "strukturdaten-bundestagswahl-2021",
+      "name": "Strukturdaten Bundestagswahl 2021",
+      "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+      "status": 200,
+      "final_url": "https://www.bundeswahlleiterin.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+      "moved": true,
+      "error": "",
+      "title": "Strukturdaten Deutschland - Die Bundeswahlleiterin"
+    },
+    {
+      "slug": "unfallatlas",
+      "name": "Unfallatlas",
+      "url": "https://unfallatlas.statistikportal.de/",
+      "status": 200,
+      "final_url": "https://unfallatlas.statistikportal.de/",
+      "moved": false,
+      "error": "",
+      "title": "Unfallatlas | Kartenanwendung"
+    },
+    {
+      "slug": "genesis-online-bund",
+      "name": "GENESIS-Online (Bund)",
+      "url": "https://www-genesis.destatis.de/genesis/online",
+      "status": 200,
+      "final_url": "https://genesis.destatis.de/datenbank/online/",
+      "moved": true,
+      "error": "",
+      "title": "GENESIS-Online"
+    },
+    {
+      "slug": "zensus-2022",
+      "name": "Zensus 2022",
+      "url": "https://ergebnisse.zensus2022.de/",
+      "status": 200,
+      "final_url": "https://ergebnisse.zensus2022.de/datenbank/online/",
+      "moved": false,
+      "error": "",
+      "title": "Zensusdatenbank: Ergebnisse des Zensus"
+    },
+    {
+      "slug": "openstreetmap-poi-layer-overpass",
+      "name": "OpenStreetMap POI-Layer (Overpass)",
+      "url": "https://wiki.openstreetmap.org/wiki/Map_features",
+      "status": 200,
+      "final_url": "https://wiki.openstreetmap.org/wiki/Map_features",
+      "moved": false,
+      "error": "",
+      "title": "Map features - OpenStreetMap Wiki"
+    },
+    {
+      "slug": "wegweiser-kommune-bertelsmann-stiftung",
+      "name": "Wegweiser Kommune (Bertelsmann Stiftung)",
+      "url": "https://www.wegweiser-kommune.de/",
+      "status": 200,
+      "final_url": "https://www.wegweiser-kommune.de/",
+      "moved": false,
+      "error": "",
+      "title": "Home - Wegweiser Kommune"
+    },
+    {
+      "slug": "dwd-climate-data-center-cdc",
+      "name": "DWD Climate Data Center (CDC)",
+      "url": "https://opendata.dwd.de/climate_environment/CDC/",
+      "status": 200,
+      "final_url": "https://opendata.dwd.de/climate_environment/CDC/",
+      "moved": false,
+      "error": "",
+      "title": "Index of /climate_environment/CDC/"
+    },
+    {
+      "slug": "boris-d-bodenrichtwerte",
+      "name": "BORIS-D Bodenrichtwerte",
+      "url": "https://www.bodenrichtwerte-boris.de/",
+      "status": 200,
+      "final_url": "https://www.bodenrichtwerte-boris.de/boris-d/?lang=en",
+      "moved": false,
+      "error": "",
+      "title": "BORIS-D - Bodenrichtwertinformationssystem für Deutschland"
+    },
+    {
+      "slug": "wahlergebnisse-bundeswahlleiterin",
+      "name": "Wahlergebnisse Bundeswahlleiterin",
+      "url": "https://www.bundeswahlleiterin.de/",
+      "status": 200,
+      "final_url": "https://www.bundeswahlleiterin.de/",
+      "moved": false,
+      "error": "",
+      "title": "Die Bundeswahlleiterin - Die Bundeswahlleiterin"
+    },
+    {
+      "slug": "ioer-monitor-flaechennutzung",
+      "name": "IÖR-Monitor (Flächennutzung)",
+      "url": "https://www.ioer-monitor.de/",
+      "status": 200,
+      "final_url": "https://www.ioer-monitor.de/",
+      "moved": false,
+      "error": "",
+      "title": "IÖR Monitor"
+    },
+    {
+      "slug": "rwi-geo-grid-rwi-geo-red-fdz-ruhr",
+      "name": "RWI-GEO-GRID / RWI-GEO-RED (FDZ Ruhr)",
+      "url": "https://fdz.rwi-essen.de/",
+      "status": 200,
+      "final_url": "https://fdz.rwi-essen.de/",
+      "moved": false,
+      "error": "",
+      "title": "FDZ"
+    }
+  ]
+}
