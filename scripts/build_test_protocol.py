@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""Build the keyword-test workbook for the colleagues' review round.
+"""Build the review workbook for the colleagues' round.
 
-Kerstin asked for a list of keywords to be tried and the outcome written down, as the basis for a
-joint discussion. This produces the workbook they fill in: instructions on the first sheet, one
-sheet per finder with the keywords prepared, and empty columns for what actually came back.
+The first version asked them to check whether the finder retrieves things that are in it. The
+retrieval gates already answer that, 58 queries at a time, and a second opinion on it adds little.
+What no gate can produce is the thing Erik and Sebastian actually know: which data their work needs
+that the index does not hold, and which words they searched with that led nowhere although the data
+is there. Those are two different gaps, one in the data and one in the vocabulary, and they are
+fixed in completely different ways, so the workbook keeps them apart.
 
-The keywords are not a random list. They are three deliberate groups, so the round produces
-comparable evidence rather than impressions:
-  * "leicht": the concept is named the way the sources name it. These should simply work.
-  * "umschrieben": the concept is described in ordinary words. This is what the tool is for and
-    where it is worth knowing how it holds up.
-  * "nicht im Index": Germany does not publish this regionally at all. These check whether the
-    tool admits it, and whether the note about a flat result field is believed.
+Sheet 1 explains the task. Sheet 2 collects missing data. Sheet 3 collects searches that failed
+although the answer exists. Sheet 4 lists what is indexed today, generated from the registry, so
+"missing" is judged against the actual contents and not against a guess.
 
-    python scripts/build_test_protocol.py --out deliverables_geodb_datenquellen/Stichwort-Test.xlsx
+    python scripts/build_test_protocol.py --out deliverables_geodb_datenquellen/Rueckmeldung.xlsx
 """
 from __future__ import annotations
 
 import argparse
+import json
 from datetime import date
 from pathlib import Path
 
@@ -25,117 +25,97 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+REGISTRY = REPO_ROOT / "data_sources" / "registry" / "geo_sources.json"
+METADATA = REPO_ROOT / "soep_metadata_output" / "geodb_metadata.json"
 BLUE = "1F77B4"
+DARK = "2C3E50"
 
-GEODB = [
-    ("leicht", "Krankenhausbetten je Einwohner"),
-    ("leicht", "Arbeitslosenquote auf Kreisebene"),
-    ("leicht", "Breitbandverfügbarkeit auf Gemeindeebene"),
-    ("leicht", "Bevölkerungsdichte"),
-    ("leicht", "Kita-Betreuungsquote unter drei Jahren"),
-    ("leicht", "Bodenrichtwerte"),
-    ("leicht", "Wahlbeteiligung Bundestagswahl"),
-    ("leicht", "Pflegeheime und Pflegebedürftige"),
-    ("leicht", "Bruttoinlandsprodukt je Einwohner"),
-    ("leicht", "Krankenhäuser"),
-    ("umschrieben", "wo müssen Menschen am weitesten zum Arzt fahren"),
-    ("umschrieben", "Gegenden, in denen viele Menschen von Sozialleistungen leben"),
-    ("umschrieben", "wo ziehen mehr Leute weg als hin"),
-    ("umschrieben", "wie teuer ist das Wohnen dort"),
-    ("umschrieben", "Regionen mit schlechter Internetversorgung"),
-    ("umschrieben", "gibt es hier genug Kita-Plätze"),
-    ("umschrieben", "wie grün ist die Gemeinde"),
-    ("umschrieben", "Orte, an denen kaum junge Familien wohnen"),
-    ("umschrieben", "wie stark hängt eine Region an der Industrie"),
-    ("umschrieben", "Erreichbarkeit von Apotheken im ländlichen Raum"),
-    ("umschrieben", "Verkehrsunfälle mit Radfahrern"),
-    ("umschrieben", "Lärmbelastung an Hauptstraßen"),
-    ("umschrieben", "Anteil erneuerbarer Energien"),
-    ("umschrieben", "Schulabbrecher"),
-    ("umschrieben", "Zahl der Studierenden je Hochschulstandort"),
-    ("nicht im Index", "Anteil vegetarisch lebender Personen"),
-    ("nicht im Index", "Zahl der Parkbänke je Gemeinde"),
-    ("nicht im Index", "Einsamkeit der Bevölkerung"),
-    ("nicht im Index", "Vertrauen in die Nachbarschaft"),
-    ("nicht im Index", "Arbeitslosigkeit in Frankreich"),
+GAPS = [
+    ("Was fehlt (Konzept, in Ihren Worten)", 40),
+    ("Wofür brauchen Sie es? (Projekt, Fragestellung)", 34),
+    ("Räumliche Ebene (Gemeinde, Kreis, …)", 22),
+    ("Zeitraum", 16),
+    ("Kennen Sie eine Quelle dafür? (Name / Link)", 34),
+    ("Im Finder gesucht? Was kam?", 32),
+    ("Wichtigkeit (hoch / mittel / niedrig)", 18),
 ]
 
-SOEP = [
-    ("leicht", "Nettoerwerbseinkommen im letzten Monat"),
-    ("leicht", "Lebenszufriedenheit"),
-    ("leicht", "höchster Schulabschluss"),
-    ("leicht", "Migrationshintergrund"),
-    ("leicht", "tatsächliche Arbeitszeit pro Woche"),
-    ("leicht", "Familienstand"),
-    ("leicht", "Haushaltsnettoeinkommen"),
-    ("leicht", "Gesundheitszustand"),
-    ("umschrieben", "wie zufrieden sind die Leute mit ihrem Leben"),
-    ("umschrieben", "wie viel verdient jemand netto im Monat"),
-    ("umschrieben", "Bildungsabschluss der Eltern"),
-    ("umschrieben", "Sorgen um die eigene wirtschaftliche Lage"),
-    ("umschrieben", "Vertrauen in andere Menschen"),
-    ("umschrieben", "wie oft wird Fleisch gegessen"),
-    ("umschrieben", "Einstellung zu Geschlechterrollen"),
-    ("umschrieben", "Wohnort in Ost- oder Westdeutschland"),
-    ("nicht im Index", "Lieblingsfarbe der Befragten"),
-    ("nicht im Index", "Zahl der Haustiere im Haushalt"),
+VOCAB = [
+    ("Suchbegriff, den ich eingegeben habe", 38),
+    ("Was ich erwartet hätte", 32),
+    ("Was tatsächlich kam", 34),
+    ("Habe ich es später doch gefunden? Womit?", 32),
+    ("Anmerkung", 34),
 ]
 
-COLUMNS = [
-    ("Gruppe", 14), ("Stichwort", 42), ("Was ich erwartet habe", 32),
-    ("Treffer 1", 34), ("Treffer 2", 34), ("Treffer 3", 34),
-    ("Wohin führte der Link von Treffer 1?", 30),
-    ("Brauchbar? (ja / teilweise / nein)", 20), ("Anmerkung", 46),
-]
-
-INSTRUCTIONS = [
-    ("Stichwort-Test der GeoLAB-Finder", True),
-    ("", False),
-    (f"Vorbereitet am {date.today().strftime('%d.%m.%Y')} für die gemeinsame Durchsicht.", False),
-    ("", False),
-    ("Worum es geht", True),
-    ("Die beiden Finder durchsuchen Beschreibungen von Daten, nicht die Daten selbst. Ein Treffer", False),
-    ("ist also die Beschreibung eines Indikators, einer Tabelle oder eines Datensatzes, und der Link", False),
-    ("führt zu der Stelle, die die Daten wirklich hält. Uns interessiert, ob die richtigen Sachen", False),
-    ("gefunden werden und ob man von dort aus wirklich an die Zahlen kommt.", False),
-    ("", False),
-    ("So gehen Sie vor", True),
-    ("1. Blatt 'GeoDB' und Blatt 'SOEP' nacheinander durchgehen, die Adressen stehen dort oben.", False),
-    ("2. Stichwort eintippen, suchen, die ersten drei Treffer kurz notieren (Name genügt).", False),
-    ("3. Beim ersten Treffer den Link anklicken: landen Sie direkt bei der Sache, auf einer", False),
-    ("   Übersichtsseite, oder auf einer Startseite, wo Sie erneut suchen müssen?", False),
-    ("4. Spalte 'Brauchbar' ausfüllen und alles, was auffällt, in die Anmerkung.", False),
-    ("", False),
-    ("Was die Gruppen bedeuten", True),
-    ("leicht: der Begriff heißt bei den Quellen genauso. Sollte einfach klappen.", False),
-    ("umschrieben: mit eigenen Worten beschrieben. Dafür ist das Werkzeug gedacht.", False),
-    ("nicht im Index: das gibt es für Deutschland regional gar nicht. Hier ist die Frage, ob das", False),
-    ("Werkzeug es zugibt: es zeigt dann einen Hinweis, dass sich kein Treffer abhebt.", False),
-    ("", False),
-    ("Gern eigene Stichworte unten anhängen, die Zeilen sind nicht begrenzt.", False),
+INTRO = [
+    ("Rückmeldung zu den GeoLAB-Findern", "title"),
+    ("", ""),
+    (f"Vorbereitet am {date.today().strftime('%d.%m.%Y')} für die gemeinsame Durchsicht.", "italic"),
+    ("", ""),
+    ("Worum wir Sie bitten", "head"),
+    ("Ob der Finder findet, was drin ist, haben wir automatisiert geprüft. Was wir nicht wissen und", ""),
+    ("nur von Ihnen erfahren können, ist zweierlei:", ""),
+    ("", ""),
+    ("1. Welche Daten Sie für Ihre Arbeit brauchen, die es im Index nicht gibt (Blatt 'Was fehlt').", "bold"),
+    ("   Blatt 'Was ist schon drin' listet die 33 Quellen, damit Sie nicht etwas vorschlagen, das", ""),
+    ("   bereits enthalten ist. Ein Konzept in Ihren Worten genügt, eine Quelle dazu ist willkommen,", ""),
+    ("   aber keine Bedingung: die zu finden ist unsere Arbeit, nicht Ihre.", ""),
+    ("", ""),
+    ("2. Suchbegriffe, mit denen Sie nichts Brauchbares bekommen haben, obwohl es die Daten gibt", "bold"),
+    ("   (Blatt 'Suche lief ins Leere'). Das ist der andere Fehlertyp: die Daten sind da, aber unser", ""),
+    ("   Werkzeug versteht Ihr Wort dafür nicht. Solche Fälle sind für uns besonders wertvoll, weil", ""),
+    ("   wir sie beheben können, ohne eine einzige neue Quelle zu erschließen.", ""),
+    ("", ""),
+    ("Zum Ausprobieren", "head"),
+    ("GeoDB (Geodaten): https://geodb.geolab.soz.uni-bielefeld.de/", ""),
+    ("SOEP-Variablen:   https://soep-faiss.geolab.soz.uni-bielefeld.de/", ""),
+    ("", ""),
+    ("Beschreiben Sie ruhig in ganzen Sätzen, was Sie suchen; dafür ist die Suche gebaut. Wenn kein", ""),
+    ("Treffer sich abhebt, sagt das Werkzeug das inzwischen selbst, und ob dieser Hinweis verständlich", ""),
+    ("ist, ist eine der Fragen, die wir Ihnen stellen.", ""),
+    ("", ""),
+    ("Zeitaufwand: eine halbe Stunde reicht. Lieber fünf gut beschriebene Lücken als dreißig Zeilen.", "bold"),
 ]
 
 
-def sheet_for(workbook: Workbook, title: str, url: str, rows: list[tuple[str, str]]) -> None:
+def styled_sheet(workbook: Workbook, title: str, subtitle: str, columns, rows: int = 24):
     ws = workbook.create_sheet(title)
-    ws["A1"] = f"{title}: {url}"
-    ws["A1"].font = Font(bold=True, size=12, color=BLUE)
-    ws["A2"] = "Stichwort eintippen, suchen, die ersten drei Treffer notieren, dann den Link von Treffer 1 prüfen."
-    ws["A2"].font = Font(italic=True, size=10)
-    header_row = 4
-    for index, (name, width) in enumerate(COLUMNS, start=1):
-        cell = ws.cell(row=header_row, column=index, value=name)
+    ws["A1"] = subtitle
+    ws["A1"].font = Font(bold=True, size=11, color=BLUE)
+    ws["A1"].alignment = Alignment(wrap_text=True)
+    for index, (name, width) in enumerate(columns, start=1):
+        cell = ws.cell(row=3, column=index, value=name)
         cell.font = Font(bold=True, color="FFFFFF")
-        cell.fill = PatternFill("solid", fgColor="2C3E50")
+        cell.fill = PatternFill("solid", fgColor=DARK)
         cell.alignment = Alignment(wrap_text=True, vertical="center")
         ws.column_dimensions[get_column_letter(index)].width = width
-    ws.row_dimensions[header_row].height = 30
-    for offset, (group, keyword) in enumerate(rows, start=header_row + 1):
-        ws.cell(row=offset, column=1, value=group)
-        ws.cell(row=offset, column=2, value=keyword)
-        for column in range(1, len(COLUMNS) + 1):
-            ws.cell(row=offset, column=column).alignment = Alignment(wrap_text=True, vertical="top")
-    ws.freeze_panes = ws.cell(row=header_row + 1, column=1)
+    ws.row_dimensions[3].height = 32
+    for row in range(4, 4 + rows):
+        ws.row_dimensions[row].height = 30
+        for column in range(1, len(columns) + 1):
+            ws.cell(row=row, column=column).alignment = Alignment(wrap_text=True, vertical="top")
+    ws.freeze_panes = ws.cell(row=4, column=1)
+    return ws
+
+
+def indexed_sources():
+    """Name, record count and themes per source, straight from what is indexed."""
+    rows = json.loads(METADATA.read_text(encoding="utf-8"))
+    registry = {s["slug"]: s for s in json.loads(REGISTRY.read_text(encoding="utf-8"))["sources"]}
+    counts, labels, themes = {}, {}, {}
+    for row in rows:
+        key = row.get("source_key")
+        counts[key] = counts.get(key, 0) + 1
+        labels.setdefault(key, row.get("source_label", key))
+        if row.get("theme"):
+            themes.setdefault(key, set()).add(row["theme"])
+    out = []
+    for key, count in sorted(counts.items(), key=lambda kv: -kv[1]):
+        topic = ", ".join(sorted(themes.get(key, set()))[:4])
+        out.append((labels[key], count, topic))
+    return out
 
 
 def main() -> None:
@@ -147,19 +127,35 @@ def main() -> None:
     workbook = Workbook()
     intro = workbook.active
     intro.title = "Anleitung"
-    intro.column_dimensions["A"].width = 100
-    for index, (text, bold) in enumerate(INSTRUCTIONS, start=1):
+    intro.column_dimensions["A"].width = 104
+    for index, (text, kind) in enumerate(INTRO, start=1):
         cell = intro.cell(row=index, column=1, value=text)
-        cell.font = Font(bold=bold, size=13 if (bold and index == 1) else 11,
-                         color=BLUE if index == 1 else "000000")
+        cell.font = Font(bold=kind in {"title", "head", "bold"},
+                         italic=kind == "italic",
+                         size=14 if kind == "title" else 11,
+                         color=BLUE if kind in {"title", "head"} else "000000")
 
-    sheet_for(workbook, "GeoDB", "https://geodb.geolab.soz.uni-bielefeld.de/", GEODB)
-    sheet_for(workbook, "SOEP", "https://soep-faiss.geolab.soz.uni-bielefeld.de/", SOEP)
+    styled_sheet(workbook, "Was fehlt",
+                 "Daten, die Sie brauchen und die der Finder nicht kennt. Eine Zeile je Konzept.",
+                 GAPS, rows=26)
+    styled_sheet(workbook, "Suche lief ins Leere",
+                 "Suchbegriffe, die nichts Brauchbares ergaben, obwohl es die Daten gibt.",
+                 VOCAB, rows=22)
+
+    ws = styled_sheet(workbook, "Was ist schon drin",
+                      "Der heutige Bestand, damit 'fehlt' gegen den tatsächlichen Inhalt beurteilt wird.",
+                      [("Quelle", 52), ("Beschreibungen", 16), ("Themen (Auszug)", 62)], rows=0)
+    for offset, (name, count, topic) in enumerate(indexed_sources(), start=4):
+        ws.cell(row=offset, column=1, value=name)
+        ws.cell(row=offset, column=2, value=count)
+        ws.cell(row=offset, column=3, value=topic)
+        for column in range(1, 4):
+            ws.cell(row=offset, column=column).alignment = Alignment(wrap_text=True, vertical="top")
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     workbook.save(out)
-    print(f"geschrieben: {out}  ({len(GEODB)} GeoDB-Stichworte, {len(SOEP)} SOEP-Stichworte)")
+    print(f"geschrieben: {out}")
 
 
 if __name__ == "__main__":
