@@ -1269,3 +1269,36 @@ button, input, select, textarea,
   font-weight: 400;
   cursor: default;
 }
+
+/* Weight where it belongs: the link is the action, so it looks like a button; the precision note
+   is a statement about that button, so it is plain text. It used to be the other way round, and
+   people clicked the tinted chip. */
+.result-actions .result-link {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  /* A fixed deep blue rather than var(--accent): the dark theme's accent is a light blue, and
+     white on it measures about 2.6:1, below the 4.5:1 that normal text needs. This reads at
+     roughly 8.6:1 and still stands out against the dark surface. */
+  background: #1d4ed8;
+  color: #fff !important;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.result-actions .result-link:hover {
+  background: #1e40af;
+  text-decoration: none;
+}
+
+.result-actions .link-chip {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+  cursor: default;
+}
