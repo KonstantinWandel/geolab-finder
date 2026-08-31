@@ -452,6 +452,30 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                     </p>
                   )}
 
+                  {/* A link that only opens a search mask needs to say so. A colleague looked up
+                      "Krankenhäuser", landed on a portal page where nothing of that name was
+                      linked, and had no way of knowing she was expected to search again. The
+                      name to search for is the record's own label, because that is what the
+                      portal calls it, not the words she typed. */}
+                  {(row.link_level === 'portal' || row.link_level === 'statistic') && (
+                    <p className="result-hint-search">
+                      {row.link_level === 'portal'
+                        ? t('row.hintPortal', { name: `„${row.label || row.variable_name}“` })
+                        : t('row.hintStatistic')}
+                      {row.link_level === 'portal' && (
+                        <button type="button" className="result-copy"
+                                onClick={(event) => {
+                                  const button = event.currentTarget
+                                  navigator.clipboard?.writeText(row.label || row.variable_name || '')
+                                  button.dataset.copied = '1'
+                                  setTimeout(() => { delete button.dataset.copied }, 1600)
+                                }}>
+                          {t('row.copyTerm')}
+                        </button>
+                      )}
+                    </p>
+                  )}
+
                   <div className="result-actions">
                     {href ? (
                       <a className="result-link" href={href} target="_blank" rel="noreferrer">
@@ -459,14 +483,6 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                       </a>
                     ) : (
                       <span className="text-muted">{t('row.noLink')}</span>
-                    )}
-                    {/* A deep link into a statistical portal is the first thing to rot, so the
-                        entry page of the source is always offered beside it. */}
-                    {row.portal_url && row.portal_url !== href && (
-                      <a className="result-portal" href={row.portal_url} target="_blank"
-                         rel="noreferrer" title={t('row.portalTitle')}>
-                        {t('row.portal')}
-                      </a>
                     )}
                     {level && (
                       <span
@@ -485,6 +501,16 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                       </button>
                     )}
                   </div>
+
+                  {/* The fallback sits on its own line, and says what it is for. Beside the main
+                      link it read as the thing the arrow pointed at, so people clicked it and
+                      landed on an entry page instead of the record. */}
+                  {row.portal_url && row.portal_url !== href && (
+                    <p className="result-fallback">
+                      {t('row.fallbackPrefix')}{' '}
+                      <a href={row.portal_url} target="_blank" rel="noreferrer">{t('row.portal')}</a>
+                    </p>
+                  )}
                 </li>
               )
             })}
