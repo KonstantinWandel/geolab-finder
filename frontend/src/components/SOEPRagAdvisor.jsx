@@ -476,17 +476,20 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                     </p>
                   )}
 
+                  {/* No trailing arrow on the link below. It pointed at whatever stood to its
+                      right, first the portal fallback and then the precision chip, and a reader
+                      followed it there. The link text already says that it opens something. */}
                   <div className="result-actions">
                     {href ? (
                       <a className="result-link" href={href} target="_blank" rel="noreferrer">
-                        {row.source_key === 'inkar' ? 'INKAR' : t('row.open')} &rarr;
+                        {row.source_key === 'inkar' ? 'INKAR' : t('row.open')}
                       </a>
                     ) : (
                       <span className="text-muted">{t('row.noLink')}</span>
                     )}
                     {level && (
                       <span
-                        className="mini-chip"
+                        className="mini-chip link-chip"
                         title={row.link_verified === false
                           ? t('link.unverified', { label: level.label })
                           : level.label}
