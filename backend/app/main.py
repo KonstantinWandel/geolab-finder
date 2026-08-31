@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Any
@@ -85,13 +85,21 @@ async def startup_event():
         print(f"Advisor warmup failed: {exc}")
     print("Models loaded.")
 
-@app.post("/api/search", response_model=List[SearchResult])
+# The Destatis-era routes are dead on the finder deployments (GEOLAB_ENABLE_DESTATIS=0):
+# /api/search already answered with an empty list and nothing in the UI calls any of them. They go
+# on their own router that is only mounted when the feature is on, so a public deployment offers
+# exactly the endpoints it uses. Two more were deleted outright, /api/execute and /api/soep, which
+# had been reduced to returning "disabled for security reasons" and existed only to be probed.
+legacy = APIRouter()
+
+
+@legacy.post("/api/search", response_model=List[SearchResult])
 async def search_tables(req: SearchRequest):
     if search_service is None:
         return []
     return search_service.search(req.query, req.k)
 
-@app.post("/api/analyze", response_model=AnalyzeResponse)
+@legacy.post("/api/analyze", response_model=AnalyzeResponse)
 async def analyze_data(req: AnalyzeRequest):
     if search_service is None:
         return AnalyzeResponse(
@@ -124,13 +132,7 @@ class HarmonizeRequest(BaseModel):
     raw_data: List[dict]
     source_type: str
 
-@app.post("/api/execute")
-async def execute_code(req: ExecuteRequest):
-    return {"error": "Execution endpoint is disabled for security reasons."}
-    # result = execution_service.execute_script(req.code)
-    # return result
-
-@app.post("/api/harmonize")
+@legacy.post("/api/harmonize")
 async def harmonize_data(req: HarmonizeRequest):
     cdm_data = harmonizer.harmonize(req.raw_data, req.source_type)
     return {"cdm": cdm_data}
@@ -154,15 +156,13 @@ class SOEPAdviceRequest(BaseModel):
     include_raw: bool = False
     sample_groups: Optional[List[str]] = None
 
-@app.post("/api/soep")
-async def aggregate_soep(req: SOEPRequest):
-    return {"error": "SOEP raw data endpoint is disabled for security reasons."}
-    # data = soep_aggregator.aggregate_variable(req.variable, req.year)
-    # return {"data": data}
-
-@app.get("/api/search_soep")
+@legacy.get("/api/search_soep")
 async def search_soep(q: str):
     return soep_search_service.search(q)
+
+
+if ENABLE_DESTATIS:
+    app.include_router(legacy)
 
 
 @app.post("/api/soep/advice")
