@@ -28,6 +28,13 @@ echo "[3/6] re-embedding (GPU)"
     SOEP_METADATA_ROOT="$PWD/../soep_metadata_output" \
     $E -c "import warnings;warnings.filterwarnings('ignore');from app.services.soep_rag_advisor import SOEPRagAdvisorService as S;print(S().build_and_save_embeddings(64))" )
 
+# Sources move, and they move silently. breitband-monitor.de began redirecting to a company site
+# after the domain lapsed, and the finder went on offering it as a portal card because a redirect
+# answers 200. This runs on every refresh, costs a minute, and prints only what looks wrong.
+echo "[3b] source addresses"
+"$HOME/miniconda3/envs/webshot/bin/python" scripts/check_source_urls.py \
+  --json-out output/source_urls.json 2>&1 | tail -14 || echo "  (Adressprüfung übersprungen)"
+
 echo "[4/6] retrieval gate"
 GEOLAB_APP_MODE=inkar SOEP_RAG_DEVICE=cuda \
   INKAR_METADATA_ROOT="$PWD/soep_metadata_output" SOEP_METADATA_ROOT="$PWD/soep_metadata_output" \

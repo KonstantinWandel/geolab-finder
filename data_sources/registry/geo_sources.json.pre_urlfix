@@ -362,7 +362,7 @@
     {
       "name": "Breitband-Monitor",
       "slug": "breitband-monitor",
-      "url": "https://gigabitgrundbuch.bund.de/",
+      "url": "https://www.breitband-monitor.de/",
       "excel_row": 3,
       "provider": "",
       "access_modes": [
@@ -412,14 +412,12 @@
       "coverage_end_month": 9,
       "coverage_end_year": 2020,
       "update_frequency": "jährlich",
-      "note": "",
-      "url_former": "https://www.breitband-monitor.de/",
-      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: sie leitet seit spätestens 2026-08-31 per 301 auf die Firmenseite kyago.de um, vermutlich eine nicht verlängerte Domain der Bundesnetzagentur. Der Betreiber ist informiert (KW, 2026-08-31). Sobald sie wieder erreichbar ist, genügt es, url_former wieder nach url zu schreiben. SSL certificate error"
+      "note": "SSL certificate error"
     },
     {
       "name": "Breitbandatlas",
       "slug": "breitbandatlas",
-      "url": "https://gigabitgrundbuch.bund.de/",
+      "url": "https://www.bmvi.de/SharedDocs/DE/Artikel/DG/breitbandatlas/breitbandatlas.html",
       "excel_row": 4,
       "provider": "",
       "access_modes": [
@@ -469,9 +467,7 @@
       "coverage_end_month": 8,
       "coverage_end_year": 2021,
       "update_frequency": "laufend",
-      "note": "",
-      "url_former": "https://www.bmvi.de/SharedDocs/DE/Artikel/DG/breitbandatlas/breitbandatlas.html",
-      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: die BMVI-Seite antwortet nicht mehr. Zertifikat abgelaufen, Stand 2021"
+      "note": "Zertifikat abgelaufen, Stand 2021"
     },
     {
       "name": "Arbeitsmarktstatistik BA - Karte",
@@ -1027,7 +1023,7 @@
     {
       "name": "Deutschlandatlas - Erreichbarkeit von Apotheken",
       "slug": "deutschlandatlas-erreichbarkeit-von-apotheken",
-      "url": "https://www.deutschlandatlas.bund.de/",
+      "url": "https://www.deutschlandatlas.bund.de/DE/Karten/Unsere-Gesundheitsversorgung/132-PKW-Apotheken.html",
       "excel_row": 14,
       "provider": "",
       "access_modes": [
@@ -1071,9 +1067,7 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "Stand 2021",
-      "url_former": "https://www.deutschlandatlas.bund.de/DE/Karten/Unsere-Gesundheitsversorgung/103-Apotheken.html",
-      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: die katalogisierte Kartenseite liefert 404, die Einstiegsseite führt weiterhin zu allen Karten."
+      "note": "Stand 2021"
     },
     {
       "name": "Hochschulkompass",
@@ -1115,8 +1109,7 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "",
-      "maintenance_note": "keine Angabe , vermutlich laufend"
+      "note": "keine Angabe , vermutlich laufend"
     },
     {
       "name": "Deutsche Bahn - Infrastrukturregister",
@@ -1208,8 +1201,7 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "",
-      "maintenance_note": "Copyright 2024, sonst keine Angabe"
+      "note": "Copyright 2024, sonst keine Angabe"
     },
     {
       "name": "Open Data - ÖPNV",
@@ -1307,8 +1299,7 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "",
-      "maintenance_note": "keine Angabe , vermutlich laufend"
+      "note": "keine Angabe , vermutlich laufend"
     },
     {
       "name": "Spielplatzkarte",
@@ -1357,8 +1348,7 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "",
-      "maintenance_note": "keine Angabe , vermutlich laufend"
+      "note": "keine Angabe , vermutlich laufend"
     },
     {
       "name": "Destatis - Regionale Mobilität und Infektionsgeschehen",
@@ -1411,7 +1401,7 @@
     {
       "name": "Datenguide (abgeschaltet)",
       "slug": "datenguide-abgeschaltet",
-      "url": "https://www.regionalstatistik.de/genesis/online",
+      "url": "https://datengui.de/statistiken",
       "excel_row": 22,
       "provider": "",
       "access_modes": [
@@ -1615,9 +1605,7 @@
       "coverage_end_month": null,
       "coverage_end_year": 2022,
       "update_frequency": "n/a",
-      "note": "abhängig von Variable",
-      "url_former": "https://datengui.de/statistiken",
-      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: datengui.de antwortet, ist aber das abgeschaltete Datenguide-Projekt."
+      "note": "abhängig von Variable"
     },
     {
       "name": "INKAR",
