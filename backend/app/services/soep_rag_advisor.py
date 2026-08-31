@@ -19,6 +19,17 @@ except Exception:  # pragma: no cover
 # age/group-specific subsample instruments. Used by the dataset-authority
 # precision prior so the analysis-ready variable wins ties over chattier
 # subsample items (the original "pglabnet buried under refugee/child panels" bug).
+# What a link is worth to someone who wants the numbers: an indicator or a table opens the thing
+# itself, a statistic opens an information page one click away from its tables, a dataset opens a
+# download or a register, a portal opens a search mask where the query has to be typed again.
+LINK_LEVEL_BONUS = {
+    "indicator": 0.05,
+    "table": 0.05,
+    "statistic": 0.01,
+    "dataset": 0.0,
+    "portal": -0.04,
+}
+
 CORE_DATASETS = {"pgen", "pequiv", "ppathl", "hgen", "hpathl", "hpath"}      # generated/tracking
 CORE_SURVEY_DATASETS = {"pl", "hl"}                                          # main person/HH survey
 # Gross/administrative/exit-sample + employer-side families: almost never the
@@ -296,6 +307,7 @@ class SOEPRagAdvisorService:
         self._query_vec_cache: Dict[str, Any] = {}
         self._name_index: Optional[Dict[str, List[int]]] = None
         self._label_words: Optional[set] = None
+        self._link_weight = float(os.getenv("GEOLAB_LINK_LEVEL_WEIGHT", "1.0"))
         self._exact_code_bonus = float(os.getenv("GEOLAB_EXACT_CODE_BONUS", "0.5"))
         self._code_token_bonus = float(os.getenv("GEOLAB_CODE_TOKEN_BONUS", "0.2"))
 
@@ -1398,6 +1410,14 @@ class SOEPRagAdvisorService:
                 delta -= self._auth_bio
             elif ds in SUBSAMPLE_DATASETS and not subsample_relevant:
                 delta -= self._auth_sub
+
+        # 4) How usable the link is. Two records can describe the same thing while one opens the
+        #    table with the numbers and the other opens a portal where the user has to search
+        #    again. A colleague's first test made the cost visible: for "Krankenhäuser" the top
+        #    hit opened a statistic information page, and the record that lands directly on the
+        #    table sat at rank six. This is a tie-breaker, deliberately smaller than the topical
+        #    signals, so it reorders near-equal hits and never pulls up an off-topic one.
+        delta += LINK_LEVEL_BONUS.get(self._as_text(row.get("link_level")), 0.0) * self._link_weight
         return delta
 
     @staticmethod

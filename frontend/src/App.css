@@ -1206,3 +1206,55 @@ button, input, select, textarea,
 .result-portal:hover {
   color: var(--accent, #3b82f6);
 }
+
+/* Says what a link that only opens a search mask expects of the reader. */
+.result-hint-search {
+  margin: 0.6rem 0 0 1.9rem;
+  padding: 0.45rem 0.7rem;
+  border-left: 3px solid var(--muted, #94a3b8);
+  background: var(--surface-2, rgba(148, 163, 184, 0.08));
+  border-radius: 0 5px 5px 0;
+  font-size: 0.86rem;
+  color: var(--text-soft, inherit);
+}
+
+.result-copy {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.4));
+  border-radius: 4px;
+  background: var(--bg, transparent);
+  color: inherit;
+  cursor: pointer;
+}
+
+.result-copy[data-copied] {
+  border-color: var(--accent, #3b82f6);
+  color: var(--accent, #3b82f6);
+}
+
+@media (max-width: 640px) {
+  .result-hint-search { margin-left: 0; }
+}
+
+/* The fallback link, on its own line and worded as a fallback. Next to the main link it looked
+   like the target of that link's arrow, which is how a reader ended up on an entry page. */
+.result-fallback {
+  margin: 0.45rem 0 0 1.9rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.result-fallback a {
+  color: var(--muted);
+  text-decoration: underline;
+}
+
+.result-fallback a:hover {
+  color: var(--accent, #3b82f6);
+}
+
+@media (max-width: 640px) {
+  .result-fallback { margin-left: 0; }
+}
