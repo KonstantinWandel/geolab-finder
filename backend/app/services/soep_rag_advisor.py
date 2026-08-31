@@ -554,6 +554,12 @@ class SOEPRagAdvisorService:
         # Official v41 fields (absent in the older corpus, so everything below degrades
         # gracefully): English label, concept, topic path, dataset kind and raw flag.
         label_en = self._as_text(row.get("label_en"))
+        # SOEP publishes many labels in one language only: `pgen/pgfamstd` is "Marital Status" in
+        # both fields, and 1,973 analysis variables have no English label at all. The missing side
+        # was machine-translated once (scripts/translate_soep_labels.py) and lands here, kept
+        # apart from the official label and marked as machine translation wherever it is shown.
+        label_de_mt = self._as_text(row.get("label_de_mt"))
+        label_en_mt = self._as_text(row.get("label_en_mt"))
         topic_path = self._as_text(row.get("topic_path"))
         concept_label = self._as_text(row.get("concept_label"))
         conceptual_dataset = self._as_text(row.get("conceptual_dataset"))
@@ -579,6 +585,8 @@ class SOEPRagAdvisorService:
                       else (f"{dataset}.rds" if dataset else "SOEP dataset"))
             ),
             "label_en": label_en,
+            "label_de_mt": label_de_mt,
+            "label_en_mt": label_en_mt,
             "concept_label": concept_label,
             "conceptual_dataset": conceptual_dataset,
             "is_raw": is_raw,
@@ -594,7 +602,9 @@ class SOEPRagAdvisorService:
             "stats_summary": self._as_text(row.get("stats_summary")),
             "sample_values": self._as_text(row.get("sample_values")),
             "rich_description": rich_description,
-            "search_description": self._build_search_description(row, dataset, label),
+            "search_description": " ".join(part for part in (
+                self._build_search_description(row, dataset, label), label_de_mt, label_en_mt
+            ) if part),
             "source_url": source_url,
             "portal_url": portal_url,
             "theme": topic_path or "SOEP survey variable",
@@ -697,6 +707,10 @@ class SOEPRagAdvisorService:
                 f"Type: {row.get('item_type', '')}",
                 f"Identifier: {row.get('variable_name', '')}",
                 f"Label: {row.get('label', '')}",
+                # The other language of the same label. Without this line a German query cannot
+                # reach a variable whose only label is English, which is what the translations
+                # were made for.
+                f"Label (other language): {row.get('label_de_mt') or row.get('label_en_mt') or ''}",
                 f"Dataset: {row.get('dataset_label', row.get('dataset', ''))}",
                 f"Theme: {row.get('theme', '')}",
                 f"Spatial levels: {', '.join(row.get('spatial_levels') or [])}",
@@ -874,6 +888,30 @@ class SOEPRagAdvisorService:
 
         self._loaded = True
 
+    def _encode_documents(self, docs: List[str], batch_size: int):
+        """Encode a corpus, in fp16 where that actually buys something.
+
+        Measured on the H200: fp32 gives 170 rows/s at any batch size (the tensor cores sit idle),
+        fp16 at batch 512 gives 1057. On the 125k-row SOEP corpus that is 13 minutes against 2,
+        which is the difference between a refresh someone runs and one they postpone. On the 11k
+        GeoDB corpus it saves under a minute, and there the 58-case gate showed one deep-rank case
+        dropping out of the top ten, so the short precision is used where it pays and not where it
+        does not.
+        """
+        use_half = (self.retrieval_device == "cuda"
+                    and len(docs) >= int(os.getenv("REEMBED_FP16_MIN_ROWS", "50000")))
+        if use_half:
+            self._embedder.half()
+            batch_size = max(batch_size, int(os.getenv("REEMBED_BATCH_SIZE_CUDA", "512")))
+        try:
+            return self._embedder.encode(
+                docs, batch_size=batch_size, convert_to_numpy=True,
+                normalize_embeddings=True, show_progress_bar=True,
+            ).astype("float32"), ("fp16" if use_half else "fp32")
+        finally:
+            if use_half:
+                self._embedder.float()
+
     def build_and_save_embeddings(self, batch_size: int = 64) -> Dict[str, Any]:
         """Recompute bi-encoder embeddings for the active source(s) using the current
         document construction (including boilerplate stripping) and save them next to
@@ -890,36 +928,27 @@ class SOEPRagAdvisorService:
         if self.load_soep and self.metadata_path is not None:
             rows = [self._normalise_soep_row(r) for r in self._load_json_rows(self.metadata_path)]
             docs = [self._build_doc(r) for r in rows]
-            emb = self._embedder.encode(
-                docs, batch_size=batch_size, convert_to_numpy=True,
-                normalize_embeddings=True, show_progress_bar=True,
-            ).astype("float32")
+            emb, precision = self._encode_documents(docs, batch_size)
             base = self.metadata_path
             out_path = base.parent / f"{base.stem}_embeddings.npy"
             self._save_embeddings(out_path, emb, base)
-            summary["soep"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
+            summary["soep"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path), "precision": precision}
         if self.load_inkar and self.inkar_metadata_path and self.inkar_metadata_path.exists():
             rows = [self._normalise_inkar_row(r) for r in self._load_json_rows(self.inkar_metadata_path)]
             docs = [self._build_doc(r) for r in rows]
-            emb = self._embedder.encode(
-                docs, batch_size=batch_size, convert_to_numpy=True,
-                normalize_embeddings=True, show_progress_bar=True,
-            ).astype("float32")
+            emb, precision = self._encode_documents(docs, batch_size)
             base = self.inkar_metadata_path
             out_path = base.parent / f"{base.stem}_embeddings.npy"
             self._save_embeddings(out_path, emb, base)
-            summary["inkar"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
+            summary["inkar"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path), "precision": precision}
         if self.load_geodb and self.geodb_metadata_path and self.geodb_metadata_path.exists():
             rows = [self._normalise_geodb_row(r) for r in self._load_json_rows(self.geodb_metadata_path)]
             docs = [self._build_doc(r) for r in rows]
-            emb = self._embedder.encode(
-                docs, batch_size=batch_size, convert_to_numpy=True,
-                normalize_embeddings=True, show_progress_bar=True,
-            ).astype("float32")
+            emb, precision = self._encode_documents(docs, batch_size)
             base = self.geodb_metadata_path
             out_path = base.parent / f"{base.stem}_embeddings.npy"
             self._save_embeddings(out_path, emb, base)
-            summary["geodb"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path)}
+            summary["geodb"] = {"rows": len(rows), "dim": int(emb.shape[1]), "path": str(out_path), "precision": precision}
         return summary
 
     def get_filter_options(self, source: Optional[str] = None,

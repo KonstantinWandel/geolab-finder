@@ -360,12 +360,10 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             </div>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: '0.6rem' }}>
-            {t('results.pipeline', {
-              embedding: result.embedding_model,
-              llm: result.llm_model || t('results.generatorOff'),
-              responseMode: result.response_mode || t('results.retrievalOnly'),
-              index: result.index_type,
-            })}
+            {/* The models stay named, that is honest transparency for a research tool. What
+                went is the pipe-delimited debug line around them ("Generator: disabled | Mode:
+                retrieval-only | Index: faiss"), which was internal wiring on a public page. */}
+            {t('results.pipeline', { embedding: result.embedding_model })}
           </p>
 
           {flatField && rows.length > 0 && (
