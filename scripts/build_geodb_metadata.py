@@ -3826,15 +3826,13 @@ PORTAL_URL_OVERRIDES = {
 # the Regionaldatenbank metadata came from the Datenguide project, whose own site is switched
 # off, and the Deutschlandatlas was catalogued on one of its map pages rather than its entry
 # page. Keyed by registry slug.
-PORTAL_OVERRIDES: Dict[str, str] = {
-    "datenguide-abgeschaltet": "https://www.regionalstatistik.de/genesis/online",
-    "deutschlandatlas-erreichbarkeit-von-apotheken": "https://www.deutschlandatlas.bund.de/",
-    # breitband-monitor.de no longer serves a valid certificate (SNI mismatch, checked in a real
-    # browser on 2026-08-29); the Gigabit-Grundbuch is where that data lives now. It is also the
-    # records' own link, so those rows correctly end up with no separate fallback.
-    "breitband-monitor": "https://gigabitgrundbuch.bund.de/",
-    "breitbandatlas": "https://gigabitgrundbuch.bund.de/",
-}
+# Empty on purpose. The four addresses that used to be corrected here are now corrected in the
+# registry itself (`data_sources/registry/geo_sources.json`), which is the right place: the
+# registry feeds the portal cards, the workbook, the deliverables and the public source list, so
+# an override here fixed the fallback links while the card in the finder still pointed at the
+# wrong address. breitband-monitor.de was the case that made this obvious: the domain now
+# redirects to a company site, and the finder was offering it as a portal card.
+PORTAL_OVERRIDES: Dict[str, str] = {}
 
 
 def portal_record(source: Dict[str, Any]) -> Dict[str, Any]:
