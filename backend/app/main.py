@@ -1,7 +1,7 @@
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional, Any
+from typing import List, Optional, Union, Any
 import os
 import time
 from app.services.search import SearchService
@@ -145,16 +145,19 @@ class SOEPRequest(BaseModel):
 class SOEPAdviceRequest(BaseModel):
     question: str
     top_k: int = 12
-    dataset_scope: str = "all"
-    dataset_label: Optional[str] = None
-    nuts_level: Optional[str] = None
-    spatial_level: Optional[str] = None
+    # Every facet is multi-select in the UI, so these accept a list of values meaning "any of
+    # these". A bare string still works: the API is called directly too, and older clients send
+    # scalars.
+    dataset_scope: Union[str, List[str], None] = "all"
+    dataset_label: Union[str, List[str], None] = None
+    nuts_level: Union[str, List[str], None] = None
+    spatial_level: Union[str, List[str], None] = None
     year_start: Optional[int] = None
     year_end: Optional[int] = None
-    theme: Optional[str] = None
+    theme: Union[str, List[str], None] = None
     regional_only: bool = False
     include_raw: bool = False
-    sample_groups: Optional[List[str]] = None
+    sample_groups: Union[str, List[str], None] = None
 
 @legacy.get("/api/search_soep")
 async def search_soep(q: str):

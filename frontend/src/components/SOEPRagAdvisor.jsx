@@ -4,6 +4,40 @@ import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '..
 // The project site carries the imprint, the privacy statement and the attribution list.
 const GEOLAB_SITE = 'https://lwc-soep-regiohub.pages.ub.uni-bielefeld.de/geolab'
 
+// One facet, as a list of checkboxes instead of a dropdown. A dropdown can hold exactly one
+// value, which forced a user comparing two sources or three spatial levels to run the search once
+// per value. Nothing checked means no restriction, which is also the honest reading of an empty
+// list: the tool is not hiding anything.
+function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, emptyHint }) {
+  const chosen = selected.length
+  return (
+    <fieldset className="facet">
+      <legend className="facet-legend">
+        {label}
+        <span className="facet-count">
+          {chosen === 0 ? allLabel : `${chosen}/${options.length}`}
+        </span>
+        {chosen > 0 && (
+          <button type="button" className="facet-clear" onClick={onClear}>&times;</button>
+        )}
+      </legend>
+      <div className="facet-list">
+        {options.length === 0 && <p className="facet-empty">{emptyHint}</p>}
+        {options.map((option) => (
+          <label className="facet-item" key={option.value} title={option.title || option.label}>
+            <input
+              type="checkbox"
+              checked={selected.includes(option.value)}
+              onChange={() => onToggle(option.value)}
+            />
+            <span>{option.label}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
 function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
   const t = makeTranslator(language)
   const isInkar = mode === 'inkar'
@@ -33,19 +67,21 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [filterOptions, setFilterOptions] = useState(null)
+  // Values a source change made unavailable, kept only to say so once.
+  const [droppedFilters, setDroppedFilters] = useState([])
+  // Every facet holds a LIST of chosen values; an empty list means no restriction. The SOEP
+  // deployment is the exception that pre-selects its own source, because it serves only that one.
   const [filters, setFilters] = useState({
-    // The regional finder serves many sources now, so only the SOEP deployment
-    // pre-selects its own source; everywhere else the default is every source.
-    dataset_scope: isSoep ? 'soep' : 'all',
-    dataset_label: 'All datasets',
-    nuts_level: 'Any',
-    spatial_level: 'Any',
-    theme: 'Any',
+    dataset_scope: isSoep ? ['soep'] : [],
+    dataset_label: [],
+    nuts_level: [],
+    spatial_level: [],
+    theme: [],
     year_start: '',
     year_end: '',
     regional_only: false,
     include_raw: false,
-    sample_group: 'Any',
+    sample_group: [],
     top_k: 12,
   })
 
@@ -101,7 +137,9 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
         // include_raw is sent too: with raw files hidden, the SOEP dataset dropdown listed
         // 622 raw per-wave files that no result could ever come from.
         const query = new URLSearchParams()
-        if (filters.dataset_scope && filters.dataset_scope !== 'all') query.set('source', filters.dataset_scope)
+        // The facet endpoint scopes to one source. With several chosen (or none) the unscoped
+        // lists are the right answer, since every chosen source may contribute values.
+        if ((filters.dataset_scope || []).length === 1) query.set('source', filters.dataset_scope[0])
         if (filters.include_raw) query.set('include_raw', 'true')
         const suffix = query.toString() ? `?${query}` : ''
         const res = await fetch(`${apiUrl}/soep/filter-options${suffix}`)
@@ -109,20 +147,26 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
         const data = await res.json()
         if (cancelled) return
         setFilterOptions(data)
+        // A value that no longer exists in the new source's facets is dropped from the
+        // selection. Keeping it would filter every result away with nothing on screen saying why.
+        const dropped = []
         setFilters((current) => {
-          const next = { ...current }
-          if (next.dataset_label !== 'All datasets' && !(data.datasets || []).includes(next.dataset_label)) {
-            next.dataset_label = 'All datasets'
+          const keep = (chosen, available) => {
+            const gone = (chosen || []).filter((value) => !(available || []).includes(value))
+            dropped.push(...gone)
+            return (chosen || []).filter((value) => (available || []).includes(value))
           }
-          if (next.theme !== 'Any' && !(data.themes || []).includes(next.theme)) next.theme = 'Any'
-          if (next.spatial_level !== 'Any' && !(data.spatial_levels || []).includes(next.spatial_level)) {
-            next.spatial_level = 'Any'
+          return {
+            ...current,
+            dataset_label: keep(current.dataset_label, data.datasets),
+            theme: keep(current.theme, data.themes),
+            spatial_level: keep(current.spatial_level, data.spatial_levels),
+            nuts_level: keep(current.nuts_level, data.nuts_levels),
+            sample_group: keep(current.sample_group,
+                                (data.sample_groups || []).map((g) => g.value)),
           }
-          if (next.nuts_level !== 'Any' && !(data.nuts_levels || []).includes(next.nuts_level)) {
-            next.nuts_level = 'Any'
-          }
-          return next
         })
+        setDroppedFilters(dropped)
       } catch (e) {
         console.error(e)
       }
@@ -140,13 +184,29 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
   }, [chatHistory])
 
   const sourceLabel = useMemo(() => {
-    const source = filterOptions?.sources?.find((item) => item.value === filters.dataset_scope)
+    const chosen = filters.dataset_scope || []
+    if (chosen.length !== 1) {
+      return chosen.length === 0 ? t('filter.allSources') : t('filter.nSources', { count: chosen.length })
+    }
+    const source = filterOptions?.sources?.find((item) => item.value === chosen[0])
     return source ? sourceOptionLabel(source) : t('filter.allSources')
   }, [filterOptions, filters.dataset_scope, language])
 
   const updateFilter = (key, value) => {
     setFilters((current) => ({ ...current, [key]: value }))
   }
+
+  const toggleFilter = (key, value) => {
+    setFilters((current) => {
+      const chosen = current[key] || []
+      return {
+        ...current,
+        [key]: chosen.includes(value) ? chosen.filter((v) => v !== value) : [...chosen, value],
+      }
+    })
+  }
+
+  const clearFilter = (key) => setFilters((current) => ({ ...current, [key]: [] }))
 
   const handleAsk = async (e) => {
     if (e) e.preventDefault()
@@ -170,16 +230,17 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
           // Send the SELECTED source, never the deployment mode. Sending `mode` here hard
           // filtered every GeoDB query to source_key "inkar" no matter what the dropdown said,
           // which made 18 of 19 sources unreachable through the UI while the API was fine.
-          dataset_scope: filterSnapshot.dataset_scope || 'all',
-          dataset_label: filterSnapshot.dataset_label === 'All datasets' ? null : filterSnapshot.dataset_label,
-          nuts_level: filterSnapshot.nuts_level === 'Any' ? null : filterSnapshot.nuts_level,
-          spatial_level: filterSnapshot.spatial_level === 'Any' ? null : filterSnapshot.spatial_level,
-          theme: filterSnapshot.theme === 'Any' ? null : filterSnapshot.theme,
+          // Lists, or null when nothing is checked. The backend reads a list as "any of these".
+          dataset_scope: filterSnapshot.dataset_scope?.length ? filterSnapshot.dataset_scope : null,
+          dataset_label: filterSnapshot.dataset_label?.length ? filterSnapshot.dataset_label : null,
+          nuts_level: filterSnapshot.nuts_level?.length ? filterSnapshot.nuts_level : null,
+          spatial_level: filterSnapshot.spatial_level?.length ? filterSnapshot.spatial_level : null,
+          theme: filterSnapshot.theme?.length ? filterSnapshot.theme : null,
           year_start: filterSnapshot.year_start ? Number(filterSnapshot.year_start) : null,
           year_end: filterSnapshot.year_end ? Number(filterSnapshot.year_end) : null,
           regional_only: Boolean(filterSnapshot.regional_only),
           include_raw: Boolean(filterSnapshot.include_raw),
-          sample_groups: filterSnapshot.sample_group === 'Any' ? null : [filterSnapshot.sample_group],
+          sample_groups: filterSnapshot.sample_group?.length ? filterSnapshot.sample_group : null,
         }),
       })
 
@@ -304,6 +365,33 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
     setSelectedRows((current) => ({ ...current, [key]: !current[key] }))
   }
 
+  // What a query was actually narrowed by. Every facet holds a list now, so joining the raw
+  // values produced lines like "soep,All datasets,Any,Any"; this names only what restricts and
+  // says so plainly when nothing does.
+  const describeFilters = (f) => {
+    const parts = []
+    const named = (key, label, render = (v) => v) => {
+      const chosen = f[key] || []
+      if (!chosen.length) return
+      parts.push(`${label}: ${chosen.map(render).join(', ')}`)
+    }
+    named('dataset_scope', t('filter.source'), (v) => {
+      const source = filterOptions?.sources?.find((item) => item.value === v)
+      return source ? sourceOptionLabel(source) : v
+    })
+    named('dataset_label', isInkar ? t('filter.datasetGeo') : t('filter.datasetSoep'), datasetOptionLabel)
+    named('sample_group', t('filter.sampleGroup'), (v) => sampleGroupLabel(v) || v)
+    named('spatial_level', t('filter.spatialLevel'), spatialLevelLabel)
+    named('theme', t('filter.theme'), shortenPath)
+    if (f.year_start || f.year_end) {
+      parts.push(`${t('filter.startYear')}\u2013${t('filter.endYear')}: `
+        + `${f.year_start || '…'}\u2013${f.year_end || '…'}`)
+    }
+    if (f.regional_only) parts.push(t('filter.regionalOnly'))
+    if (f.include_raw) parts.push(t('filter.includeRawShort'))
+    return parts.length ? parts.join(' · ') : t('filter.none')
+  }
+
   const renderMessage = (msg, i) => {
     if (msg.role === 'user') {
       return (
@@ -312,7 +400,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
           <p style={{ whiteSpace: 'pre-wrap', margin: '0.5rem 0 0 0' }}>{msg.content}</p>
           {msg.filters && (
             <p className="text-muted" style={{ fontSize: '0.8rem', margin: '0.5rem 0 0 0' }}>
-              {t('chat.filters', { summary: [msg.filters.dataset_scope, msg.filters.dataset_label, msg.filters.nuts_level, msg.filters.spatial_level, `${msg.filters.year_start || t('filter.any')}-${msg.filters.year_end || t('filter.any')}`].join(', ') })}
+              {t('chat.filters', { summary: describeFilters(msg.filters) })}
             </p>
           )}
         </div>
@@ -563,62 +651,74 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
         <div className="left-col">
           <div className="filter-panel glass-panel">
         {(filterOptions?.sources || []).length > 1 && (
-          <div>
-            <label>{t('filter.source')}</label>
-            <select value={filters.dataset_scope} onChange={(e) => updateFilter('dataset_scope', e.target.value)}>
-              {(filterOptions?.sources || [{ value: 'all', label: t('filter.allSources') }]).map((source) => (
-                <option key={source.value} value={source.value}>{sourceOptionLabel(source)}</option>
-              ))}
-            </select>
-          </div>
+          <FacetChecks
+            label={t('filter.source')}
+            /* The API's source list carries an "all" pseudo-entry for the old dropdown. As one
+               checkbox among many it would mean nothing, and leaving nothing checked already
+               means every source. */
+            options={(filterOptions?.sources || [])
+              .filter((source) => source.value !== 'all')
+              .map((source) => ({ value: source.value, label: sourceOptionLabel(source) }))}
+            selected={filters.dataset_scope}
+            onToggle={(value) => toggleFilter('dataset_scope', value)}
+            onClear={() => clearFilter('dataset_scope')}
+            allLabel={t('filter.allSelected')}
+            emptyHint={t('filter.noneAvailable')}
+          />
         )}
-        <div>
-          <label>{isInkar ? t('filter.datasetGeo') : t('filter.datasetSoep')}</label>
-          <select value={filters.dataset_label} onChange={(e) => updateFilter('dataset_label', e.target.value)}>
-            <option value="All datasets">{t('filter.allDatasets')}</option>
-            {(filterOptions?.datasets || []).map((dataset) => (
-              <option key={dataset} value={dataset}>{datasetOptionLabel(dataset)}</option>
-            ))}
-          </select>
-        </div>
+        <FacetChecks
+          label={isInkar ? t('filter.datasetGeo') : t('filter.datasetSoep')}
+          options={(filterOptions?.datasets || []).map((dataset) => ({
+            value: dataset, label: datasetOptionLabel(dataset), title: dataset,
+          }))}
+          selected={filters.dataset_label}
+          onToggle={(value) => toggleFilter('dataset_label', value)}
+          onClear={() => clearFilter('dataset_label')}
+          allLabel={t('filter.allSelected')}
+          emptyHint={t('filter.noneAvailable')}
+        />
         {showSoepFilters && (filterOptions?.sample_groups || []).length > 0 && (
-          <div>
-            <label>{t('filter.sampleGroup')}</label>
-            <select value={filters.sample_group} onChange={(e) => updateFilter('sample_group', e.target.value)}>
-              <option value="Any">{t('filter.anySampleGroup')}</option>
-              {(filterOptions?.sample_groups || []).map((g) => (
-                <option key={g.value} value={g.value}>{sampleOptionLabel(g)}</option>
-              ))}
-            </select>
-          </div>
+          <FacetChecks
+            label={t('filter.sampleGroup')}
+            options={(filterOptions?.sample_groups || []).map((g) => ({
+              value: g.value, label: sampleOptionLabel(g),
+            }))}
+            selected={filters.sample_group}
+            onToggle={(value) => toggleFilter('sample_group', value)}
+            onClear={() => clearFilter('sample_group')}
+            allLabel={t('filter.allSelected')}
+            emptyHint={t('filter.noneAvailable')}
+          />
         )}
         {showRegionalFilters && (
-          <>
-            <div>
-              <label>{t('filter.spatialLevel')}</label>
-              <select value={filters.spatial_level} onChange={(e) => updateFilter('spatial_level', e.target.value)}>
-                <option value="Any">{t('filter.anyLevel')}</option>
-                {sortSpatialLevels(filterOptions?.spatial_levels).map((level) => (
-                  <option key={level} value={level}>{spatialLevelLabel(level)}</option>
-                ))}
-              </select>
-            </div>
-          </>
+          <FacetChecks
+            label={t('filter.spatialLevel')}
+            options={sortSpatialLevels(filterOptions?.spatial_levels).map((level) => ({
+              value: level, label: spatialLevelLabel(level),
+            }))}
+            selected={filters.spatial_level}
+            onToggle={(value) => toggleFilter('spatial_level', value)}
+            onClear={() => clearFilter('spatial_level')}
+            allLabel={t('filter.allSelected')}
+            emptyHint={t('filter.noneAvailable')}
+          />
         )}
         {/* Theme is no longer INKAR-only: SOEP v41 brings the official topic hierarchy, so the
             facet is shown whenever the loaded sources actually offer themes. */}
         {(filterOptions?.themes || []).length > 0 && (
-          <div>
-            <label>{t('filter.theme')}</label>
-            <select value={filters.theme} onChange={(e) => updateFilter('theme', e.target.value)}>
-              <option value="Any">{t('filter.any')}</option>
-              {/* SOEP topic paths are long, and a truncated dropdown made different paths look
-                  identical; the last segments are what distinguishes them. */}
-              {(filterOptions?.themes || []).map((theme) => (
-                <option key={theme} value={theme} title={theme}>{shortenPath(theme)}</option>
-              ))}
-            </select>
-          </div>
+          <FacetChecks
+            label={t('filter.theme')}
+            /* SOEP topic paths are long and their last segments are what distinguishes them, so
+               the list shows the tail and the full path stays in the tooltip. */
+            options={(filterOptions?.themes || []).map((theme) => ({
+              value: theme, label: shortenPath(theme), title: theme,
+            }))}
+            selected={filters.theme}
+            onToggle={(value) => toggleFilter('theme', value)}
+            onClear={() => clearFilter('theme')}
+            allLabel={t('filter.allSelected')}
+            emptyHint={t('filter.noneAvailable')}
+          />
         )}
         <div>
           <label>{t('filter.startYear')}</label>
@@ -675,6 +775,11 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             {t('filter.includeRaw', { count: filterOptions.raw_rows.toLocaleString(language === 'de' ? 'de-DE' : 'en-GB') })}
           </label>
         )}
+          {droppedFilters.length > 0 && (
+            <p className="filter-dropped">
+              {t('filter.dropped', { values: droppedFilters.join(', ') })}
+            </p>
+          )}
           <div className="filter-note">
             {t('filter.active', { source: sourceLabel })}
             {filterOptions?.year_min && filterOptions?.year_max && ` | ${t('filter.years', { min: filterOptions.year_min, max: filterOptions.year_max })}`}

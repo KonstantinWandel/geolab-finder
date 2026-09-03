@@ -34,13 +34,20 @@ function App() {
     if (!document.title || document.title.startsWith('%')) document.title = pageTitle
   }, [APP_MODE])
 
-  // German is the default for a German-speaking browser; the choice persists per browser.
+  // English is the default; a choice the user makes persists per browser.
   const [language, setLanguage] = useState(detectLanguage)
   const t = makeTranslator(language)
   useEffect(() => {
     document.documentElement.setAttribute('lang', language)
-    try { localStorage.setItem('geolab_lang', language) } catch (e) { /* ignore */ }
   }, [language])
+
+  // Written only when the user picks a language, never for the detected default. Storing the
+  // default too would have kept every returning German-browser visitor on German forever, since
+  // the stored value wins over the new default.
+  const chooseLanguage = (value) => {
+    setLanguage(value)
+    try { localStorage.setItem('geolab_lang', value) } catch (e) { /* ignore */ }
+  }
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -101,7 +108,7 @@ function App() {
       <header className="app-header">
         <h1>GeoLAB <span className="text-gradient">{TITLES[APP_MODE] || TITLES.all}</span></h1>
         <div className="header-controls">
-          <select className="theme-select" value={language} onChange={(e) => setLanguage(e.target.value)} aria-label={t('lang.aria')}>
+          <select className="theme-select" value={language} onChange={(e) => chooseLanguage(e.target.value)} aria-label={t('lang.aria')}>
             {LANGUAGES.map((entry) => (
               <option key={entry.value} value={entry.value}>{entry.label}</option>
             ))}
