@@ -17,7 +17,9 @@ VM=${GEOLAB_VM:-vm}
 REMOTE=/home/kwandel/health
 
 echo "[1/5] Skripte, Registry und Ausnahmen übertragen"
-ssh "$VM" "mkdir -p $REMOTE/repo/scripts $REMOTE/repo/data_sources/registry $REMOTE/repo/state $REMOTE/repo/logs"
+# $REMOTE/logs ist das Protokoll des Cron-Aufrufs und muss vorher da sein: fehlt es, schlägt
+# die Umleitung in run_health.sh fehl und die Ausgabe des wöchentlichen Laufs ist verloren.
+ssh "$VM" "mkdir -p $REMOTE/repo/scripts $REMOTE/repo/data_sources/registry $REMOTE/repo/state $REMOTE/repo/logs $REMOTE/logs"
 rsync -az scripts/health_check.py scripts/check_source_urls.py scripts/check_geodb_links.py \
       "$VM:$REMOTE/repo/scripts/"
 rsync -az data_sources/registry/geo_sources.json data_sources/registry/known_url_issues.json \
