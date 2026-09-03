@@ -7,6 +7,8 @@
       "name": "Regionalatlas Deutschland",
       "slug": "regionalatlas-deutschland",
       "url": "https://regionalatlas.statistikportal.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 2,
       "provider": "",
       "access_modes": [
@@ -363,6 +365,8 @@
       "name": "Breitband-Monitor",
       "slug": "breitband-monitor",
       "url": "https://gigabitgrundbuch.bund.de/",
+      "url_former": "https://www.breitband-monitor.de/",
+      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: sie leitet seit spätestens 2026-08-31 per 301 auf die Firmenseite kyago.de um, vermutlich eine nicht verlängerte Domain der Bundesnetzagentur. Der Betreiber ist informiert (KW, 2026-08-31). Sobald sie wieder erreichbar ist, genügt es, diesen Eintrag zu entfernen. SSL certificate error",
       "excel_row": 3,
       "provider": "",
       "access_modes": [
@@ -412,14 +416,14 @@
       "coverage_end_month": 9,
       "coverage_end_year": 2020,
       "update_frequency": "jährlich",
-      "note": "",
-      "url_former": "https://www.breitband-monitor.de/",
-      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: sie leitet seit spätestens 2026-08-31 per 301 auf die Firmenseite kyago.de um, vermutlich eine nicht verlängerte Domain der Bundesnetzagentur. Der Betreiber ist informiert (KW, 2026-08-31). Sobald sie wieder erreichbar ist, genügt es, url_former wieder nach url zu schreiben. SSL certificate error"
+      "note": ""
     },
     {
       "name": "Breitbandatlas",
       "slug": "breitbandatlas",
       "url": "https://gigabitgrundbuch.bund.de/",
+      "url_former": "https://www.bmvi.de/SharedDocs/DE/Artikel/DG/breitbandatlas/breitbandatlas.html",
+      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: die BMVI-Seite antwortet nicht mehr. Zertifikat abgelaufen, Stand 2021",
       "excel_row": 4,
       "provider": "",
       "access_modes": [
@@ -469,14 +473,14 @@
       "coverage_end_month": 8,
       "coverage_end_year": 2021,
       "update_frequency": "laufend",
-      "note": "",
-      "url_former": "https://www.bmvi.de/SharedDocs/DE/Artikel/DG/breitbandatlas/breitbandatlas.html",
-      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: die BMVI-Seite antwortet nicht mehr. Zertifikat abgelaufen, Stand 2021"
+      "note": ""
     },
     {
       "name": "Arbeitsmarktstatistik BA - Karte",
       "slug": "arbeitsmarktstatistik-ba-karte",
       "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Statistiken/Statistiken-nach-Regionen/Politische-Gebietsstruktur-Nav.html",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 5,
       "provider": "",
       "access_modes": [
@@ -532,6 +536,8 @@
       "name": "Strukturdaten und -indikatoren - BA",
       "slug": "strukturdaten-und-indikatoren-ba",
       "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 6,
       "provider": "",
       "access_modes": [
@@ -645,6 +651,8 @@
       "name": "Arbeitsmarktreport BA",
       "slug": "arbeitsmarktreport-ba",
       "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 7,
       "provider": "",
       "access_modes": [
@@ -699,6 +707,8 @@
       "name": "Arbeitsmarkt kommunal - BA",
       "slug": "arbeitsmarkt-kommunal-ba",
       "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 8,
       "provider": "",
       "access_modes": [
@@ -753,6 +763,8 @@
       "name": "Migration & Integration in Regionen",
       "slug": "migration-integration-in-regionen",
       "url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 9,
       "provider": "",
       "access_modes": [
@@ -822,6 +834,8 @@
       "name": "Krankenhausatlas Deutschland",
       "slug": "krankenhausatlas-deutschland",
       "url": "https://krankenhausatlas.statistikportal.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 10,
       "provider": "",
       "access_modes": [
@@ -873,6 +887,8 @@
       "name": "Krankenhausverzeichnis",
       "slug": "krankenhausverzeichnis",
       "url": "https://www.deutsches-krankenhaus-verzeichnis.de/app/suche",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 11,
       "provider": "",
       "access_modes": [
@@ -922,6 +938,8 @@
       "name": "Bundes-Klinik-Atlas (vormals Fachärztesuche - Weisse Liste)",
       "slug": "bundes-klinik-atlas",
       "url": "https://bundes-klinik-atlas.de/open-data/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 12,
       "provider": "",
       "access_modes": [
@@ -974,6 +992,8 @@
       "name": "Arztsuche - Bundesärztekammer",
       "slug": "arztsuche-bundesaerztekammer",
       "url": "https://www.bundesaerztekammer.de/service/arztsuche/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 13,
       "provider": "",
       "access_modes": [
@@ -1028,6 +1048,8 @@
       "name": "Deutschlandatlas - Erreichbarkeit von Apotheken",
       "slug": "deutschlandatlas-erreichbarkeit-von-apotheken",
       "url": "https://www.deutschlandatlas.bund.de/",
+      "url_former": "https://www.deutschlandatlas.bund.de/DE/Karten/Unsere-Gesundheitsversorgung/132-PKW-Apotheken.html",
+      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: die katalogisierte Kartenseite liefert 404, die Einstiegsseite führt weiterhin zu allen Karten.",
       "excel_row": 14,
       "provider": "",
       "access_modes": [
@@ -1071,14 +1093,14 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "Stand 2021",
-      "url_former": "https://www.deutschlandatlas.bund.de/DE/Karten/Unsere-Gesundheitsversorgung/103-Apotheken.html",
-      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: die katalogisierte Kartenseite liefert 404, die Einstiegsseite führt weiterhin zu allen Karten."
+      "note": "Stand 2021"
     },
     {
       "name": "Hochschulkompass",
       "slug": "hochschulkompass",
       "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
+      "url_former": "",
+      "maintenance_note": "keine Angabe , vermutlich laufend",
       "excel_row": 15,
       "provider": "",
       "access_modes": [
@@ -1115,13 +1137,14 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "",
-      "maintenance_note": "keine Angabe , vermutlich laufend"
+      "note": ""
     },
     {
       "name": "Deutsche Bahn - Infrastrukturregister",
       "slug": "deutsche-bahn-infrastrukturregister",
-      "url": "https://geovdbn.deutschebahn.com/isr",
+      "url": "https://geoviewer.deutschebahn.com/maps/#/context/ISR/275618",
+      "url_former": "https://geovdbn.deutschebahn.com/isr",
+      "maintenance_note": "Umgezogen: geovdbn.deutschebahn.com leitet auf die DB MapCloud um. Diese Viewer-Adresse ist ohne Registrierung lesbar (InfraGO-Ticket IIBV31-13354, 2026-08-25); die Anmeldung im Infraportal, auf die das Arbeitsblatt zeigt, braucht nur der operative Zugang.",
       "excel_row": 16,
       "provider": "",
       "access_modes": [
@@ -1167,6 +1190,8 @@
       "name": "Deutsche Bahn - Bahnhofsuche",
       "slug": "deutsche-bahn-bahnhofsuche",
       "url": "https://www.bahnhof.de/bahnhof-de",
+      "url_former": "",
+      "maintenance_note": "Copyright 2024, sonst keine Angabe",
       "excel_row": 17,
       "provider": "",
       "access_modes": [
@@ -1208,13 +1233,14 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "",
-      "maintenance_note": "Copyright 2024, sonst keine Angabe"
+      "note": ""
     },
     {
       "name": "Open Data - ÖPNV",
       "slug": "open-data-oepnv",
       "url": "https://www.opendata-oepnv.de/ht/de/willkommen",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 18,
       "provider": "",
       "access_modes": [
@@ -1259,6 +1285,8 @@
       "name": "Spielplatztreff - Suchmaschine für Spielplätze",
       "slug": "spielplatztreff-suchmaschine-fuer-spielplaetze",
       "url": "https://www.spielplatztreff.de/",
+      "url_former": "",
+      "maintenance_note": "keine Angabe , vermutlich laufend",
       "excel_row": 19,
       "provider": "",
       "access_modes": [
@@ -1307,13 +1335,14 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "",
-      "maintenance_note": "keine Angabe , vermutlich laufend"
+      "note": ""
     },
     {
       "name": "Spielplatzkarte",
       "slug": "spielplatzkarte",
       "url": "https://spielplatznet.de/karte.htm",
+      "url_former": "",
+      "maintenance_note": "keine Angabe , vermutlich laufend",
       "excel_row": 20,
       "provider": "",
       "access_modes": [
@@ -1357,13 +1386,14 @@
       "coverage_end_month": null,
       "coverage_end_year": null,
       "update_frequency": "n/a",
-      "note": "",
-      "maintenance_note": "keine Angabe , vermutlich laufend"
+      "note": ""
     },
     {
       "name": "Destatis - Regionale Mobilität und Infektionsgeschehen",
       "slug": "destatis-regionale-mobilitaet-und-infektionsgesc",
       "url": "https://www.destatis.de/DE/Service/EXSTAT/Datensaetze/mobilitaetsindikatoren-mobilfunkdaten.html",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 21,
       "provider": "",
       "access_modes": [
@@ -1412,6 +1442,8 @@
       "name": "Datenguide (abgeschaltet)",
       "slug": "datenguide-abgeschaltet",
       "url": "https://www.regionalstatistik.de/genesis/online",
+      "url_former": "https://datengui.de/statistiken",
+      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: datengui.de antwortet, ist aber das abgeschaltete Datenguide-Projekt.",
       "excel_row": 22,
       "provider": "",
       "access_modes": [
@@ -1615,14 +1647,14 @@
       "coverage_end_month": null,
       "coverage_end_year": 2022,
       "update_frequency": "n/a",
-      "note": "abhängig von Variable",
-      "url_former": "https://datengui.de/statistiken",
-      "maintenance_note": "Ursprüngliche Adresse aufbewahrt: datengui.de antwortet, ist aber das abgeschaltete Datenguide-Projekt."
+      "note": "abhängig von Variable"
     },
     {
       "name": "INKAR",
       "slug": "inkar",
       "url": "https://www.inkar.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 23,
       "provider": "",
       "access_modes": [
@@ -2044,6 +2076,8 @@
       "name": "German Companies",
       "slug": "german-companies",
       "url": "https://rapidapi.com/Implisense/api/german-company-data",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 24,
       "provider": "",
       "access_modes": [
@@ -2086,6 +2120,8 @@
       "name": "Open Data Handelsregister",
       "slug": "open-data-handelsregister",
       "url": "https://offeneregister.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 25,
       "provider": "",
       "access_modes": [
@@ -2113,6 +2149,8 @@
       "name": "Ländermonitor Frühkindliche Bildungssysteme",
       "slug": "laendermonitor-fruehkindliche-bildungssysteme",
       "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 26,
       "provider": "",
       "access_modes": [
@@ -2181,7 +2219,9 @@
     {
       "name": "Strukturdaten Bundestagswahl 2021",
       "slug": "strukturdaten-bundestagswahl-2021",
-      "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+      "url": "https://www.bundeswahlleiterin.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+      "url_former": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+      "maintenance_note": "Umgezogen: die Behörde heißt seit 2023 Bundeswahlleiterin, bundeswahlleiter.de leitet weiter, führt aber die alte Domain.",
       "excel_row": 27,
       "provider": "",
       "access_modes": [
@@ -2328,6 +2368,8 @@
       "name": "Unfallatlas",
       "slug": "unfallatlas",
       "url": "https://unfallatlas.statistikportal.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 28,
       "provider": "",
       "access_modes": [
@@ -2374,7 +2416,9 @@
     {
       "name": "GENESIS-Online (Bund)",
       "slug": "genesis-online-bund",
-      "url": "https://www-genesis.destatis.de/genesis/online",
+      "url": "https://genesis.destatis.de/datenbank/online/",
+      "url_former": "https://www-genesis.destatis.de/genesis/online",
+      "maintenance_note": "Umgezogen: www-genesis.destatis.de antwortet 307 auf genesis.destatis.de. Gilt nur für die Einstiegsseite. Tiefenlinks behalten die Form ?operation=table&code=, weil die neue Anwendungsadresse dafür nur eine leere Hülle ausliefert.",
       "excel_row": 29,
       "provider": "",
       "access_modes": [
@@ -2464,6 +2508,8 @@
       "name": "Zensus 2022",
       "slug": "zensus-2022",
       "url": "https://ergebnisse.zensus2022.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 30,
       "provider": "",
       "access_modes": [
@@ -2558,6 +2604,8 @@
       "name": "OpenStreetMap POI-Layer (Overpass)",
       "slug": "openstreetmap-poi-layer-overpass",
       "url": "https://wiki.openstreetmap.org/wiki/Map_features",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 31,
       "provider": "",
       "access_modes": [
@@ -2707,6 +2755,8 @@
       "name": "Wegweiser Kommune (Bertelsmann Stiftung)",
       "slug": "wegweiser-kommune-bertelsmann-stiftung",
       "url": "https://www.wegweiser-kommune.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 32,
       "provider": "",
       "access_modes": [
@@ -2820,6 +2870,8 @@
       "name": "DWD Climate Data Center (CDC)",
       "slug": "dwd-climate-data-center-cdc",
       "url": "https://opendata.dwd.de/climate_environment/CDC/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 33,
       "provider": "",
       "access_modes": [
@@ -2873,6 +2925,8 @@
       "name": "BORIS-D Bodenrichtwerte",
       "slug": "boris-d-bodenrichtwerte",
       "url": "https://www.bodenrichtwerte-boris.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 34,
       "provider": "",
       "access_modes": [
@@ -2933,6 +2987,8 @@
       "name": "Wahlergebnisse Bundeswahlleiterin",
       "slug": "wahlergebnisse-bundeswahlleiterin",
       "url": "https://www.bundeswahlleiterin.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 35,
       "provider": "",
       "access_modes": [
@@ -2990,6 +3046,8 @@
       "name": "IÖR-Monitor (Flächennutzung)",
       "slug": "ioer-monitor-flaechennutzung",
       "url": "https://www.ioer-monitor.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 36,
       "provider": "",
       "access_modes": [
@@ -3065,6 +3123,8 @@
       "name": "RWI-GEO-GRID / RWI-GEO-RED (FDZ Ruhr)",
       "slug": "rwi-geo-grid-rwi-geo-red-fdz-ruhr",
       "url": "https://fdz.rwi-essen.de/",
+      "url_former": "",
+      "maintenance_note": "",
       "excel_row": 37,
       "provider": "",
       "access_modes": [
