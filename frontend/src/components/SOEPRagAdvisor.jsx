@@ -11,6 +11,41 @@ const GEOLAB_SITE = 'https://lwc-soep-regiohub.pages.ub.uni-bielefeld.de/geolab'
 // column scrolls and an absolutely positioned panel would be clipped by it.
 function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, emptyHint, closeLabel }) {
   const [open, setOpen] = useState(false)
+  // Which way the menu opens and how tall it may be, measured rather than assumed: a fixed
+  // height ran off the bottom of the window for three of the four facets on a 900px screen.
+  const [place, setPlace] = useState({ up: false, maxHeight: 420 })
+  const box = useRef(null)
+
+  const measure = () => {
+    if (!box.current) return
+    const rect = box.current.getBoundingClientRect()
+    const below = window.innerHeight - rect.bottom - 12
+    const above = rect.top - 12
+    const up = above > below
+    setPlace({ up, maxHeight: Math.max(180, Math.min(560, up ? above : below)) })
+  }
+
+  // An overlay has to close when the reader looks away from it: a click anywhere else, or Escape.
+  // Clicking another facet's trigger therefore closes this one, so only one menu is ever open.
+  // While it is open, scrolling or resizing changes the room it has, so it is measured again.
+  useEffect(() => {
+    if (!open) return undefined
+    window.addEventListener('resize', measure)
+    window.addEventListener('scroll', measure, true)
+    const onPointer = (event) => {
+      if (box.current && !box.current.contains(event.target)) setOpen(false)
+    }
+    const onKey = (event) => { if (event.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onPointer)
+      document.removeEventListener('keydown', onKey)
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('scroll', measure, true)
+    }
+  }, [open])
+
   const chosen = selected.length
   const summary = chosen === 0
     ? allLabel
@@ -18,15 +53,22 @@ function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, em
       ? (options.find((option) => option.value === selected[0])?.label || selected[0])
       : `${chosen}/${options.length}`)
   return (
-    <div className={open ? 'facet is-open' : 'facet'}>
+    <div className={`facet${open ? ' is-open' : ''}${open && place.up ? ' drops-up' : ''}`} ref={box}>
       <label className="facet-label">{label}</label>
-      <button type="button" className="facet-trigger" onClick={() => setOpen((value) => !value)}
-              aria-expanded={open}>
+      <button
+        type="button"
+        className="facet-trigger"
+        aria-expanded={open}
+        onClick={() => {
+          if (!open) measure()
+          setOpen((value) => !value)
+        }}
+      >
         <span className={chosen ? 'facet-summary is-set' : 'facet-summary'}>{summary}</span>
         <span className="facet-caret" aria-hidden="true">{open ? '\u25B4' : '\u25BE'}</span>
       </button>
       {open && (
-        <div className="facet-list" onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false) }}>
+        <div className="facet-list" style={{ maxHeight: `${place.maxHeight}px` }}>
           {options.length === 0 && <p className="facet-empty">{emptyHint}</p>}
           {options.map((option) => (
             <label className="facet-item" key={option.value} title={option.title || option.label}>

@@ -754,14 +754,13 @@ tr:hover { background: var(--surface-2); }
   align-content: start;
 }
 
-/* The query box and the filters follow the page instead of scrolling inside their own box. */
+/* The query box and the filters follow the page instead of scrolling inside their own box.
+   No max-height and no overflow here: an open facet menu overlays the results, and any scroll
+   container on an ancestor clips an absolutely positioned child. The page itself scrolls. */
 .left-col {
   position: sticky;
   top: 0.75rem;
   align-self: flex-start;
-  max-height: calc(100dvh - 1.5rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
 }
 .left-col .chat-section { flex: 0 0 auto; }
 
@@ -1307,10 +1306,6 @@ button, input, select, textarea,
    A <select> holds one value, so comparing two sources meant searching twice. Collapsed, the
    trigger reads like the dropdown it replaces; open, it is a checkbox list. It expands in flow,
    not as an overlay, because the filter column scrolls and would clip a positioned panel. */
-.facet {
-  min-width: 0;
-}
-
 .facet-label {
   display: block;
 }
@@ -1359,18 +1354,33 @@ button, input, select, textarea,
   font-size: 0.7rem;
 }
 
+.facet {
+  position: relative;
+}
+
+/* Overlays the rest of the interface instead of pushing it down, and is wider than the column it
+   hangs from, because a SOEP topic path or a source name does not fit in 340px. */
 .facet-list {
-  max-height: 220px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 40;
+  /* Wider than the 340px column so long source names and topic paths fit, but never wider than
+     the window: on a 360px phone a flat 420px would have pushed the page sideways. */
+  width: max(100%, min(420px, 92vw));
+  max-width: min(92vw, 560px);
+  max-height: min(62vh, 520px);
   overflow-y: auto;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  padding: 0.3rem 0.35rem;
+  padding: 0.35rem 0.4rem;
   border: 1px solid var(--accent, #3b82f6);
   border-top: none;
-  border-radius: 0 0 5px 5px;
-  background: var(--surface, var(--bg, transparent));
+  border-radius: 0 5px 5px 5px;
+  background: var(--surface, var(--bg, #fff));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
 }
 
 .facet-item {
@@ -1454,4 +1464,25 @@ button, input, select, textarea,
   color: var(--muted);
   border-left: 2px solid var(--border, rgba(148, 163, 184, 0.5));
   padding-left: 0.5rem;
+}
+
+/* Opens upwards when the trigger sits too low for the menu to fit below it. */
+.facet.drops-up .facet-list {
+  top: auto;
+  bottom: 100%;
+  border-top: 1px solid var(--accent, #3b82f6);
+  border-bottom: none;
+  border-radius: 5px 5px 5px 0;
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.22);
+}
+
+.facet.drops-up .facet-trigger {
+  border-radius: 0 0 5px 5px;
+  border-top-color: var(--accent, #3b82f6);
+}
+
+/* The actions row belongs at the visual bottom in either direction. */
+.facet.drops-up .facet-actions {
+  position: sticky;
+  bottom: 0;
 }
