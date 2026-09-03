@@ -761,6 +761,12 @@ tr:hover { background: var(--surface-2); }
   position: sticky;
   top: 0.75rem;
   align-self: flex-start;
+  /* A sticky element forms its own stacking context, so the open facet menu's z-index applies
+     only INSIDE this column: the column itself was painted at z-index auto, and the footer's
+     links, which come later in the document, drew on top of the menu. The citation line and the
+     imprint links showed through the open topic menu. Raising the column lifts its whole
+     subtree above what follows it. */
+  z-index: 20;
 }
 .left-col .chat-section { flex: 0 0 auto; }
 
