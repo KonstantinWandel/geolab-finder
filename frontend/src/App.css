@@ -1303,69 +1303,84 @@ button, input, select, textarea,
   cursor: default;
 }
 
-/* ---- Facets as checkbox lists ---------------------------------------------------------------
-   A dropdown holds one value, so comparing two sources or three spatial levels meant running the
-   same search once per value. Each facet is now a scrollable list of checkboxes; nothing checked
-   means no restriction. */
+/* ---- Facets: a dropdown that opens onto checkboxes ------------------------------------------
+   A <select> holds one value, so comparing two sources meant searching twice. Collapsed, the
+   trigger reads like the dropdown it replaces; open, it is a checkbox list. It expands in flow,
+   not as an overlay, because the filter column scrolls and would clip a positioned panel. */
 .facet {
-  border: 1px solid var(--border, rgba(148, 163, 184, 0.35));
-  border-radius: 6px;
-  padding: 0.35rem 0.5rem 0.4rem;
-  margin: 0;
   min-width: 0;
 }
 
-.facet-legend {
+.facet-label {
+  display: block;
+}
+
+.facet-trigger {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.4rem;
-  padding: 0 0.25rem;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-
-.facet-count {
-  font-size: 0.68rem;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--accent, #3b82f6);
-}
-
-.facet-clear {
-  border: none;
-  background: none;
-  padding: 0 0.1rem;
-  font-size: 0.95rem;
-  line-height: 1;
-  color: var(--muted);
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.4));
+  border-radius: 5px;
+  background: var(--bg, transparent);
+  color: var(--text, inherit);
+  font-size: 0.86rem;
+  text-align: left;
   cursor: pointer;
 }
 
-.facet-clear:hover {
-  color: var(--accent, #3b82f6);
+.facet-trigger:hover {
+  border-color: var(--accent, #3b82f6);
 }
 
-/* Bounded and scrollable: the theme facet offers several hundred values. */
+.facet.is-open .facet-trigger {
+  border-color: var(--accent, #3b82f6);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.facet-summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.facet-summary.is-set {
+  color: var(--text, inherit);
+  font-weight: 600;
+}
+
+.facet-caret {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
 .facet-list {
-  max-height: 148px;
+  max-height: 220px;
   overflow-y: auto;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  padding-right: 0.2rem;
+  padding: 0.3rem 0.35rem;
+  border: 1px solid var(--accent, #3b82f6);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  background: var(--surface, var(--bg, transparent));
 }
 
 .facet-item {
   display: flex;
   align-items: flex-start;
-  gap: 0.4rem;
+  gap: 0.45rem;
   font-size: 0.84rem;
   line-height: 1.3;
   cursor: pointer;
-  padding: 0.08rem 0.1rem;
+  padding: 0.1rem 0.15rem;
   border-radius: 3px;
 }
 
@@ -1386,6 +1401,36 @@ button, input, select, textarea,
   margin: 0.2rem 0.1rem;
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+/* Sticks to the bottom of the open list, so "done" is reachable without scrolling back. */
+.facet-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.3rem;
+  margin-top: 0.2rem;
+  border-top: 1px solid var(--border, rgba(148, 163, 184, 0.3));
+  background: var(--surface, var(--bg, #fff));
+}
+
+.facet-clear,
+.facet-done {
+  border: none;
+  background: none;
+  padding: 0.1rem 0.2rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.facet-done {
+  color: var(--accent, #3b82f6);
+  font-weight: 600;
+  text-decoration: none;
 }
 
 /* .filter-panel label was written for the old dropdown captions: block, uppercase, letter-spaced.

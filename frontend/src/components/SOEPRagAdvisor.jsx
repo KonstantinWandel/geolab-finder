@@ -4,37 +4,49 @@ import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '..
 // The project site carries the imprint, the privacy statement and the attribution list.
 const GEOLAB_SITE = 'https://lwc-soep-regiohub.pages.ub.uni-bielefeld.de/geolab'
 
-// One facet, as a list of checkboxes instead of a dropdown. A dropdown can hold exactly one
-// value, which forced a user comparing two sources or three spatial levels to run the search once
-// per value. Nothing checked means no restriction, which is also the honest reading of an empty
-// list: the tool is not hiding anything.
-function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, emptyHint }) {
+// One facet: a dropdown that opens onto checkboxes. A plain <select> holds exactly one value, so
+// comparing two sources or three spatial levels meant running the same search once per value.
+// Collapsed it shows what is chosen; nothing checked means no restriction, which is the honest
+// reading of an empty list. The list expands in flow rather than as an overlay, because the filter
+// column scrolls and an absolutely positioned panel would be clipped by it.
+function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, emptyHint, closeLabel }) {
+  const [open, setOpen] = useState(false)
   const chosen = selected.length
+  const summary = chosen === 0
+    ? allLabel
+    : (chosen === 1
+      ? (options.find((option) => option.value === selected[0])?.label || selected[0])
+      : `${chosen}/${options.length}`)
   return (
-    <fieldset className="facet">
-      <legend className="facet-legend">
-        {label}
-        <span className="facet-count">
-          {chosen === 0 ? allLabel : `${chosen}/${options.length}`}
-        </span>
-        {chosen > 0 && (
-          <button type="button" className="facet-clear" onClick={onClear}>&times;</button>
-        )}
-      </legend>
-      <div className="facet-list">
-        {options.length === 0 && <p className="facet-empty">{emptyHint}</p>}
-        {options.map((option) => (
-          <label className="facet-item" key={option.value} title={option.title || option.label}>
-            <input
-              type="checkbox"
-              checked={selected.includes(option.value)}
-              onChange={() => onToggle(option.value)}
-            />
-            <span>{option.label}</span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
+    <div className={open ? 'facet is-open' : 'facet'}>
+      <label className="facet-label">{label}</label>
+      <button type="button" className="facet-trigger" onClick={() => setOpen((value) => !value)}
+              aria-expanded={open}>
+        <span className={chosen ? 'facet-summary is-set' : 'facet-summary'}>{summary}</span>
+        <span className="facet-caret" aria-hidden="true">{open ? '\u25B4' : '\u25BE'}</span>
+      </button>
+      {open && (
+        <div className="facet-list" onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false) }}>
+          {options.length === 0 && <p className="facet-empty">{emptyHint}</p>}
+          {options.map((option) => (
+            <label className="facet-item" key={option.value} title={option.title || option.label}>
+              <input
+                type="checkbox"
+                checked={selected.includes(option.value)}
+                onChange={() => onToggle(option.value)}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+          <div className="facet-actions">
+            {chosen > 0 && (
+              <button type="button" className="facet-clear" onClick={onClear}>{allLabel}</button>
+            )}
+            <button type="button" className="facet-done" onClick={() => setOpen(false)}>{closeLabel}</button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -664,6 +676,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             onClear={() => clearFilter('dataset_scope')}
             allLabel={t('filter.allSelected')}
             emptyHint={t('filter.noneAvailable')}
+            closeLabel={t('filter.close')}
           />
         )}
         <FacetChecks
@@ -676,6 +689,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
           onClear={() => clearFilter('dataset_label')}
           allLabel={t('filter.allSelected')}
           emptyHint={t('filter.noneAvailable')}
+          closeLabel={t('filter.close')}
         />
         {showSoepFilters && (filterOptions?.sample_groups || []).length > 0 && (
           <FacetChecks
@@ -688,6 +702,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             onClear={() => clearFilter('sample_group')}
             allLabel={t('filter.allSelected')}
             emptyHint={t('filter.noneAvailable')}
+            closeLabel={t('filter.close')}
           />
         )}
         {showRegionalFilters && (
@@ -701,6 +716,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             onClear={() => clearFilter('spatial_level')}
             allLabel={t('filter.allSelected')}
             emptyHint={t('filter.noneAvailable')}
+            closeLabel={t('filter.close')}
           />
         )}
         {/* Theme is no longer INKAR-only: SOEP v41 brings the official topic hierarchy, so the
@@ -718,6 +734,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             onClear={() => clearFilter('theme')}
             allLabel={t('filter.allSelected')}
             emptyHint={t('filter.noneAvailable')}
+            closeLabel={t('filter.close')}
           />
         )}
         <div>
