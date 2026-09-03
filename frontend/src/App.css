@@ -1302,3 +1302,111 @@ button, input, select, textarea,
   font-weight: 400;
   cursor: default;
 }
+
+/* ---- Facets as checkbox lists ---------------------------------------------------------------
+   A dropdown holds one value, so comparing two sources or three spatial levels meant running the
+   same search once per value. Each facet is now a scrollable list of checkboxes; nothing checked
+   means no restriction. */
+.facet {
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.35));
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem 0.4rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.facet-legend {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0 0.25rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.facet-count {
+  font-size: 0.68rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--accent, #3b82f6);
+}
+
+.facet-clear {
+  border: none;
+  background: none;
+  padding: 0 0.1rem;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.facet-clear:hover {
+  color: var(--accent, #3b82f6);
+}
+
+/* Bounded and scrollable: the theme facet offers several hundred values. */
+.facet-list {
+  max-height: 148px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding-right: 0.2rem;
+}
+
+.facet-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+  line-height: 1.3;
+  cursor: pointer;
+  padding: 0.08rem 0.1rem;
+  border-radius: 3px;
+}
+
+.facet-item:hover {
+  background: var(--surface-2, rgba(148, 163, 184, 0.12));
+}
+
+.facet-item input {
+  margin: 0.15rem 0 0 0;
+  flex: 0 0 auto;
+}
+
+.facet-item span {
+  overflow-wrap: anywhere;
+}
+
+.facet-empty {
+  margin: 0.2rem 0.1rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* .filter-panel label was written for the old dropdown captions: block, uppercase, letter-spaced.
+   A facet's option labels are labels too, so they inherited all of it and the list came out
+   shouting. The legend keeps that styling, the options do not. */
+.filter-panel .facet-item {
+  display: flex;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.84rem;
+  color: var(--text, inherit);
+  margin-bottom: 0;
+  gap: 0.45rem;
+}
+
+/* Says when a source change made a checked value unavailable. Without it the tick simply
+   vanished, which reads as a bug. */
+.filter-dropped {
+  margin: 0.3rem 0 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  border-left: 2px solid var(--border, rgba(148, 163, 184, 0.5));
+  padding-left: 0.5rem;
+}

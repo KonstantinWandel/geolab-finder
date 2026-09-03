@@ -1048,18 +1048,40 @@ class SOEPRagAdvisorService:
             "bbsr_reference": self._bbsr_reference,
         }
 
+    # Placeholders the UI sends for "no restriction". A filter set to one of these, or left
+    # empty, does not narrow anything.
+    _FILTER_ANY = {"", "any", "all", "all datasets", "all sources", "all metadata sources"}
+
+    @classmethod
+    def _wanted(cls, value: Any) -> set:
+        """The set a filter asks for, from a scalar or a list.
+
+        Every facet is multi-select in the UI, so each of these arrives as a list of chosen
+        values; a bare string still works, because the API is also called directly and the
+        older clients send scalars.
+        """
+        if value is None:
+            return set()
+        values = value if isinstance(value, (list, tuple, set)) else [value]
+        out = set()
+        for item in values:
+            text = cls._as_text(item)
+            if text and text.strip().lower() not in cls._FILTER_ANY:
+                out.add(text)
+        return out
+
     def _passes_filters(self, row: Dict[str, Any], filters: Optional[Dict[str, Any]]) -> bool:
         filters = filters or {}
-        source = self._as_text(filters.get("dataset_scope") or filters.get("source") or "all").lower()
-        if source and source != "all" and row.get("source_key") != source:
+        sources = {s.lower() for s in self._wanted(filters.get("dataset_scope") or filters.get("source"))}
+        if sources and self._as_text(row.get("source_key")).lower() not in sources:
             return False
 
-        dataset_label = self._as_text(filters.get("dataset_label"))
-        if dataset_label and dataset_label != "All datasets" and dataset_label not in {
-            row.get("dataset", ""),
-            row.get("dataset_label", ""),
-            row.get("sheet", ""),
-        }:
+        dataset_labels = self._wanted(filters.get("dataset_label"))
+        if dataset_labels and not (dataset_labels & {
+            self._as_text(row.get("dataset")),
+            self._as_text(row.get("dataset_label")),
+            self._as_text(row.get("sheet")),
+        }):
             return False
 
         # Sample/questionnaire group (SOEP only). Accepts a list (multi-select) or
@@ -1070,26 +1092,21 @@ class SOEPRagAdvisorService:
         if row.get("is_raw") and not filters.get("include_raw"):
             return False
 
-        sample_groups = filters.get("sample_groups")
-        if sample_groups:
-            if isinstance(sample_groups, str):
-                sample_groups = [sample_groups]
-            wanted = {self._as_text(g) for g in sample_groups if self._as_text(g) and self._as_text(g) != "Any"}
-            if wanted and row.get("source_key") == "soep" and row.get("sample_group") not in wanted:
+        sample_groups = self._wanted(filters.get("sample_groups") or filters.get("sample_group"))
+        if sample_groups and row.get("source_key") == "soep" and (
+                self._as_text(row.get("sample_group")) not in sample_groups):
+            return False
+
+        # A row carries several levels at once, so a chosen level matches when the row offers it.
+        row_levels = {self._as_text(l) for l in (row.get("spatial_levels") or [])} | {
+            self._as_text(l) for l in (row.get("nuts_levels") or [])}
+        for key in ("nuts_level", "spatial_level"):
+            wanted_levels = self._wanted(filters.get(key))
+            if wanted_levels and not (wanted_levels & row_levels):
                 return False
 
-        nuts_level = self._as_text(filters.get("nuts_level"))
-        if nuts_level and nuts_level != "Any":
-            if nuts_level not in (row.get("nuts_levels") or []) and nuts_level not in (row.get("spatial_levels") or []):
-                return False
-
-        spatial_level = self._as_text(filters.get("spatial_level"))
-        if spatial_level and spatial_level != "Any":
-            if spatial_level not in (row.get("spatial_levels") or []) and spatial_level not in (row.get("nuts_levels") or []):
-                return False
-
-        theme = self._as_text(filters.get("theme"))
-        if theme and theme != "Any" and row.get("theme") != theme:
+        themes = self._wanted(filters.get("theme"))
+        if themes and self._as_text(row.get("theme")) not in themes:
             return False
 
         if filters.get("regional_only") and not (row.get("spatial_levels") or row.get("nuts_levels")):

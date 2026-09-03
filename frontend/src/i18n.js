@@ -28,6 +28,12 @@ export const STRINGS = {
 
     'filter.source': 'Search source',
     'filter.allSources': 'All metadata sources',
+    'filter.allSelected': 'all',
+    'filter.noneAvailable': 'nothing to choose here',
+    'filter.nSources': '{count} sources',
+    'filter.none': 'no filters',
+    'filter.dropped': 'Dropped, the chosen sources do not offer it: {values}',
+    'filter.includeRawShort': 'raw questionnaire files included',
     'filter.datasetGeo': 'Dataset / sheet',
     'filter.datasetSoep': 'SOEP dataset',
     'filter.allDatasets': 'All datasets',
@@ -161,6 +167,12 @@ export const STRINGS = {
 
     'filter.source': 'Datenquelle',
     'filter.allSources': 'Alle Metadatenquellen',
+    'filter.allSelected': 'alle',
+    'filter.noneAvailable': 'hier gibt es nichts zu wählen',
+    'filter.nSources': '{count} Quellen',
+    'filter.none': 'keine Filter',
+    'filter.dropped': 'Entfallen, die gewählten Quellen bieten das nicht an: {values}',
+    'filter.includeRawShort': 'Rohfragebögen einbezogen',
     'filter.datasetGeo': 'Datensatz / Tabellenblatt',
     'filter.datasetSoep': 'SOEP-Datensatz',
     'filter.allDatasets': 'Alle Datensätze',
@@ -315,13 +327,11 @@ export function detectLanguage() {
   try {
     const stored = localStorage.getItem('geolab_lang')
     if (stored === 'de' || stored === 'en') return stored
-  } catch (e) { /* private mode: fall through to the browser preference */ }
-  try {
-    const preferred = (navigator.languages || [navigator.language || 'en']).find(Boolean) || 'en'
-    return String(preferred).toLowerCase().startsWith('de') ? 'de' : 'en'
-  } catch (e) {
-    return 'en'
-  }
+  } catch (e) { /* private mode: fall through to the default */ }
+  // English is the default for everyone, including German browsers. The tools are used by
+  // international researchers, the site around them is English, and the language switch is one
+  // click away for anyone who wants German.
+  return 'en'
 }
 
 // t('filter.active', { source: 'INKAR' }) -> "Aktiv: INKAR". A missing key falls back to
