@@ -579,6 +579,61 @@ Next lever if it needs to be faster still: ONNX Runtime for the cross-encoder, w
 1.5-2.5x on that stage, at the cost of installing onnxruntime plus optimum on the VM and
 exporting the model. Not done: it is a live service and the current numbers are usable.
 
+## Keeping this running: MAINTENANCE.md is the operator's document
+
+`MAINTENANCE.md` (German, for a student assistant or whoever inherits this) holds the routines:
+what runs by itself, how to read the weekly report, and what to do when a source address, a
+service, or the certificate goes wrong. This file stays the technical inside view. When the two
+disagree, one of them is out of date and needs fixing, not working around.
+
+The weekly report runs on the **VM**, not here: `scripts/health_check.py`, installed by
+`scripts/install_health_check.sh`, Mondays 05:30 via cron, writing
+`/home/kwandel/health/repo/state/latest.json` plus one line per run in `logs/health.log`. lovelace
+is a pod, so no schedule survives here; the VM is a real machine. Sections: a real query against
+both finders (not `/health`, which stays green with a missing index), the 36 source entry pages in
+a browser, a rotating sample of about 420 deep links, index age, certificate, disk and backup.
+`bash ~/kwandel/bin/geolab_alarm.sh` brings a non-green report to the person at login.
+
+Two rules for anything that touches it. **Self-healing must not hide its cause**: the report turns
+yellow after a repair, never green, because a service that needs restarting every week is broken
+even when every restart works. **Acknowledged exceptions are dated**: an address that answers but
+cannot be checked from a data centre goes in `data_sources/registry/known_url_issues.json` with a
+reason and a review date, so an exception cannot quietly become permanent.
+
+## A source address is corrected in ONE place, and it is not the registry file
+
+`data_sources/registry/geo_sources.json` is GENERATED from `Geospatial_Data_Sources.xlsx` by
+`scripts/build_source_registry.py`. It says "canonical, committed" at the top of that script, which
+is how four corrected addresses and eight maintenance notes came to be typed straight into the JSON
+by hand. They survived exactly until the next regeneration, which reverted every one of them
+silently and took the reasoning with it. Found on 2026-09-03 by regenerating and diffing.
+
+So all of it now lives in `SOURCE_FIXES` in `build_source_registry.py`, keyed by slug: `url` (the
+workbook's own address moves to `url_former`), `maintenance_note` (internal, never shown), and
+`note` (which IS shown, it lands in the portal record's description as "Hinweis: ..."). Regeneration
+reproduces the repairs. `PORTAL_OVERRIDES` and `PORTAL_URL_OVERRIDES` in
+`build_geodb_metadata.py` are both empty on purpose: an override there reached the portal record
+only, while the source card, the attribution page, the deliverables and the address check all read
+the registry and went on showing the wrong address.
+
+Corollary for any generated artifact in this repo: fix the generator, never its output. If you
+catch yourself editing a file some script writes, that edit has a half-life of one run.
+
+## Caddy reads the certificate file once, at start
+
+TLS for both finders is an externally deployed wildcard certificate at
+`/etc/ssl/geolab.soz.uni-bielefeld.de/fullchain.cer`, referenced by an explicit `tls` directive in
+the Caddyfile. Caddy therefore does **no** ACME renewal here, and it reads that file only when it
+starts. The file was renewed on 2026-08-06; Caddy kept serving the June certificate and would have
+served an expired one from 2026-09-06, blocking both sites in every browser, on a Sunday. Found on
+2026-09-03 by the first run of the new health check, three days before it would have broken.
+
+`caddy-cert-reload.path` on the VM now reloads Caddy whenever that file changes (a 15 s delay
+covers a deployer writing key and chain separately), and `health_check.py` compares the served
+certificate against the file weekly and reloads if they differ. When debugging TLS here, check
+those two before suspecting ACME: there is no ACME. A remaining lifetime shorter than the file's is
+a missing reload, not a failed renewal.
+
 ## Hard-won rules
 
 **The embedding cache is matched by ROW COUNT only, never by model.** `_load_cached_embeddings`

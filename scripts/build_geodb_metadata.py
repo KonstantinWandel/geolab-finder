@@ -3812,13 +3812,12 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
 NO_PORTAL_RECORD = {"inkar"}
 
 
-# Portals whose workbook URL is not the one a researcher should be sent to.
-PORTAL_URL_OVERRIDES = {
-    # InfraGO support (ticket IIBV31-13354, 2026-08-25): the Infrastrukturregister is readable
-    # without any registration through the DB MapCloud viewer. The Infraportal registration the
-    # workbook points at is only needed for the operational applications.
-    "deutsche-bahn-infrastrukturregister": "https://geoviewer.deutschebahn.com/maps/#/context/ISR/275618",
-}
+# Empty on purpose, like PORTAL_OVERRIDES above, and for the same reason. The DB
+# Infrastrukturregister address that used to sit here now lives in `SOURCE_FIXES` in
+# `build_source_registry.py`: an override here reached the portal record only, while the source
+# card, the attribution page, the deliverables and the weekly address check all read the registry
+# and went on showing the old address. One address, one place.
+PORTAL_URL_OVERRIDES: Dict[str, str] = {}
 
 
 # The registry's URL is the address the source was catalogued under, which is not always the

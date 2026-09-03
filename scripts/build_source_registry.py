@@ -103,6 +103,79 @@ SLUG_OVERRIDES = {
     "Bundes-Klinik-Atlas (vormals Fachärztesuche - Weisse Liste)": "bundes-klinik-atlas",
 }
 
+# Repairs to what the workbook says about a source, keyed by registry slug.
+#
+# THIS IS THE ONLY PLACE where a source address gets corrected. The registry is generated from
+# the workbook's hyperlinks, so a fix typed into `geo_sources.json` survives exactly until the
+# next `build_source_registry.py` run and then silently disappears, taking the reasoning with it.
+# That had already happened to four addresses and eight notes, which is how this table came to be.
+#
+# Per slug:
+#   url               the address a reader should be sent to. The workbook's own address moves to
+#                     `url_former`, so the move stays readable in the registry.
+#   maintenance_note  prose for whoever maintains this, never shown to a user.
+#   note              replaces the workbook's Kommentar, which IS shown to users: it lands in the
+#                     portal record's description as "Hinweis: ...". Set it to "" to keep an
+#                     internal remark ("keine Angabe, vermutlich laufend") out of the finder.
+#
+# When `check_source_urls.py` reports a source as moved or dead, the repair is one entry here plus
+# a rebuild. Addresses that answer but cannot be checked from a data centre (bot challenges)
+# belong in `data_sources/registry/known_url_issues.json` instead, so the weekly check stays
+# quiet about them without anyone forgetting they exist.
+SOURCE_FIXES: Dict[str, Dict[str, str]] = {
+    "breitband-monitor": {
+        "url": "https://gigabitgrundbuch.bund.de/",
+        "note": "",
+        "maintenance_note": (
+            "Ursprüngliche Adresse aufbewahrt: sie leitet seit spätestens 2026-08-31 per 301 auf "
+            "die Firmenseite kyago.de um, vermutlich eine nicht verlängerte Domain der "
+            "Bundesnetzagentur. Der Betreiber ist informiert (KW, 2026-08-31). Sobald sie wieder "
+            "erreichbar ist, genügt es, diesen Eintrag zu entfernen. SSL certificate error"),
+    },
+    "breitbandatlas": {
+        "url": "https://gigabitgrundbuch.bund.de/",
+        "note": "",
+        "maintenance_note": ("Ursprüngliche Adresse aufbewahrt: die BMVI-Seite antwortet nicht "
+                             "mehr. Zertifikat abgelaufen, Stand 2021"),
+    },
+    "deutschlandatlas-erreichbarkeit-von-apotheken": {
+        "url": "https://www.deutschlandatlas.bund.de/",
+        "maintenance_note": ("Ursprüngliche Adresse aufbewahrt: die katalogisierte Kartenseite "
+                             "liefert 404, die Einstiegsseite führt weiterhin zu allen Karten."),
+    },
+    "datenguide-abgeschaltet": {
+        "url": "https://www.regionalstatistik.de/genesis/online",
+        "maintenance_note": ("Ursprüngliche Adresse aufbewahrt: datengui.de antwortet, ist aber "
+                            "das abgeschaltete Datenguide-Projekt."),
+    },
+    # Von der Adressprüfung am 2026-09-03 gefunden: drei echte Umzüge, alle drei antworten 200,
+    # weshalb nur die Domainvergleich sie überhaupt sichtbar gemacht hat.
+    "deutsche-bahn-infrastrukturregister": {
+        "url": "https://geoviewer.deutschebahn.com/maps/#/context/ISR/275618",
+        "maintenance_note": ("Umgezogen: geovdbn.deutschebahn.com leitet auf die DB MapCloud um. "
+                             "Diese Viewer-Adresse ist ohne Registrierung lesbar (InfraGO-Ticket "
+                             "IIBV31-13354, 2026-08-25); die Anmeldung im Infraportal, auf die das "
+                             "Arbeitsblatt zeigt, braucht nur der operative Zugang."),
+    },
+    "strukturdaten-bundestagswahl-2021": {
+        "url": "https://www.bundeswahlleiterin.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+        "maintenance_note": ("Umgezogen: die Behörde heißt seit 2023 Bundeswahlleiterin, "
+                             "bundeswahlleiter.de leitet weiter, führt aber die alte Domain."),
+    },
+    "genesis-online-bund": {
+        "url": "https://genesis.destatis.de/datenbank/online/",
+        "maintenance_note": ("Umgezogen: www-genesis.destatis.de antwortet 307 auf "
+                             "genesis.destatis.de. Gilt nur für die Einstiegsseite. Tiefenlinks "
+                             "behalten die Form ?operation=table&code=, weil die neue "
+                             "Anwendungsadresse dafür nur eine leere Hülle ausliefert."),
+    },
+    # Nur Aufräumen: der Kommentar aus dem Arbeitsblatt taugt nicht als Hinweis für Nutzer.
+    "hochschulkompass": {"note": "", "maintenance_note": "keine Angabe , vermutlich laufend"},
+    "deutsche-bahn-bahnhofsuche": {"note": "", "maintenance_note": "Copyright 2024, sonst keine Angabe"},
+    "spielplatztreff-suchmaschine-fuer-spielplaetze": {"note": "", "maintenance_note": "keine Angabe , vermutlich laufend"},
+    "spielplatzkarte": {"note": "", "maintenance_note": "keine Angabe , vermutlich laufend"},
+}
+
 UMLAUTS = {"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"}
 
 
@@ -177,11 +250,20 @@ def read_workbook(path: Path) -> List[Dict[str, Any]]:
         access = [ACCESS_LABEL[column] for column in ACCESS_COLS if marked(column)]
         spatial = [column for column in SPATIAL_COLS if marked(column)]
 
+        slug = SLUG_OVERRIDES.get(name, slugify(name))
+        url = name_cell.hyperlink.target if name_cell.hyperlink else ""
+        fix = SOURCE_FIXES.get(slug, {})
+        url_former = ""
+        if fix.get("url") and fix["url"] != url:
+            url, url_former = fix["url"], url
+
         records.append(
             {
                 "name": name,
-                "slug": SLUG_OVERRIDES.get(name, slugify(name)),
-                "url": name_cell.hyperlink.target if name_cell.hyperlink else "",
+                "slug": slug,
+                "url": url,
+                "url_former": url_former,
+                "maintenance_note": fix.get("maintenance_note", ""),
                 "excel_row": row_number,
                 "provider": "",  # filled by hand in SOURCE.md; not in the workbook
                 "access_modes": access,
@@ -195,7 +277,7 @@ def read_workbook(path: Path) -> List[Dict[str, Any]]:
                 "coverage_end_month": MONTHS.get(clean(cells[index_of["endmonth"]].value).lower()),
                 "coverage_end_year": as_year(cells[index_of["endyear"]].value),
                 "update_frequency": clean(cells[index_of["Turnus"]].value),
-                "note": clean(cells[index_of["Kommentar"]].value),
+                "note": fix.get("note", clean(cells[index_of["Kommentar"]].value)),
             }
         )
 

@@ -1,0 +1,19 @@
+{
+  "_comment": [
+    "Adressen, die der wöchentliche Prüflauf kennt und deshalb nicht mehr melden soll.",
+    "Nur für Fälle, die von außen nicht prüfbar sind, nicht für kaputte Links: eine echt",
+    "gestorbene oder umgezogene Adresse wird in SOURCE_FIXES in build_source_registry.py",
+    "korrigiert, nicht hier stillgelegt. Jeder Eintrag hat einen Grund, ein Datum und ein",
+    "Datum zur Wiedervorlage, damit eine Ausnahme nicht zur Ewigkeit wird.",
+    "Felder: slug, grund, seit, wiedervorlage, geprueft_von."
+  ],
+  "issues": [
+    {
+      "slug": "hochschulkompass",
+      "grund": "Bot-Schutz: die Seite antwortet 400 mit einer Enodia-Verifikationsseite, wenn die Anfrage aus einem Rechenzentrum kommt. Im normalen Browser erreichbar, am 2026-09-03 von Hand geprüft.",
+      "seit": "2026-09-03",
+      "wiedervorlage": "2027-03-01",
+      "geprueft_von": "KW"
+    }
+  ]
+}
