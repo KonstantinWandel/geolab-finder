@@ -634,6 +634,23 @@ certificate against the file weekly and reloads if they differ. When debugging T
 those two before suspecting ACME: there is no ACME. A remaining lifetime shorter than the file's is
 a missing reload, not a failed renewal.
 
+## The services' tuning lives in systemd drop-ins, not in the unit file
+
+`systemctl cat geolab-inkar` prints the unit followed by everything in
+`/etc/systemd/system/geolab-inkar.service.d/`, and on this VM that directory carries the decisions:
+`e5.conf` (the embedding model the indexes were actually built with), `onnx.conf` and `int8.conf`
+(the quantised reranker), `rerank.conf` (candidates and document characters, swept against both
+gates), `threads.conf`. Each file carries the measurement that justified it.
+
+**Never remove that directory to undo an experiment.** On 2026-09-05 a one-line thread experiment
+was reverted with `rm -rf` on the whole `.service.d`, which also deleted the embedding-model
+override: the finder restarted on `bge-m3` while its index is built with `e5-large-instruct`, was
+briefly 502 while it downloaded the wrong model, and would have answered with nonsense once it came
+up. Put an experiment in its own file and delete only that file. If the directory is lost, the twin
+service still has its copies and
+`soep_metadata_output/*_embeddings.npy.meta.json` names the model the index was built with, which is
+the authority on what the service must load.
+
 ## Hard-won rules
 
 **The embedding cache is matched by ROW COUNT only, never by model.** `_load_cached_embeddings`
