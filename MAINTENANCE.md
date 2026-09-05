@@ -137,6 +137,25 @@ grep -o 'assets/index-[A-Za-z0-9_-]*\.js' frontend/dist-inkar/index.html
 Beide Zeichenketten müssen gleich sein. Ein fehlgeschlagener Frontend-Bau liefert sonst
 unbemerkt das alte Bündel aus, und `rsync` meldet trotzdem Erfolg.
 
+**Alte Bündel nie löschen.** Wer die Seite schon einmal besucht hat, kann noch ein älteres
+`index.html` im Browser haben und fragt dann nach einem alten Bündelnamen. Fehlt der, sah der
+Besucher bis zum 2026-09-05 einen weißen Bildschirm, und zwar dauerhaft, weil der Server die
+fehlende Datei mit `200`, HTML-Inhalt und einem Jahr Cache beantwortet hat. Der Server sagt jetzt
+sauber `404`, und die Bündel werden beim Ausliefern nur ergänzt, nicht ersetzt (`rsync` ohne
+`--delete` für `assets/`). Der Wochenbericht prüft beides.
+
+**Wenn jemand einen weißen Bildschirm meldet:** zuerst prüfen, ob es am Server liegt.
+
+```bash
+curl -sI https://geodb.geolab.soz.uni-bielefeld.de/$(curl -s https://geodb.geolab.soz.uni-bielefeld.de/ \
+  | grep -o 'assets/index-[A-Za-z0-9_-]*\.js') | grep -i content-type
+```
+
+Dort muss `text/javascript` stehen. Steht dort `text/html`, ist es der oben beschriebene Fehler.
+Steht dort das Richtige, hat der Browser noch eine vergiftete Datei aus der Zeit davor im Speicher:
+das lässt sich nur dort beheben, mit einem harten Neuladen (Strg+Umschalt+R, auf dem Mac
+Cmd+Umschalt+R) oder über „Websitedaten löschen". Einmal genügt.
+
 ## Routine 4: eine Seite antwortet nicht
 
 ```bash
