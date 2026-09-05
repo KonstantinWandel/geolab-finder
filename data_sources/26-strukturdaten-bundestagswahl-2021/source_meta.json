@@ -1,7 +1,9 @@
 {
   "name": "Strukturdaten Bundestagswahl 2021",
   "slug": "strukturdaten-bundestagswahl-2021",
-  "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+  "url": "https://www.bundeswahlleiterin.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+  "url_former": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+  "maintenance_note": "Umgezogen: die Behörde heißt seit 2023 Bundeswahlleiterin, bundeswahlleiter.de leitet weiter, führt aber die alte Domain.",
   "excel_row": 27,
   "provider": "",
   "access_modes": [

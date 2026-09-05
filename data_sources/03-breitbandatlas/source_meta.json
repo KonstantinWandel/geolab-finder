@@ -1,7 +1,9 @@
 {
   "name": "Breitbandatlas",
   "slug": "breitbandatlas",
-  "url": "https://www.bmvi.de/SharedDocs/DE/Artikel/DG/breitbandatlas/breitbandatlas.html",
+  "url": "https://gigabitgrundbuch.bund.de/",
+  "url_former": "https://www.bmvi.de/SharedDocs/DE/Artikel/DG/breitbandatlas/breitbandatlas.html",
+  "maintenance_note": "Ursprüngliche Adresse aufbewahrt: die BMVI-Seite antwortet nicht mehr. Zertifikat abgelaufen, Stand 2021",
   "excel_row": 4,
   "provider": "",
   "access_modes": [
@@ -51,5 +53,5 @@
   "coverage_end_month": 8,
   "coverage_end_year": 2021,
   "update_frequency": "laufend",
-  "note": "Zertifikat abgelaufen, Stand 2021"
+  "note": ""
 }

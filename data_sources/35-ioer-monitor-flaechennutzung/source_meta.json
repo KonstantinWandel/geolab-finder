@@ -2,6 +2,8 @@
   "name": "IÖR-Monitor (Flächennutzung)",
   "slug": "ioer-monitor-flaechennutzung",
   "url": "https://www.ioer-monitor.de/",
+  "url_former": "",
+  "maintenance_note": "Indikatorliste kommt seit 2026-09-05 aus dem Katalogdienst des Kartenviewers (POST monitor.ioer.de/backend/query.php mit values={\"format\":{\"id\":\"gebiete\"|\"raster\"},\"query\":\"getAllIndicators\"}), nicht mehr aus der PDF-Liste: die PDF hinkt nach und nannte im September 2026 acht abgeschaltete und keinen der elf neuen Indikatoren. Tiefenlink je Indikator: monitor.ioer.de/?ind=<Kürzel>&raumgl=<Ebene> beziehungsweise &raeumliche_gliederung=raster für die reinen Rasterindikatoren. Ohne Jahresangabe wählt der Viewer selbst den neuesten Stand, deshalb steht in den Links kein Jahr.",
   "excel_row": 36,
   "provider": "",
   "access_modes": [

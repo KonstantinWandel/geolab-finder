@@ -2,6 +2,8 @@
   "name": "Open Data Handelsregister",
   "slug": "open-data-handelsregister",
   "url": "https://offeneregister.de/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 25,
   "provider": "",
   "access_modes": [

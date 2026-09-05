@@ -1,7 +1,9 @@
 {
   "name": "Breitband-Monitor",
   "slug": "breitband-monitor",
-  "url": "https://www.breitband-monitor.de/",
+  "url": "https://gigabitgrundbuch.bund.de/",
+  "url_former": "https://www.breitband-monitor.de/",
+  "maintenance_note": "Ursprüngliche Adresse aufbewahrt: sie leitet seit spätestens 2026-08-31 per 301 auf die Firmenseite kyago.de um, vermutlich eine nicht verlängerte Domain der Bundesnetzagentur. Der Betreiber ist informiert (KW, 2026-08-31). Sobald sie wieder erreichbar ist, genügt es, diesen Eintrag zu entfernen. SSL certificate error",
   "excel_row": 3,
   "provider": "",
   "access_modes": [
@@ -51,5 +53,5 @@
   "coverage_end_month": 9,
   "coverage_end_year": 2020,
   "update_frequency": "jährlich",
-  "note": "SSL certificate error"
+  "note": ""
 }

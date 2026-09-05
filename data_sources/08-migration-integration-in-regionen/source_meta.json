@@ -2,6 +2,8 @@
   "name": "Migration & Integration in Regionen",
   "slug": "migration-integration-in-regionen",
   "url": "https://service.destatis.de/DE/karten/migration_integration_regionen.html",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 9,
   "provider": "",
   "access_modes": [

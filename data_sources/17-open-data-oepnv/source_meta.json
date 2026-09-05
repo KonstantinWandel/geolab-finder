@@ -2,6 +2,8 @@
   "name": "Open Data - ÖPNV",
   "slug": "open-data-oepnv",
   "url": "https://www.opendata-oepnv.de/ht/de/willkommen",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 18,
   "provider": "",
   "access_modes": [

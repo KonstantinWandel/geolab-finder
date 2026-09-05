@@ -2,6 +2,8 @@
   "name": "Wahlergebnisse Bundeswahlleiterin",
   "slug": "wahlergebnisse-bundeswahlleiterin",
   "url": "https://www.bundeswahlleiterin.de/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 35,
   "provider": "",
   "access_modes": [

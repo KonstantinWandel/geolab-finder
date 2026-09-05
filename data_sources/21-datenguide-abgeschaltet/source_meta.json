@@ -1,7 +1,9 @@
 {
   "name": "Datenguide (abgeschaltet)",
   "slug": "datenguide-abgeschaltet",
-  "url": "https://datengui.de/statistiken",
+  "url": "https://www.regionalstatistik.de/genesis/online",
+  "url_former": "https://datengui.de/statistiken",
+  "maintenance_note": "Ursprüngliche Adresse aufbewahrt: datengui.de antwortet, ist aber das abgeschaltete Datenguide-Projekt.",
   "excel_row": 22,
   "provider": "",
   "access_modes": [

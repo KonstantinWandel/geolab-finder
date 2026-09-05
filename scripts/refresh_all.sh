@@ -35,6 +35,12 @@ echo "[3b] source addresses"
 "$HOME/miniconda3/envs/webshot/bin/python" scripts/check_source_urls.py \
   --json-out output/source_urls.json 2>&1 | tail -14 || echo "  (Adressprüfung übersprungen)"
 
+# The IÖR links point into a map application, so no HTTP check can tell a working link from a
+# broken one; only the rendered map header can. About 90 seconds for all 91.
+echo "[3c] IÖR deep links (browser)"
+"$HOME/miniconda3/envs/webshot/bin/python" scripts/check_ioer_links.py \
+  --json-out output/ioer_link_check.json 2>&1 | tail -6 || echo "  (IÖR-Linkprüfung übersprungen)"
+
 echo "[4/6] retrieval gate"
 GEOLAB_APP_MODE=inkar SOEP_RAG_DEVICE=cuda \
   INKAR_METADATA_ROOT="$PWD/soep_metadata_output" SOEP_METADATA_ROOT="$PWD/soep_metadata_output" \

@@ -2,6 +2,8 @@
   "name": "Unfallatlas",
   "slug": "unfallatlas",
   "url": "https://unfallatlas.statistikportal.de/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 28,
   "provider": "",
   "access_modes": [

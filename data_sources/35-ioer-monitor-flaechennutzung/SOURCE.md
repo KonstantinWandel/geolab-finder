@@ -37,8 +37,25 @@ and leave them as downloaded, no manual cleaning.
 
 ## Manual notes
 
-- Provider / publisher:
-- Licence / terms of use:
-- Identifier scheme (indicator codes?):
-- Deep-link pattern to a single indicator (if any):
-- Status:
+- **Provider / publisher:** Leibniz-Institut für ökologische Raumentwicklung (IÖR), Dresden.
+- **Licence / terms of use:** Namensnennung IÖR
+  (<https://www.ioer-monitor.de/fileadmin/Dokumente/PDFs/Nutzungsbedingungen_IOER-Monitor.pdf>).
+- **Identifier scheme:** five characters, e.g. `S11RG`. The first letter is the category
+  (S Siedlung, V Verkehr, F Freiraum, N Nachhaltigkeit, P Stadtgrün, B Bevölkerungsbezug,
+  G Gebäude, D Zersiedelung, L Landschafts- und Naturschutz, U Landschaftsqualität,
+  O Ökosystemleistungen, R Risiko, E Energie, X Relief). The same code addresses the OGC services.
+- **Deep-link pattern to a single indicator:** `https://monitor.ioer.de/?ind=<code>&raumgl=<level>`
+  for the 85 indicators published for areas, `?ind=<code>&raeumliche_gliederung=raster` for the six
+  that exist only as raster. Levels are `bld ror krs g50 gem vwg stt`. Naming no year is deliberate:
+  the viewer then shows the newest year that indicator has, so the link does not age. Six raster-only
+  indicators render an empty map at `&raumgl=krs`, which is why the catalogue an indicator appears
+  in decides the link rather than its `spatial_extends` field. All 91 links were opened in a
+  browser on 2026-09-05 and every one showed the indicator it names.
+- **Machine-readable catalogue:** the viewer's own endpoint, no key needed:
+  `POST https://monitor.ioer.de/backend/query.php` with
+  `values={"format":{"id":"gebiete"},"query":"getAllIndicators"}` (and `"raster"` for the other
+  catalogue). It answers with every indicator's German and English name, unit, years,
+  spatial levels, OGC services, description, method and interpretation text.
+  `scripts/fetch_sources.py` stores both catalogues as `raw/indikatoren_katalog.json`.
+  A personal key is needed only to CALL the WMS/WFS/WCS services, never to read this list.
+- **Status:** active, one edition a year. 91 indicators as of 2026-09-05, coverage 2000-2025.

@@ -3625,15 +3625,180 @@ IOER_CATEGORIES: Dict[str, str] = {
 }
 
 
-def flatten_ioer(source: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """IÖR-Monitor: all 88 indicators, from the monitor's own public indicator list.
+# The area levels the monitor publishes at, in its own wording (from the viewer's
+# getSpatialExtend answer), mapped onto the workbook levels every other source here uses.
+IOER_LEVELS: Dict[str, Tuple[str, str]] = {
+    "bld": ("Bundesländer", "Bundesland"),
+    "ror": ("Raumordnungsregionen", "weitere räumliche Gliederungen"),
+    "krs": ("Kreise", "Kreise & kreisfreie Städte"),
+    "g50": ("Städte ab 50 000 Ew.", "Gemeinden und Verbandsgemeinden"),
+    "gem": ("Gemeinden", "Gemeinden und Verbandsgemeinden"),
+    "vwg": ("Verbandsgemeinden", "Gemeinden und Verbandsgemeinden"),
+    "stt": ("Stadtteile", "Bezirksregionen / Ortsteile"),
+}
+# Which level the link should open on. Kreise draws in a second and is the level most people
+# want; the finer ones are there for the indicators that exist only for cities or municipalities.
+IOER_LEVEL_PREFERENCE: Tuple[str, ...] = ("krs", "g50", "gem", "vwg", "ror", "bld", "stt")
 
-    The list was assumed to be behind the user area; it is not. The "Übersicht der Geodienste"
-    section of /indikatoren/ links a public PDF with every indicator, its five-character code and
-    its category, and the codes are what address the WMS/WCS/WFS services. The service CALL still
-    needs a personal key (an unauthenticated call answers a WMS ServiceException), so the records
-    link to the indicator overview page and carry the code and the call pattern instead of a
-    per-indicator link that would not open for anyone.
+
+def _ioer_text(value: Any) -> str:
+    """Undo the catalogue's own encoding: ° stands for a space, and markup is double-escaped."""
+    text = clean(value)
+    if not text:
+        return ""
+    text = text.replace("°", " ")
+    text = html.unescape(html.unescape(text))
+    return re.sub(r"\s+", " ", strip_tags(text)).strip()
+
+
+def _unique_ci(parts: Iterable[str], drop: Optional[set] = None) -> List[str]:
+    """Keep the first spelling of each part, ignoring case, and drop what is already said."""
+    seen = {clean(item).casefold() for item in (drop or set())}
+    out: List[str] = []
+    for part in parts:
+        text = clean(part)
+        if text and text.casefold() not in seen:
+            seen.add(text.casefold())
+            out.append(text)
+    return out
+
+
+def _dedupe_lines(text: str) -> str:
+    return "\n".join(_unique_ci(text.split("\n")))
+
+
+def flatten_ioer(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """IÖR-Monitor: one record per indicator, linking into the map viewer at that indicator.
+
+    The monitor's documented API needs a personal key, which is why these records used to point
+    at the indicator overview page and carry the code in the text: 88 records, 88 identical links.
+    The map viewer keeps its whole state in the query string, though, and reading it needs no key
+    at all, so `monitor.ioer.de/?ind=<code>&raumgl=<level>` opens exactly one indicator, at a
+    level it exists for, with the newest year the monitor has for it (the viewer picks that itself
+    when the link names no year, which is why none of these links carry one and none go stale).
+    Verified in a browser over a sample of 16 indicators covering both catalogues, September 2026.
+
+    The catalogue behind them is the viewer's own `getAllIndicators`, which also carries the unit,
+    the years, the levels and the description text per indicator. The PDF that used to be the
+    source is kept as a fallback: it lags, and by September 2026 it named 8 retired indicators and
+    missed 11 live ones.
+    """
+    catalogue = source["folder"] / "raw" / "indikatoren_katalog.json"
+    if not catalogue.exists():
+        return _flatten_ioer_from_pdf(source)
+    document = json.loads(catalogue.read_text(encoding="utf-8"))
+    formats: Dict[str, Any] = document.get("formats") or {}
+    viewer = (document.get("viewer") or "https://monitor.ioer.de/").rstrip("/") + "/"
+
+    # code -> (category letter, category name, metadata, is_raster), area catalogue winning so an
+    # indicator that exists both ways is described by its area version and gains Rasterzellen.
+    merged: Dict[str, Dict[str, Any]] = {}
+    for form in ("raster", "gebiete"):
+        for letter, category in (formats.get(form) or {}).items():
+            for code, meta in (category.get("indicators") or {}).items():
+                entry = merged.setdefault(code, {"raster": False, "gebiete": False})
+                entry[form] = True
+                if form == "gebiete" or "meta" not in entry:
+                    entry.update({"letter": letter, "category": clean(category.get("cat_name")),
+                                  "category_en": clean(category.get("cat_name_en")), "meta": meta})
+
+    records: List[Dict[str, Any]] = []
+    for code in sorted(merged):
+        entry = merged[code]
+        meta = entry["meta"]
+        name = _ioer_text(meta.get("ind_name")) or code
+        # Only the area catalogue says anything true about area levels. The raster catalogue
+        # marks all seven levels for every indicator, and the six indicators that appear only
+        # there render an empty map at ?raumgl=krs (checked in a browser), so a record built
+        # from the raster side claims raster and nothing else.
+        levels = [key for key, flag in (meta.get("spatial_extends") or {}).items()
+                  if str(flag) == "1" and key in IOER_LEVELS] if entry["gebiete"] else []
+        years = [int(y) for y in re.findall(r"\d{4}", str(meta.get("times") or ""))]
+
+        # The link: the finest level worth opening on, or the raster view for the raster-only ones.
+        opens_on = next((key for key in IOER_LEVEL_PREFERENCE if key in levels), "")
+        if opens_on:
+            link = f"{viewer}?ind={code}&raumgl={opens_on}"
+            opens_label = IOER_LEVELS[opens_on][0]
+        elif entry["raster"]:
+            link = f"{viewer}?ind={code}&raeumliche_gliederung=raster"
+            opens_label = "Raster 100 m"
+        else:
+            link = f"{viewer}?ind={code}"
+            opens_label = ""
+
+        spatial: List[str] = []
+        nuts: List[str] = []
+        for key in levels:
+            mapped = SPATIAL_MAP.get(IOER_LEVELS[key][1], {})
+            spatial += [x for x in mapped.get("spatial", []) if x not in spatial]
+            nuts += [x for x in mapped.get("nuts", []) if x not in nuts]
+        if entry["raster"]:
+            spatial = ["Rasterzellen"] + spatial
+            nuts = ["Rasterzellen"] + nuts
+        if not spatial:
+            spatial, nuts = ["Rasterzellen"], ["Rasterzellen"]
+
+        services = [name_.upper() for name_, flag in sorted((meta.get("ogc") or {}).items())
+                    if str(flag) == "1"]
+        level_names = ", ".join(IOER_LEVELS[key][0] for key in
+                                sorted(levels, key=lambda k: IOER_LEVEL_PREFERENCE.index(k)))
+        description = _dedupe_lines(join_nonempty([
+            name + ".",
+            _ioer_text(meta.get("info")),
+            _ioer_text(meta.get("interpretation")),
+            _ioer_text(meta.get("datengrundlage")),
+            IOER_CATEGORIES.get(entry["letter"], ""),
+            f"Räumliche Ebenen: {level_names}." if level_names else "",
+            "Auch als Rasterkarte." if entry["raster"] else "",
+        ]))
+        records.append(
+            make_record(
+                source_key="ioer_monitor",
+                source_label="IÖR-Monitor (Leibniz-Institut für ökologische Raumentwicklung)",
+                item_type="regional_indicator",
+                item_id=f"ioer:{code}",
+                variable_name=code,
+                label=f"{name} (IÖR-Monitor)",
+                dataset_label=f"IÖR-Monitor: {entry['category']}" if entry["category"] else "IÖR-Monitor",
+                theme="Flächennutzung & Umwelt",
+                description=description[:1600],
+                aliases="; ".join(_unique_ci([
+                    _ioer_text(meta.get("ind_name_en")),
+                    _ioer_text(meta.get("ind_name_short")),
+                    entry.get("category_en", ""),
+                    code,
+                ], drop={name})),
+                unit=clean(meta.get("unit")),
+                spatial_levels=spatial,
+                nuts_levels=nuts,
+                year_start=min(years) if years else None,
+                year_end=max(years) if years else None,
+                years_text=(f"{min(years)}-{max(years)} ({len(years)} Zeitschnitte)"
+                            if len(years) > 1 else (str(years[0]) if years else "")),
+                source_url=source["url"],
+                indicator_url=link,
+                link_level="indicator",
+                access_modes=source["access_modes"] or ["interactive map viewer", "machine-readable API"],
+                update_frequency=source["update_frequency"] or "jährlich",
+                api_hint=join_nonempty([
+                    f"Indikatorkürzel {code}.",
+                    f"Der Link öffnet den Indikator im Kartenviewer ({opens_label})." if opens_label else "",
+                    (f"Geodienste {', '.join(services)} über monitor.ioer.de/monitor_api/user?id={code}"
+                     "&service=wms|wfs|wcs&key=<Schlüssel>; der Schlüssel stammt aus dem kostenlosen "
+                     "Nutzerbereich des IÖR-Monitors.") if services else "",
+                    "Nutzungsbedingungen: Namensnennung IÖR.",
+                ]),
+            )
+        )
+    return records
+
+
+def _flatten_ioer_from_pdf(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Fallback for a missing catalogue file: names and codes from the printable indicator list.
+
+    It carries no unit, no years and no per-indicator levels, and the links it can build reach the
+    overview page rather than the indicator, so this is a floor, not an alternative.
     """
     pdf = source["folder"] / "raw" / "indikatoren_liste.pdf"
     if not pdf.exists():
@@ -3684,7 +3849,7 @@ def flatten_ioer(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 years_text=f"{source['coverage_start_year']}-{source['coverage_end_year']}",
                 source_url=source["url"],
                 indicator_url=landing,
-                link_level="dataset",
+                link_level="portal",
                 access_modes=source["access_modes"] or ["interactive map viewer", "machine-readable API"],
                 update_frequency=source["update_frequency"] or "jährlich",
                 api_hint=f"Indikatorkürzel {code}. Die Geodienste werden je Indikator über "

@@ -2,6 +2,8 @@
   "name": "Arbeitsmarktstatistik BA - Karte",
   "slug": "arbeitsmarktstatistik-ba-karte",
   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Statistiken/Statistiken-nach-Regionen/Politische-Gebietsstruktur-Nav.html",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 5,
   "provider": "",
   "access_modes": [

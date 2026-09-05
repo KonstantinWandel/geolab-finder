@@ -1,5 +1,5 @@
 {
-  "checked": "2026-08-31",
+  "checked": "2026-09-05",
   "results": [
     {
       "slug": "regionalatlas-deutschland",
@@ -135,18 +135,19 @@
       "slug": "hochschulkompass",
       "name": "Hochschulkompass",
       "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
-      "status": null,
-      "final_url": "",
+      "status": 400,
+      "final_url": "https://www.hochschulkompass.de/.enodia/challenge?redirect=%2Fhochschulen%2Fhochschulsuche.html",
       "moved": false,
-      "error": "TimeoutError: Page.goto: Timeout 40000ms exceeded.\nCall log:\n  - navigating to \"http"
+      "error": "",
+      "title": "Enodia Verification"
     },
     {
       "slug": "deutsche-bahn-infrastrukturregister",
       "name": "Deutsche Bahn - Infrastrukturregister",
-      "url": "https://geovdbn.deutschebahn.com/isr",
+      "url": "https://geoviewer.deutschebahn.com/maps/#/context/ISR/275618",
       "status": 200,
-      "final_url": "https://geoviewer.deutschebahn.com/maps/?context-ISR#/",
-      "moved": true,
+      "final_url": "https://geoviewer.deutschebahn.com/maps/#/context/ISR/275618",
+      "moved": false,
       "error": "",
       "title": "DB MapCloud"
     },
@@ -253,10 +254,10 @@
     {
       "slug": "strukturdaten-bundestagswahl-2021",
       "name": "Strukturdaten Bundestagswahl 2021",
-      "url": "https://www.bundeswahlleiter.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
+      "url": "https://www.bundeswahlleiterin.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
       "status": 200,
       "final_url": "https://www.bundeswahlleiterin.de/bundestagswahlen/2021/strukturdaten/bund-99.html",
-      "moved": true,
+      "moved": false,
       "error": "",
       "title": "Strukturdaten Deutschland - Die Bundeswahlleiterin"
     },
@@ -273,10 +274,10 @@
     {
       "slug": "genesis-online-bund",
       "name": "GENESIS-Online (Bund)",
-      "url": "https://www-genesis.destatis.de/genesis/online",
+      "url": "https://genesis.destatis.de/datenbank/online/",
       "status": 200,
       "final_url": "https://genesis.destatis.de/datenbank/online/",
-      "moved": true,
+      "moved": false,
       "error": "",
       "title": "GENESIS-Online"
     },

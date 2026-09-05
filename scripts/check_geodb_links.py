@@ -50,6 +50,11 @@ BOGUS_PROBES = {
         "https://regionalatlas.statistikportal.de/?BL=DE&TCode=ZZZZ&ICode=ZZ9999",
     "regionalstatistik.de/genesis/online/statistic":
         "https://www.regionalstatistik.de/genesis/online/statistic/99999",
+    # The monitor is a Leaflet app: the same 4.7 KB shell comes back for every indicator and for
+    # none, so this probe is what stops the check reporting a confident "ok" it cannot support.
+    # These links are verified for real by scripts/check_ioer_links.py, in a browser.
+    "monitor.ioer.de/?ind=":
+        "https://monitor.ioer.de/?ind=ZZ999&raumgl=krs",
 }
 
 

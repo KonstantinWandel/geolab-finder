@@ -2,6 +2,8 @@
   "name": "Bundes-Klinik-Atlas (vormals Fachärztesuche - Weisse Liste)",
   "slug": "bundes-klinik-atlas",
   "url": "https://bundes-klinik-atlas.de/open-data/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 12,
   "provider": "",
   "access_modes": [

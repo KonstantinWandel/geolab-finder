@@ -2,6 +2,8 @@
   "name": "BORIS-D Bodenrichtwerte",
   "slug": "boris-d-bodenrichtwerte",
   "url": "https://www.bodenrichtwerte-boris.de/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 34,
   "provider": "",
   "access_modes": [

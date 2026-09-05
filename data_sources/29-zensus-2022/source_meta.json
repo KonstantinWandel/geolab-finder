@@ -2,6 +2,8 @@
   "name": "Zensus 2022",
   "slug": "zensus-2022",
   "url": "https://ergebnisse.zensus2022.de/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 30,
   "provider": "",
   "access_modes": [

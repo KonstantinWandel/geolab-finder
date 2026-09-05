@@ -2,6 +2,8 @@
   "name": "DWD Climate Data Center (CDC)",
   "slug": "dwd-climate-data-center-cdc",
   "url": "https://opendata.dwd.de/climate_environment/CDC/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 33,
   "provider": "",
   "access_modes": [

@@ -1,7 +1,9 @@
 {
   "name": "Deutschlandatlas - Erreichbarkeit von Apotheken",
   "slug": "deutschlandatlas-erreichbarkeit-von-apotheken",
-  "url": "https://www.deutschlandatlas.bund.de/DE/Karten/Unsere-Gesundheitsversorgung/132-PKW-Apotheken.html",
+  "url": "https://www.deutschlandatlas.bund.de/",
+  "url_former": "https://www.deutschlandatlas.bund.de/DE/Karten/Unsere-Gesundheitsversorgung/132-PKW-Apotheken.html",
+  "maintenance_note": "Ursprüngliche Adresse aufbewahrt: die katalogisierte Kartenseite liefert 404, die Einstiegsseite führt weiterhin zu allen Karten.",
   "excel_row": 14,
   "provider": "",
   "access_modes": [
