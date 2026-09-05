@@ -189,6 +189,11 @@ ssh vm "sudo systemctl reload caddy"    # wenn das ausgelieferte älter ist als 
 - **Keine Forschungsdaten in die Repos.** Sie enthalten Quelltext, keine Daten und keine Modelle.
 - **RegioPress-Volltexte** (aus dem Genios-Bestand) dürfen nicht öffentlich werden. Sie haben mit
   den Findern nichts zu tun, liegen aber auf derselben Maschine; die Regel gilt trotzdem.
+- **INKAR/BBSR: nichts auf deren Server schreiben.** Zwischen dem Projekt und dem BBSR besteht eine
+  eigene Vereinbarung, deren Reichweite offen ist (Stand 2026-09-05, Konstantin klärt sie). Bis das
+  geklärt ist: keine gespeicherten Abfragen über `Main/SaveQuery` anlegen, keine automatisierten
+  Abrufe in Serie, kein Ausschöpfen der Anwendung. Lesen der öffentlichen Kataloge und Geodienste
+  ist davon nicht berührt. Warum das überhaupt eine Frage ist, steht in `CLAUDE.md`.
 
 ## Was ein Skript nicht kann
 
