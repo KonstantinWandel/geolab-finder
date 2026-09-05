@@ -340,6 +340,53 @@ def check_host() -> dict:
 
 # ---------------------------------------------------------------- Bericht
 
+def check_frontends() -> dict:
+    """Kommt das Bündel, auf das die Seite verweist, auch wirklich als JavaScript zurück?
+
+    Am 2026-09-05 gemeldet als "manchmal weißer Bildschirm, in verschiedenen Browsern". Ursache
+    war nicht der Browser: `try_files` schrieb jeden unbekannten Pfad auf `index.html` um, und die
+    Kopfzeile für Bündel hing allein am angefragten Pfad. Eine fehlende Bündeldatei kam deshalb
+    mit HTTP 200, `Content-Type: text/html` und `Cache-Control: immutable` für ein Jahr zurück.
+    Der Browser legte das HTML dauerhaft unter der JS-Adresse ab, das Programm startete nie, und
+    die Seite blieb weiß. Beides wird hier geprüft, weil beides von außen unsichtbar war und für
+    einen Besucher wie ein kaputter Rechner aussieht.
+    """
+    detail, verdict = {}, "ok"
+    for finder in FINDERS:
+        eintrag = {}
+        try:
+            dok = urllib.request.urlopen(f"https://{finder['host']}/", timeout=30)
+            html = dok.read().decode("utf-8", "replace")
+            eintrag["dokument_cache"] = dok.headers.get("Cache-Control", "")
+            treffer = re.search(r"/assets/(index-[A-Za-z0-9_-]+\.js)", html)
+            if not treffer:
+                eintrag["fehler"] = "im Dokument steht kein Bündel"
+                verdict = worse(verdict, "bad")
+            else:
+                name = treffer.group(1)
+                eintrag["bündel"] = name
+                antwort = urllib.request.urlopen(f"https://{finder['host']}/assets/{name}", timeout=30)
+                typ = antwort.headers.get("Content-Type", "")
+                eintrag["typ"] = typ
+                if "javascript" not in typ:
+                    eintrag["fehler"] = f"das Bündel kommt als {typ} zurück, nicht als JavaScript"
+                    verdict = worse(verdict, "bad")
+            # Und die andere Richtung: ein Name, den es nicht gibt, muss 404 sagen.
+            try:
+                urllib.request.urlopen(f"https://{finder['host']}/assets/index-GIBTESNICHT.js", timeout=30)
+                eintrag["fehlende_datei"] = "200 statt 404, die Umschreibung auf index.html ist zurück"
+                verdict = worse(verdict, "bad")
+            except urllib.error.HTTPError as fehler:
+                eintrag["fehlende_datei"] = f"{fehler.code}"
+                if fehler.code != 404:
+                    verdict = worse(verdict, "warn")
+        except Exception as fehler:  # noqa: BLE001
+            eintrag["fehler"] = f"{type(fehler).__name__}: {fehler}"
+            verdict = worse(verdict, "bad")
+        detail[finder["key"]] = eintrag
+    return {"verdict": verdict, "detail": detail}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -357,6 +404,7 @@ def main() -> int:
     report = {"gelaufen": datetime.now(timezone.utc).isoformat(timespec="seconds"),
               "modus": "quick" if args.quick else "vollständig"}
     report["dienst"] = check_services(heal=not args.no_heal)
+    report["oberfläche"] = check_frontends()
     report["alter"] = check_freshness()
     report["zertifikat"] = check_certificate(heal=not args.no_heal)
     report["maschine"] = check_host()
@@ -368,7 +416,7 @@ def main() -> int:
         report["links"] = check_links(sys.executable, args.per_source)
 
     gesamt = "ok"
-    for key in ("dienst", "quellen", "links", "alter", "zertifikat", "maschine"):
+    for key in ("dienst", "oberfläche", "quellen", "links", "alter", "zertifikat", "maschine"):
         gesamt = worse(gesamt, report[key].get("verdict", "ok"))
 
     # Eine Reparatur darf den Anlass nicht verschlucken. Ein Dienst, der jede Woche neu gestartet
@@ -385,6 +433,7 @@ def main() -> int:
                                        encoding="utf-8")
     zeile = (f"[{report['gelaufen']}] {gesamt.upper():<4} "
              f"dienst={report['dienst']['verdict']} "
+             f"oberfläche={report['oberfläche']['verdict']} "
              f"quellen={report['quellen']['verdict']} "
              f"links={report['links']['verdict']}"
              f"({report['links'].get('quote', '-')}) "
@@ -395,7 +444,7 @@ def main() -> int:
     with (LOGS / "health.log").open("a", encoding="utf-8") as handle:
         handle.write(zeile + "\n")
     print(zeile)
-    for key in ("dienst", "quellen", "links", "alter", "zertifikat", "maschine"):
+    for key in ("dienst", "oberfläche", "quellen", "links", "alter", "zertifikat", "maschine"):
         if report[key].get("verdict", "ok") != "ok":
             print(f"  {key}: {json.dumps(report[key], ensure_ascii=False)[:600]}")
     return {"ok": 0, "warn": 1, "bad": 2}[gesamt]

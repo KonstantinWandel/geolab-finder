@@ -433,10 +433,23 @@ rsync -az soep_metadata_output/{geodb_metadata.json,geodb_rag_embeddings.npy,ink
       backend/app/services/soep_rag_advisor.py vm:~/geodb_stage/
 rsync -az --delete frontend/dist-inkar/ vm:~/geodb_stage/site_inkar/
 ssh vm 'sudo install -o geolab -g geolab -m 664 ~/geodb_stage/<file> /opt/geolab/app/destatis-rag/soep_metadata_output/ ;
-        sudo rsync -a --delete ~/geodb_stage/site_inkar/ /opt/geolab/sites/inkar/ ;
+        # Everything but the bundles is replaced; the bundles are only ever added to.
+        sudo rsync -a --delete --exclude "assets/**" ~/geodb_stage/site_inkar/ /opt/geolab/sites/inkar/ ;
+        sudo rsync -a ~/geodb_stage/site_inkar/assets/ /opt/geolab/sites/inkar/assets/ ;
         sudo chown -R geolab:geolab /opt/geolab/sites/inkar ;
         sudo systemctl restart geolab-inkar geolab-soep'
 ```
+
+**Never delete the old bundles.** They are a few hundred kilobytes each and they are what a browser
+still holding an older `index.html` asks for. Deleting them turned every such visitor into a white
+screen: `try_files` rewrote the missing bundle to `index.html`, the `@bundles` header applied to the
+request path whether or not the file existed, so the browser stored an HTML document under the
+bundle's address with `immutable, max-age=1y` and never asked again. Caddy now answers 404 for a
+missing file under `/assets/` and marks only files that actually exist as immutable (the `file`
+matcher, which needs `root` set at site level, not inside the `handle` blocks), and
+`health_check.py` checks both directions weekly. Fixed and verified 2026-09-05; the old bundles of
+both finders were restored from `/opt/geolab/backups/` at the same time, and an old document boots
+and searches again.
 
 `soep_rag_advisor.py` is **shared by both services** on the VM, so a backend change restarts the
 SOEP finder too; check `soep-faiss.geolab.soz.uni-bielefeld.de` after every deploy, not only geodb.
