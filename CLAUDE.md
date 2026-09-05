@@ -167,6 +167,25 @@ and per-indicator years and levels. Three things generalise:
   empty map at `&raumgl=krs`. Which catalogue an indicator appears in decides its link and its
   levels; `spatial_extends` is only believed on the area side. Checked in a browser, not assumed.
 
+**And sometimes the app really has no address for its content (INKAR, 2026-09-05).** The same
+search was run against INKAR, the largest portal-level block in either index at 660 indicators, and
+the answer is no. `www.inkar.de` is an ASP.NET application: its table and map windows read the
+selection from the window that opened them, and the start page reads exactly one thing from its
+address, the id of a query stored on the BBSR server (`location.hash` -> `Main/GetUserQuery/<id>`).
+The BBSR's own map viewer at bbsr-geodienste.de reads no URL parameters at all. A per-indicator link
+would therefore mean writing 660 stored queries into a federal agency's database. `Main/SaveQuery`
+does accept an anonymous POST (one probe was created, opened from a clean browser and deleted again),
+so it is possible; it is a decision for Konstantin and for the BBSR, not a technical question, and
+nothing of the sort was done.
+
+What the search did turn up is that about 80 of the 660 indicators are published as WMS layers and
+as metadata records that all resolve in the national Geodatenkatalog, one page per indicator.
+`scripts/fetch_inkar_geodienste.py` collects them, and the builder attaches the layer name and the
+catalogue page to the matching records. They keep inkar.de as their link, because that is where the
+numbers are; the addresses ride along in `api_hint`, and every INKAR record now also carries the
+theme path so the reader knows where to look in the wizard. The embedding text is untouched by all
+of this, which is why the INKAR vectors did not need rebuilding.
+
 Because monitor.ioer.de answers the same 4.7 KB shell for any query string, `check_geodb_links.py`
 reports these as `shell` (correctly: it cannot judge them). `scripts/check_ioer_links.py` is what
 verifies them, by reading the map header the app writes once the indicator has loaded; all 91

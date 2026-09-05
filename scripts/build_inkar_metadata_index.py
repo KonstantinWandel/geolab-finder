@@ -33,6 +33,30 @@ BBSR_REFERENCE_URL = (
     "https://www.bbsr.bund.de/BBSR/DE/forschung/raumbeobachtung/"
     "Raumabgrenzungen/raumabgrenzungen-uebersicht"
 )
+# What scripts/fetch_inkar_geodienste.py collected: the subset of INKAR indicators the BBSR also
+# publishes as a WMS layer and as a metadata record in the national Geodatenkatalog.
+GEODIENSTE_PATH = Path(__file__).resolve().parents[1] / "data_sources" / "22-inkar" / "raw" / "geodienste.json"
+
+
+def normalise_title(text: str) -> str:
+    lowered = clean_value(text).lower()
+    for source, target in (("ä", "a"), ("ö", "o"), ("ü", "u"), ("ß", "ss")):
+        lowered = lowered.replace(source, target)
+    return re.sub(r"[^a-z0-9]+", " ", lowered).strip()
+
+
+def load_geodienste(path: Path = GEODIENSTE_PATH) -> Dict[str, Any]:
+    """Title -> WMS layer and catalogue record. Missing file is not an error: the records then
+    carry the portal link and nothing extra, which is what they carried before."""
+    if not path.exists():
+        return {"layers": {}, "records": {}, "meta": {}}
+    document = json.loads(path.read_text(encoding="utf-8"))
+    layers: Dict[str, List[Dict[str, str]]] = {}
+    for layer in document.get("layers", []):
+        layers.setdefault(normalise_title(layer.get("title", "")), []).append(layer)
+    records = {normalise_title(r.get("title", "")): r
+               for r in document.get("records", []) if r.get("resolves") is not False}
+    return {"layers": layers, "records": records, "meta": document}
 
 
 def clean_value(value: Any) -> str:
@@ -194,7 +218,33 @@ def build_embedding_context(row: Dict[str, Any]) -> str:
     )
 
 
+def geodienste_for(record: Dict[str, Any], geodienste: Dict[str, Any]) -> Dict[str, Any]:
+    """The BBSR service addresses for one indicator, matched on its name.
+
+    About 80 of the 660 indicators are in the WMS and in the catalogue. They keep the portal as
+    their link, because that is where the numbers are; what they gain is the exact layer name for
+    a GIS client and a metadata page that describes this one indicator.
+    """
+    keys = [normalise_title(record.get("short_name", "")), normalise_title(record.get("name", ""))]
+    layer = next((geodienste["layers"][k][0] for k in keys if k in geodienste["layers"]), None)
+    entry = next((geodienste["records"][k] for k in keys if k in geodienste["records"]), None)
+    fields: Dict[str, Any] = {}
+    parts: List[str] = []
+    if layer:
+        fields["wms_layer"] = layer["layer"]
+        fields["wms_level"] = layer["level"]
+        fields["wms_url"] = geodienste["meta"].get("wms", "")
+        parts.append(f"Als WMS-Ebene {layer['layer']} ({layer['level']}) im BBSR-Dienst "
+                     f"{fields['wms_url']}?request=GetCapabilities&service=WMS abrufbar.")
+    if entry:
+        fields["catalogue_id"] = entry["id"]
+        fields["catalogue_url"] = geodienste["meta"].get("catalogue_page", "") + entry["id"]
+        parts.append(f"Metadaten zu diesem Indikator im Geodatenkatalog: {fields['catalogue_url']}")
+    return {"fields": fields, "hint": " ".join(parts)}
+
+
 def flatten_workbook(input_path: Path, bbsr_reference: Dict[str, Any]) -> List[Dict[str, Any]]:
+    geodienste = load_geodienste()
     excel = pd.ExcelFile(input_path)
     rows: List[Dict[str, Any]] = []
     skipped_sheets = {"Nutzungshinweise"}
@@ -258,11 +308,23 @@ def flatten_workbook(input_path: Path, bbsr_reference: Dict[str, Any]) -> List[D
                 "source_url": INKAR_SOURCE_URL,
                 "selector_url": INKAR_SELECTOR_URL,
                 "indicator_url": INKAR_SOURCE_URL,
+                "portal_url": INKAR_SOURCE_URL,
+                # INKAR keeps no state in its address: the table and map windows read their
+                # selection from the window that opened them, and the only thing a URL can carry
+                # is the id of a query stored on the BBSR server. So the link is the portal, and
+                # saying so is what lets the finder show the reader which name to search for.
+                "link_level": "portal",
+                "link_verified": True,
                 "api_hint": (
                     f"INKAR indicator code/Kuerzel={indicator_code}; M_ID={m_id}. "
+                    f"In INKAR unter „{current_theme_path}“ nach „{short_name or name}“ suchen. "
                     "Use the INKAR UI or an INKAR API wrapper such as inkaR with this indicator identifier."
                 ),
             }
+            services = geodienste_for(record, geodienste)
+            record.update(services["fields"])
+            if services["hint"]:
+                record["api_hint"] = record["api_hint"] + " " + services["hint"]
             record["embedding_context"] = build_embedding_context(record)
             rows.append(record)
 
