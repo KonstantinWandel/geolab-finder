@@ -63,6 +63,28 @@ STATE_ALIASES = {
     "Schleswig-Holstein": [],
     "Thüringen": ["thueringen"],
 }
+# Two Länder publish their Bodenrichtwerte outside the national catalogue, so no CSW record can
+# resolve them and the rule above correctly refuses to guess. Both addresses were opened by hand
+# on 2026-09-05 and identify themselves in their page title ("BORIS-BW - Bodenrichtwert-
+# informationssystem Baden-Württemberg", "BORIS Berlin"), which is the same standard the CSW
+# matches are held to. Anything added here has to be checked that way, not assumed.
+MANUAL_SERVICES = {
+    "Baden-Württemberg": {
+        "title": "BORIS-BW, Bodenrichtwertinformationssystem Baden-Württemberg",
+        "id": "", "type": "application", "capabilities": "",
+        "portal": "https://www.gutachterausschuesse-bw.de/",
+        "organisation": "Gutachterausschüsse Baden-Württemberg / LGL",
+        "source": "hand geprüft 2026-09-05, nicht im nationalen Katalog",
+    },
+    "Berlin": {
+        "title": "BORIS Berlin",
+        "id": "", "type": "application", "capabilities": "",
+        "portal": "https://fbinter.stadt-berlin.de/boris/",
+        "organisation": "Gutachterausschuss für Grundstückswerte in Berlin",
+        "source": "hand geprüft 2026-09-05, nicht im nationalen Katalog",
+    },
+}
+
 # A district or city in the title means the record covers that district, not the Land.
 LOCAL_HINT = re.compile(r"\b(kreis|landkreis|stadt|gemeinde|verbandsgemeinde|region\s|amt\s)\b", re.I)
 
@@ -237,7 +259,7 @@ def main() -> None:
         "term": args.term,
         "records_matched": len(records),
         "resolved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "states": services,
+        "states": {state: value or MANUAL_SERVICES.get(state) for state, value in services.items()},
     }, ensure_ascii=False, indent=1), encoding="utf-8")
     hit = sum(1 for value in services.values() if value)
     print(json.dumps({"states_resolved": hit, "of": len(STATES), "output": str(OUT_PATH)}, indent=2))

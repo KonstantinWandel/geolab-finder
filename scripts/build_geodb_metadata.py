@@ -24,6 +24,7 @@ import html
 import io
 import json
 import re
+import urllib.parse
 import zipfile
 from datetime import date
 from pathlib import Path
@@ -330,6 +331,22 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     # scripts/resolve_merkmal_statistics.py asks it once per Merkmal. Without this, 1,596 of
     # the 3,305 records here (15% of the whole index) linked to the portal home page.
     resolved_statistics: Dict[str, Dict[str, Any]] = {}
+    # Which Merkmale have a page of their own in the Regionaldatenbank
+    # (scripts/resolve_merkmal_pages.py). Absent file means nobody probed yet, and the records
+    # fall back to the statistic link exactly as before.
+    pages_path = source["folder"] / "raw" / "merkmal_pages.json"
+    merkmal_pages: Dict[str, bool] = {}
+    merkmal_labels: Dict[str, str] = {}
+    if pages_path.exists():
+        stored = json.loads(pages_path.read_text(encoding="utf-8"))
+        merkmal_pages = stored.get("merkmale") or {}
+        # The live wording of the Merkmal. These codes come from a 2020 Datenguide snapshot and
+        # 116 of 624 read differently in the database today, a few of them in substance: BEV012
+        # is "Sterbefälle je 1 000 Einwohner" now and not Wanderungssaldo, and two rates changed
+        # their denominator from 10.000 to 1.000 Einwohner. A record has to say what the link
+        # opens, so the live wording wins and the old one stays searchable as an alias.
+        merkmal_labels = stored.get("labels") or {}
+
     resolved_path = source["folder"] / "raw" / "merkmal_statistics.json"
     if resolved_path.exists():
         resolved_statistics = json.loads(resolved_path.read_text(encoding="utf-8")).get("merkmale") or {}
@@ -377,10 +394,15 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
 
         english_name = clean(english.get(code, {}).get("name"))
 
-        # The Regionalstatistik portal is a JSF app: query parameters like
-        # ?operation=merkmal&code=... are ignored and land on the homepage. The one
-        # pattern that really deep-links is /genesis/online/statistic/<5-digit code>,
-        # and the Destatis definition text names the statistics that use the key
+        # The Regionalstatistik portal is a JSF app, and ?operation=merkmal&code=... really is
+        # ignored, which is where the old note that it "cannot be deep-linked by Merkmal" came
+        # from. ?operation=variable&code=... is a different matter: it opens the Merkmal itself,
+        # with its Ausprägungen and its tabs for the tables and statistics that use it (checked in
+        # a browser and by probe, 2026-09-05; a Merkmal the database lacks answers with a fixed
+        # 8.8 KB "keine Objekte" page, which is what scripts/resolve_merkmal_pages.py records).
+        # That page is the closest landing there is, so it wins where it exists. Below it,
+        # /genesis/online/statistic/<5-digit code> opens the statistic that carries the Merkmal,
+        # and the Destatis definition text names those statistics
         # ("Erläuterung für folgende Statistik(en): 12612 Statistik der Geburten").
         statistics = re.findall(r"(\d{5})\s+([^\n]{4,80})", description.split("Statistik(en):", 1)[1]) \
             if "Statistik(en):" in description else []
@@ -403,7 +425,12 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                     statistic_names = "; ".join(
                         f"{clean(item.get('code'))} {clean(item.get('label'))}"
                         for item in api_statistics[:4])
-        if held_by == "regional":
+        live_label = clean(merkmal_labels.get(code, ""))
+        if merkmal_pages.get(code):
+            url = ("https://www.regionalstatistik.de/genesis/online?operation=variable&code="
+                   + urllib.parse.quote(code))
+            link_ok, level = True, "indicator"
+        elif held_by == "regional":
             # Verified against a deliberately bogus code: a real statistic answers about 12.7 KB,
             # code 99999 answers 8.9 KB.
             url = f"https://www.regionalstatistik.de/genesis/online/statistic/{statistic_code}"
@@ -425,11 +452,13 @@ def flatten_datenguide_genesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 item_type="regional_indicator",
                 item_id=f"genesis:{code}",
                 variable_name=code,
-                label=name,
+                label=live_label or name,
                 dataset_label=clean(payload.get("type")) or "Merkmal",
                 theme="Regionalstatistik",
-                description=description or name,
-                aliases=", ".join(part for part in [english_name, statistic_names] if part),
+                description=description or live_label or name,
+                aliases=", ".join(part for part in [
+                    name if live_label and clean(name) != clean(live_label) else "",
+                    english_name, statistic_names] if part),
                 stats_summary=statistic_names,
                 spatial_levels=["Bundesländer", "Kreise", "Gemeinden"],
                 nuts_levels=["Bundesländer", "NUTS1", "Kreise", "NUTS3", "Gemeinden", "LAU"],
@@ -546,7 +575,19 @@ def flatten_btw21(source: Dict[str, Any]) -> List[Dict[str, Any]]:
             )
     return records
 
+# The map writes its current view into the address (`window.location.hash = pageName` in
+# migration_main.js) and reads it back on load, so 18 of the 140 columns can be opened directly.
+# The rest are columns of the same CSV that the map does not offer as a view; they keep the map
+# page. Values come from the saved page, not from a guess.
+def _migration_map_views(source: Dict[str, Any]) -> set:
+    page = source["folder"] / "raw" / "portal.html"
+    if not page.exists():
+        return set()
+    return set(re.findall(r'<option[^>]*value="([^"]+)"', page.read_text(encoding="utf-8", errors="replace")))
+
+
 def flatten_migration_regionen(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    views = _migration_map_views(source)
     archive_path = source["folder"] / "raw" / "migration_integration_regionen.zip"
     with zipfile.ZipFile(archive_path) as archive:
         name = next(n for n in archive.namelist() if n.endswith("beschreibung.xlsx"))
@@ -572,7 +613,6 @@ def flatten_migration_regionen(source: Dict[str, Any]) -> List[Dict[str, Any]]:
         records.append(
             make_record(
                 source_key="migration_integration",
-                link_level="dataset",
                 source_label="Migration und Integration in den Regionen (Destatis)",
                 item_type="regional_indicator",
                 item_id=f"migration_integration:{code}",
@@ -589,10 +629,12 @@ def flatten_migration_regionen(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 year_end=source["coverage_end_year"],
                 years_text=current_time or "Stichtag 31.12.2022",
                 source_url=source["url"],
-                indicator_url=source["url"],
+                indicator_url=(f"{source['url']}#{code}" if code in views else source["url"]),
+                link_level="indicator" if code in views else "dataset",
                 access_modes=source["access_modes"],
                 update_frequency=source["update_frequency"],
-                api_hint=f"Spalte {code} in migration_integration_regionen_daten.csv (Kreisebene).",
+                api_hint=(f"Spalte {code} in migration_integration_regionen_daten.csv (Kreisebene)."
+                          + (" Die Karte öffnet diese Ansicht direkt." if code in views else "")),
             )
         )
     return records
@@ -1838,6 +1880,30 @@ def datenstand_note(hints: List[str]) -> str:
     return f"Datenstand: {'; '.join(found)}." if found else ""
 
 
+GIGABIT_PORTAL = "https://gigabitgrundbuch.bund.de/"
+GIGABIT_DOWNLOADS = "https://gigabitgrundbuch.bund.de/GIGA/DE/Downloads_Suche/start.html"
+# Direct addresses of the files the records are read from, taken from that download page
+# (2026-09-05). They ride in api_hint rather than in the link, because of their size.
+GIGABIT_FILES = {
+    "bba_12_2025.xlsx":
+        "https://data.bundesnetzagentur.de/Bundesnetzagentur/GIGA/DE/Breitbandatlas/Downloads/bba_12_2025.xlsx",
+    "Versorgungsdaten_Gitterzellen_Stand_20251231_gpkg.zip":
+        "https://data.bundesnetzagentur.de/Bundesnetzagentur/GIGA/DE/Breitbandatlas/Downloads/"
+        "Versorgungsdaten_Gitterzellen_Stand_20251231_gpkg.zip",
+    "Auswertung_Mobilfunkmonitoring.xlsx":
+        "https://gigabitgrundbuch.bund.de/GIGA/DE/Downloads_Suche/aktuell/"
+        "Auswertung_Mobilfunkmonitoring.xlsx?__blob=publicationFile",
+    "202601_Geodaten_breitbandigeMobilfunkversorgung.zip":
+        "https://data.bundesnetzagentur.de/Bundesnetzagentur/GIGA/DE/MobilfunkMonitoring/2512/"
+        "202601_Geodaten_breitbandigeMobilfunkversorgung.zip",
+}
+
+
+def gigabit_file_hint(filename: str) -> str:
+    url = GIGABIT_FILES.get(filename, "")
+    return f" Datei: {url}" if url else ""
+
+
 def flatten_breitband(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Gigabit-Grundbuch workbooks (Breitbandatlas + Mobilfunk-Monitoring). Each sheet is a
     use case (Privathaushalte, Fläche, Schulen, Autobahnen, ...) and each column after the
@@ -1919,12 +1985,13 @@ def flatten_breitband(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                         year_start=2025,
                         year_end=2025,
                         years_text="Stand 12.2025",
-                        source_url="https://gigabitgrundbuch.bund.de/",
-                        indicator_url="https://gigabitgrundbuch.bund.de/",
+                        source_url=GIGABIT_DOWNLOADS,
+                        indicator_url=GIGABIT_DOWNLOADS,
                         link_level="dataset",
                         access_modes=["direct file download", "interactive map viewer"],
                         update_frequency=source["update_frequency"] or "halbjährlich",
-                        api_hint=f"Spalte '{measure}' (Block '{group or sheet}') im Tabellenblatt '{sheet}' von {path.name}.",
+                        api_hint=(f"Spalte '{measure}' (Block '{group or sheet}') im Tabellenblatt "
+                                  f"'{sheet}' von {path.name}." + gigabit_file_hint(path.name)),
                     )
                 )
     return records
@@ -2069,14 +2136,15 @@ def flatten_breitband_raster(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                         year_start=2025,
                         year_end=2025,
                         years_text="Stand 31.12.2025",
-                        source_url="https://gigabitgrundbuch.bund.de/",
-                        indicator_url="https://gigabitgrundbuch.bund.de/",
+                        source_url=GIGABIT_DOWNLOADS,
+                        indicator_url=GIGABIT_DOWNLOADS,
                         link_level="dataset",
                         access_modes=["direct file download", "interactive map viewer"],
                         update_frequency=source["update_frequency"] or "halbjährlich",
                         api_hint=(
                             f"Spalte {name} in Tabelle {layer.get('table')} des GeoPackage "
                             f"({payload.get('archive')}); lesbar mit GDAL/OGR, geopandas oder SQLite."
+                            + gigabit_file_hint(str(payload.get("archive") or ""))
                         ),
                     )
                 )
@@ -2529,6 +2597,33 @@ def _pdf_text(path: Path, layout: bool = True) -> str:
         out_path.unlink(missing_ok=True)
 
 
+# The online glossary is paged by first letter, one lv2 id per letter, and there is no anchor for a
+# single term (checked in a browser 2026-09-05: the ids on a letter page are menu ids). So the
+# letter page is the closest a link gets, and it beats sending all 313 terms to the same index.
+def _ba_glossary_letters(source: Dict[str, Any]) -> Dict[str, str]:
+    page = source["folder"] / "raw" / "ba_glossar.html"
+    if not page.exists():
+        return {}
+    text = page.read_text(encoding="utf-8", errors="replace")
+    letters: Dict[str, str] = {}
+    for match in re.finditer(r"<a\b[^>]*lv2=(\d+)[^>]*>(.*?)</a>", text, re.S):
+        label = html.unescape(re.sub(r"<[^>]+>", "", match.group(2))).strip()
+        if 1 <= len(label) <= 3:
+            letters[label.upper()] = match.group(1)
+    return letters
+
+
+GLOSSARY_INDEX = ("https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/"
+                  "Glossar/Glossar-Nav.html")
+
+
+def _ba_glossary_url(term: str, letters: Dict[str, str]) -> str:
+    first = (term[:1] or "").upper()
+    key = "0-9" if first.isdigit() else first
+    lv2 = letters.get(key)
+    return f"{GLOSSARY_INDEX}?lv2={lv2}" if lv2 else GLOSSARY_INDEX
+
+
 def flatten_ba_glossary(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     """The BA's own glossary: the definition of every labour-market concept its statistics
     measure. The map behind this workbook row publishes no machine-readable indicator list, but
@@ -2544,6 +2639,7 @@ def flatten_ba_glossary(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     pdf = source["folder"] / "raw" / "ba_gesamtglossar.pdf"
     if not pdf.exists():
         return []
+    letters = _ba_glossary_letters(source)
     pages = _pdf_bbox_lines(pdf)
     if not pages:
         return []
@@ -2581,9 +2677,19 @@ def flatten_ba_glossary(source: Dict[str, Any]) -> List[Dict[str, Any]]:
             return False
         prev = term_parts[-1]
         joined = " ".join(term_parts)
+        # The test below has to see the term as it will finally read, not as it sits on the page:
+        # "Abgangsrate Arbeits-" + "lose" ends on "Arbeitslose", a finished term, while the raw
+        # last line is the fragment "lose". Undo the hyphenation first, exactly as flush() does.
+        repaired = re.sub(r"([a-zäöüß])-\s+(?=[a-zäöüß])", r"\1", joined)
+        last_word = repaired.split(" ")[-1] if repaired else ""
         return (prev.endswith("-")
                 or text[:1].islower()
-                or prev.split(" ")[-1].lower() in DANGLING
+                or last_word.lower() in DANGLING
+                # A German term does not end on a lowercase word: "Beschäftigungsstatistik
+                # schwerbehinderter" is unfinished, and without this its continuation
+                # "Menschen (nach SGB IX)" became a term of its own. Seven entries were cut this
+                # way. The spacing test above still bounds it, so two rows cannot be glued.
+                or (last_word[:1].islower() and not last_word.endswith(","))
                 or joined.count("(") > joined.count(")"))
 
     for lines in pages:
@@ -2632,8 +2738,8 @@ def flatten_ba_glossary(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 description=summary,
                 spatial_levels=["Bundesl\u00e4nder", "Kreise", "Gemeinden"],
                 nuts_levels=["Bundesl\u00e4nder", "NUTS1", "Kreise", "NUTS3", "Gemeinden", "LAU"],
-                source_url="https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html",
-                indicator_url="https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html",
+                source_url=GLOSSARY_INDEX,
+                indicator_url=_ba_glossary_url(term, letters),
                 link_level="dataset",
                 access_modes=["direct file download"],
                 update_frequency="halbj\u00e4hrlich",

@@ -51,7 +51,10 @@ CASES = [
     ("Personalschlüssel in Kindertagesstätten", r"personalschlüssel|personal", {"laendermonitor"}),
     ("Bevölkerungsdichte je Quadratkilometer", r"dicht", None),
     ("Schulabgänger ohne Abschluss", r"schulabg|abschluss|hauptschul", None),
-    ("Pendler zwischen Wohnort und Arbeitsort", r"pendl", None),
+    # "pendl" alone stopped matching when the Regionalstatistik labels were refreshed from the
+    # live catalogue: the official wording is "Einpendelnde über Gemeindegrenze" now, not
+    # "Pendler". The query was answered correctly and the pattern was what had aged.
+    ("Pendler zwischen Wohnort und Arbeitsort", r"pendl|pendel", None),
     ("Wohnfläche je Einwohner", r"wohnfl", None),
     ("Barrierefreiheit von Krankenhäusern", r"barriere", None),
     ("Erneuerbare Energien und Flächennutzung", r"energie|fläche|flaeche", None),

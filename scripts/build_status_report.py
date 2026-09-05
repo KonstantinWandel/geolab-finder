@@ -101,7 +101,7 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
     "breitbandatlas": {
         "de": "Offen, inhaltlich aber abgedeckt: Die im Excel hinterlegte Adresse existiert nicht mehr. Der Nachfolger Gigabitgrundbuch ist als Zeile 2 vollständig eingebunden, diese Zeile ist damit doppelt.",
         "state": "open",
-        "next": "The bmvi.de link in the workbook is dead; Gigabitgrundbuch is the successor. Needs the indicator/download page saved from a browser.",
+        "next": "The bmvi.de link in the workbook is dead and Gigabitgrundbuch, its successor, is row 2 with 632 indicator records. There is nothing left to fetch here: saving another download page would index the same files twice under a second source key. The row stays open because the workbook still lists it, not because work is missing.",
     },
     "arbeitsmarktstatistik-ba-karte": {
         "de": "Vollständig eingebunden: 313 Begriffe aus dem amtlichen Glossar der Bundesagentur, jeweils mit deren eigener Definition. Die interaktive Karte veröffentlicht keine Liste ihrer Indikatoren; die Daten dahinter stecken in den Zeilen 5, 6 und 7.",

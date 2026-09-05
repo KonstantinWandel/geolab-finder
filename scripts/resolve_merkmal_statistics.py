@@ -3,10 +3,14 @@
 
 Why this exists: 1,596 of the 3,305 Regionalstatistik records (15% of the whole GeoDB index)
 linked only to the portal home page, because their statistic code could not be mined out of the
-Destatis definition text. The portal is a JSF app that cannot be deep-linked by Merkmal, but
-`/genesis/online/statistic/<code>` opens the statistic, and `catalogue/statistics2variable`
+Destatis definition text. `/genesis/online/statistic/<code>` opens the statistic, and `catalogue/statistics2variable`
 returns exactly that code for a Merkmal. One call per Merkmal turns a home-page link into a
 "this statistic contains it" link.
+
+Correction (2026-09-05): this file used to say the portal "cannot be deep-linked by Merkmal".
+That holds for `?operation=merkmal`, which lands on the home page, but not for
+`?operation=variable&code=<C>`, which opens the Merkmal itself. `scripts/resolve_merkmal_pages.py`
+records which Merkmale have such a page, and the builder prefers it over the statistic link.
 
 Resumable and safe to re-run: the output file is loaded first and only unresolved codes are
 requested, so a killed run costs the codes it had not reached yet. Codes that genuinely resolve
