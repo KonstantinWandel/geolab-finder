@@ -40,6 +40,10 @@ UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
 
 # url pattern -> a URL of the same shape with a deliberately invalid code
 BOGUS_PROBES = {
+    # The Merkmal page: a code the database does not have answers with a fixed 8.8 KB page,
+    # which is what makes these links checkable at all.
+    "regionalstatistik.de/genesis/online?operation=variable":
+        "https://www.regionalstatistik.de/genesis/online?operation=variable&code=ZZZZZZ",
     "regionalstatistik.de/genesis/online?operation=table":
         "https://www.regionalstatistik.de/genesis/online?operation=table&code=99999-99-99-9",
     "www-genesis.destatis.de/genesis/online?operation=table":

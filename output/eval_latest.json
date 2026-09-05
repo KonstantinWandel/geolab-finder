@@ -165,7 +165,7 @@
       "query": "Unternehmen und Gewerbeanmeldungen",
       "rank": 1,
       "top_source": "regionalstatistik",
-      "top_label": "Gewerbeanmeldungen",
+      "top_label": "Gewerbeanmeldungen (ohne Automatenaufsteller)",
       "sources_in_top": [
         "genesis_bund",
         "regionalatlas",
@@ -187,7 +187,7 @@
       "query": "Bruttoinlandsprodukt je Einwohner",
       "rank": 1,
       "top_source": "regionalstatistik",
-      "top_label": "Bruttoinlandsprodukt je Einwohner",
+      "top_label": "Bruttoinlandsprodukt pro Kopf",
       "sources_in_top": [
         "ba_strukturdaten",
         "deutschlandatlas",
@@ -255,8 +255,8 @@
       "top_label": "Kindertagespflege | Personal | Personalschlüssel",
       "sources_in_top": [
         "deutschlandatlas",
-        "genesis_bund",
         "laendermonitor",
+        "regionalatlas",
         "regionalstatistik",
         "wegweiser_kommune"
       ]
@@ -265,7 +265,7 @@
       "query": "Bevölkerungsdichte je Quadratkilometer",
       "rank": 1,
       "top_source": "regionalstatistik",
-      "top_label": "Bevölkerungsdichte (Einwohner je qkm)",
+      "top_label": "Bevölkerungsdichte (EW je qkm)",
       "sources_in_top": [
         "btw_strukturdaten",
         "deutschlandatlas",
@@ -293,7 +293,7 @@
       "query": "Pendler zwischen Wohnort und Arbeitsort",
       "rank": 1,
       "top_source": "regionalstatistik",
-      "top_label": "Auspendler(innen) über Landesgrenzen (Wohnort)",
+      "top_label": "Einpendelnde über Gemeindegrenze (Arbeitsort)",
       "sources_in_top": [
         "deutschlandatlas",
         "inkar",
@@ -303,8 +303,8 @@
     {
       "query": "Wohnfläche je Einwohner",
       "rank": 1,
-      "top_source": "regionalstatistik",
-      "top_label": "Durchschnittliche Wohnfläche je Einwohner",
+      "top_source": "regionalatlas",
+      "top_label": "Durchschnittliche Wohnfläche je EW",
       "sources_in_top": [
         "inkar",
         "regionalatlas",
@@ -319,6 +319,7 @@
       "top_source": "gba_qualitaetsbericht",
       "top_label": "Barrierefreiheit",
       "sources_in_top": [
+        "breitband",
         "bundes_klinik_atlas",
         "gba_qualitaetsbericht",
         "inkar",
@@ -445,11 +446,10 @@
       "query": "gross domestic product per capita",
       "rank": 1,
       "top_source": "regionalstatistik",
-      "top_label": "BIP je Einwohner (jeweilige Preise)",
+      "top_label": "Bruttoinlandsprodukt pro Kopf",
       "sources_in_top": [
         "genesis_bund",
         "inkar",
-        "regionalatlas",
         "regionalstatistik"
       ]
     },
@@ -641,15 +641,14 @@
         "inkar",
         "regionalatlas",
         "regionalstatistik",
-        "wegweiser_kommune",
-        "zensus2022"
+        "wegweiser_kommune"
       ]
     },
     {
       "query": "Mobilfunkabdeckung 5G",
       "rank": 1,
       "top_source": "breitband",
-      "top_label": "Vodafone 5G* (Fläche)",
+      "top_label": "alle Mobilfunknetzbetreiber 5G (Privathaushalte)",
       "sources_in_top": [
         "breitband"
       ]
@@ -669,7 +668,7 @@
       "query": "Zahl der Übernachtungen im Tourismus",
       "rank": 1,
       "top_source": "regionalstatistik",
-      "top_label": "Übernachtungen",
+      "top_label": "Gästeübernachtungen",
       "sources_in_top": [
         "genesis_bund",
         "regionalatlas",

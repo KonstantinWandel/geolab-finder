@@ -45,8 +45,8 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-09-05: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 12,040 rows**
-(11,380 GeoDB records + 660 INKAR) from **36 workbook rows, 31 of which carry real records**.
+State as of 2026-09-05: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 12,036 rows**
+(11,376 GeoDB records + 660 INKAR) from **36 workbook rows, 31 of which carry real records**.
 Tracker: **29 done, 2 partial, 5 open**. Largest: Regionalstatistik/GENESIS 3,306,
 GENESIS-Online Bund 3,027, Zensus 2022 1,441, Gigabit-Grundbuch 633, DB ISR 416,
 Wegweiser Kommune 393, BA-Glossar 314, BA Arbeitsmarktreport 289, Open Data ÖPNV 324,
@@ -133,6 +133,24 @@ bracket). Sanity-check any PDF flattener by printing labels and asking whether e
    exist there, 468 are federal-only and 68 in neither. They are now resolved against the
    enumerated catalogues and linked to whichever instance holds them.
 
+**Where the links land, after the pass of 2026-09-05** (11,376 records): 5,332 open the table,
+2,713 the dataset or file that contains the record, 1,668 the statistic that contains it, **1,470
+the exact indicator** and 193 a portal to search from. The pass moved 642 records up to indicator
+level and 22 off the portal, and it is worth knowing which sources still sit at portal level and
+why: INKAR (660, in the other index, see above), 193 GeoDB records made up of one card per source
+plus the Merkmale that exist in neither GENESIS instance, and five workbook rows that are search
+masks without an export (playgrounds and physicians, where OpenStreetMap is the systematic
+alternative and is indexed).
+
+Sources checked in that pass and left alone, so nobody re-does the work: the DB Infrastrukturregister
+viewer is MapStore2 and takes no layer parameter, the Unfallatlas and the G-BA search are
+client-rendered shells, and the three BA report series already link one address per series, which
+is the level those records describe. The BA glossary moved from one address for all 313 terms to
+its 24 letter pages, Breitband from the portal front door to the download page (with the exact
+file, sheet and column in `api_hint`), BORIS-D from 14 to 16 Länder (Baden-Württemberg and Berlin
+publish outside the national catalogue and were verified by hand), and Migration/Integration got
+the 18 of its 140 columns that the Destatis map offers as a view of its own.
+
 **Link health is audited, not assumed.** `scripts/check_geodb_links.py` samples records per source,
 fetches the outward link, and compares the response against what that host returns for a
 deliberately invalid code. That is what separates "the table opened" from "the portal home page
@@ -166,6 +184,42 @@ and per-indicator years and levels. Three things generalise:
   all seven area levels for every indicator, but the six indicators that exist only there render an
   empty map at `&raumgl=krs`. Which catalogue an indicator appears in decides its link and its
   levels; `spatial_extends` is only believed on the area side. Checked in a browser, not assumed.
+
+**Three ways a link check lied in one afternoon (2026-09-05).** The question was simple: which of
+2,439 GENESIS Merkmale have a page of their own, so their record can link to the Merkmal instead of
+to the statistic that contains it. Getting an answer that survived checking took three attempts,
+and every wrong answer looked like a good one.
+
+1. **Six parallel fetches of the portal page** reported 2,268 hits. The Regionalstatistik portal
+   keeps the current selection in server-side state, so concurrent requests from one client bleed
+   into each other and each answer is a perfectly normal page for the wrong code. A browser sample
+   of fifteen found twelve empty.
+2. **Sequential fetches, deciding by the absence of the "keine Objekte" phrase**, reported 1,704.
+   Absence of a failure is not evidence of success: over a long run the portal also returns error
+   and session pages, and after about 1,700 requests it began doing so. The truth anchors added
+   after attempt 1 caught this at the end of the run, when they came back 5/10.
+3. **The documented API** (`catalogue/variables?selection=<CODE>` on the Regionaldatenbank, with
+   the token) answers the same question in six minutes: **624**. It agrees with every one of the
+   ten hand-checked codes, and it puts no load on the public UI, which attempts 1 and 2 had been
+   hammering with about 6,500 requests.
+
+What to carry: **a positive has to be positive evidence** (the page names the code and carries a
+non-empty Inhalt line), **hold every probe against a small hand-verified truth set before and
+after the run** (`TRUTH` in `scripts/resolve_merkmal_pages.py`, which aborts rather than produce a
+plausible lie), and **when a service has an interface for the question, ask it there** instead of
+reading its HTML. A stateless service is still fine to probe in parallel: the IÖR link check runs
+five browsers at once because monitor.ioer.de holds no per-client state.
+
+The same API call also showed the labels had drifted. These Merkmale come from a 2020 Datenguide
+snapshot, and 116 of the 624 read differently in the database today, a few in substance: BEV012 is
+"Sterbefälle je 1 000 Einwohner" now rather than Wanderungssaldo, and two rates changed their
+denominator from 10.000 to 1.000 Einwohner. The records now carry the live wording and keep the old
+one as an alias. One eval query then "regressed" because its pattern `pendl` no longer matched the
+official "Einpendelnde über Gemeindegrenze"; the answer was right and the test had aged.
+
+Also worth remembering: **a build that reads a file another job is still writing gets a partial
+answer without an error.** The first rebuild after starting the resolver picked up its half-written
+output and produced link counts that were neither the old nor the new state.
 
 **INKAR is a special case with an agreement behind it, so ask before acting on it.** The project
 has its own arrangement with the BBSR over INKAR, and its scope is not written down here because it
