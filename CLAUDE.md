@@ -167,6 +167,17 @@ and per-indicator years and levels. Three things generalise:
   empty map at `&raumgl=krs`. Which catalogue an indicator appears in decides its link and its
   levels; `spatial_extends` is only believed on the area side. Checked in a browser, not assumed.
 
+**INKAR is a special case with an agreement behind it, so ask before acting on it.** The project
+has its own arrangement with the BBSR over INKAR, and its scope is not written down here because it
+is not yet known: Konstantin is checking with his boss what it does and does not allow (open as of
+2026-09-05). Until that answer exists, treat INKAR as read-only in the strongest sense: **do not
+write anything to a BBSR server** (no stored queries via `Main/SaveQuery`, which is what a
+per-indicator link would require), do not run series of automated requests against the application,
+and do not scrape it. Reading the public catalogues, the workbook, the WMS and the CSW is not
+affected and is what the current records are built from. When the answer comes, it may well widen
+what is possible, including a supported way to link single indicators, so this is worth revisiting
+rather than closing.
+
 **And sometimes the app really has no address for its content (INKAR, 2026-09-05).** The same
 search was run against INKAR, the largest portal-level block in either index at 660 indicators, and
 the answer is no. `www.inkar.de` is an ASP.NET application: its table and map windows read the
