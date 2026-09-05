@@ -55,8 +55,27 @@ and leave them as downloaded, no manual cleaning.
 
 ## Manual notes
 
-- Provider / publisher:
-- Licence / terms of use:
-- Identifier scheme (indicator codes?):
-- Deep-link pattern to a single indicator (if any):
-- Status:
+- **Provider / publisher:** BBSR (Bundesinstitut für Bau-, Stadt- und Raumforschung) im BBR,
+  Laufende Raumbeobachtung. The application is hosted on Azure and built by infas360.
+- **Licence / terms of use:** Datenlizenz Deutschland Namensnennung; the whole edition is also a
+  download (`https://www.bbr-server.de/imagemap/inkar/download/inkar_2025.zip`).
+- **Identifier scheme:** two identifiers per indicator, both in our records. `M_ID` is the numeric
+  id the application uses (`Wizard/GetIndikatorInfo/<M_ID>` returns that indicator's description,
+  no key needed), `Kuerzel` is the short code from the workbook, e.g. `q_alo`.
+- **Deep-link pattern to a single indicator:** none, checked thoroughly on 2026-09-05.
+  `www.inkar.de` is an ASP.NET application whose table and map windows read their selection from
+  the window that opened them (`opener.getSelections()` in `viewtable.bundle.js`), and the start
+  page reads exactly one thing from its address: the id of a query **stored on the BBSR server**
+  (`location.hash` -> `Main/GetUserQuery/<id>`). So a per-indicator link would mean creating one
+  stored query per indicator in their database. That is technically open (`Main/SaveQuery` accepts
+  an anonymous POST; a probe was created, opened from a clean browser, and deleted again on
+  2026-09-05), but it writes to a federal agency's server and is not something to do unasked.
+  The BBSR's own map viewer at `bbsr-geodienste.de/raumbeobachtung/` reads no URL parameters either.
+- **What exists instead, per indicator:** about 80 of the 660 indicators are published as a WMS
+  layer (`https://www.bbsr-geodienste.de/wms/services`) and as a metadata record in the BBSR
+  catalogue service, and every one of those records resolves in the national Geodatenkatalog at
+  `https://gdk.gdi-de.org/gdi-de/srv/ger/catalog.search#/metadata/<uuid>`.
+  `scripts/fetch_inkar_geodienste.py` collects both and checks the resolution; the builder attaches
+  them to the matching records, which keep the portal as their link because that is where the
+  numbers are.
+- **Status:** active, one edition a year. 660 indicators in the 2025 edition.
