@@ -1,7 +1,9 @@
 {
   "name": "GENESIS-Online (Bund)",
   "slug": "genesis-online-bund",
-  "url": "https://www-genesis.destatis.de/genesis/online",
+  "url": "https://genesis.destatis.de/datenbank/online/",
+  "url_former": "https://www-genesis.destatis.de/genesis/online",
+  "maintenance_note": "Umgezogen: www-genesis.destatis.de antwortet 307 auf genesis.destatis.de. Gilt nur für die Einstiegsseite. Tiefenlinks behalten die Form ?operation=table&code=, weil die neue Anwendungsadresse dafür nur eine leere Hülle ausliefert.",
   "excel_row": 29,
   "provider": "",
   "access_modes": [

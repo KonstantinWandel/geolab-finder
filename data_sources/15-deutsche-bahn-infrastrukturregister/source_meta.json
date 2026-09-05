@@ -1,7 +1,9 @@
 {
   "name": "Deutsche Bahn - Infrastrukturregister",
   "slug": "deutsche-bahn-infrastrukturregister",
-  "url": "https://geovdbn.deutschebahn.com/isr",
+  "url": "https://geoviewer.deutschebahn.com/maps/#/context/ISR/275618",
+  "url_former": "https://geovdbn.deutschebahn.com/isr",
+  "maintenance_note": "Umgezogen: geovdbn.deutschebahn.com leitet auf die DB MapCloud um. Diese Viewer-Adresse ist ohne Registrierung lesbar (InfraGO-Ticket IIBV31-13354, 2026-08-25); die Anmeldung im Infraportal, auf die das Arbeitsblatt zeigt, braucht nur der operative Zugang.",
   "excel_row": 16,
   "provider": "",
   "access_modes": [

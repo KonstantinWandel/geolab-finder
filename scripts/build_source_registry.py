@@ -143,6 +143,17 @@ SOURCE_FIXES: Dict[str, Dict[str, str]] = {
         "maintenance_note": ("Ursprüngliche Adresse aufbewahrt: die katalogisierte Kartenseite "
                              "liefert 404, die Einstiegsseite führt weiterhin zu allen Karten."),
     },
+    "ioer-monitor-flaechennutzung": {
+        "maintenance_note": (
+            "Indikatorliste kommt seit 2026-09-05 aus dem Katalogdienst des Kartenviewers "
+            "(POST monitor.ioer.de/backend/query.php mit values={\"format\":{\"id\":\"gebiete\"|"
+            "\"raster\"},\"query\":\"getAllIndicators\"}), nicht mehr aus der PDF-Liste: die PDF "
+            "hinkt nach und nannte im September 2026 acht abgeschaltete und keinen der elf neuen "
+            "Indikatoren. Tiefenlink je Indikator: monitor.ioer.de/?ind=<Kürzel>&raumgl=<Ebene> "
+            "beziehungsweise &raeumliche_gliederung=raster für die reinen Rasterindikatoren. Ohne "
+            "Jahresangabe wählt der Viewer selbst den neuesten Stand, deshalb steht in den Links "
+            "kein Jahr."),
+    },
     "datenguide-abgeschaltet": {
         "url": "https://www.regionalstatistik.de/genesis/online",
         "maintenance_note": ("Ursprüngliche Adresse aufbewahrt: datengui.de antwortet, ist aber "

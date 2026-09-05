@@ -2,6 +2,8 @@
   "name": "Destatis - Regionale Mobilität und Infektionsgeschehen",
   "slug": "destatis-regionale-mobilitaet-und-infektionsgesc",
   "url": "https://www.destatis.de/DE/Service/EXSTAT/Datensaetze/mobilitaetsindikatoren-mobilfunkdaten.html",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 21,
   "provider": "",
   "access_modes": [

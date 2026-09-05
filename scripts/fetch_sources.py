@@ -255,12 +255,19 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
         {"name": "portal.html", "url": "https://www.ioer-monitor.de/", "kind": "portal", "note": ""},
         {"name": "indikatoren.html", "url": "https://www.ioer-monitor.de/indikatoren/", "kind": "catalogue",
          "note": "The section 'Übersicht der Geodienste' links the public indicator list below."},
+        {"name": "indikatoren_katalog.json",
+         "url": "https://monitor.ioer.de/backend/query.php",
+         "kind": "catalogue", "handler": "ioer_catalogue",
+         "note": "The viewer's own catalogue endpoint: every indicator with German and English "
+                 "name, unit, the years it exists for, the spatial levels it is published at, and "
+                 "its description, method and interpretation text. This is what the records are "
+                 "built from; the PDF below is the older, shorter list."},
         {"name": "indikatoren_liste.pdf",
          "url": "https://www.ioer-monitor.de/fileadmin/user_upload/monitor/pdf/Indikatoren_IOER-Monitor.pdf",
          "kind": "catalogue",
-         "note": "All 88 indicators with their five-character code and category. The codes address "
-                 "the WMS/WCS/WFS services directly, but the service call needs a personal key, so "
-                 "the records link at dataset level and carry the code."},
+         "note": "The printable indicator list. Kept as a fallback for the builder and because it "
+                 "carries the categories in the monitor's own wording, but it lags the catalogue: "
+                 "in September 2026 it still named 8 retired codes and missed 11 live ones."},
     ],
     "rwi-geo-grid-rwi-geo-red-fdz-ruhr": [
         {"name": "portal.html", "url": "https://fdz.rwi-essen.de/", "kind": "portal", "note": ""},
@@ -773,6 +780,54 @@ def fetch_wegweiser_api(url: str, target: Path) -> Dict[str, Any]:
             "indicators": len(indicators), "topics": len(topics)}
 
 
+def fetch_ioer_catalogue(url: str, target: Path) -> Dict[str, Any]:
+    """IÖR-Monitor: the indicator catalogue the map viewer itself loads.
+
+    The monitor looked like a portal with no machine-readable list, because its documented API
+    (`monitor_api/user?id=...&service=wms`) needs a personal key and its PDF is only names and
+    codes. The viewer, however, talks to an unauthenticated endpoint: POST `values={...,"query":
+    "getAllIndicators"}` to backend/query.php returns every indicator with its unit, its years,
+    the spatial levels it exists at, and its description, method and interpretation text. Two
+    calls are needed because area indicators and raster indicators are separate catalogues, and a
+    third records what the level abbreviations mean, straight from the monitor rather than guessed.
+    """
+    started = time.time()
+
+    def post(payload: Dict[str, Any]) -> Any:
+        body = urllib.parse.urlencode({"values": json.dumps(payload)}).encode("utf-8")
+        request = urllib.request.Request(url, data=body, headers={
+            "User-Agent": UA, "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            # The endpoint is public but answers a bare client with an error page.
+            "Referer": "https://monitor.ioer.de/",
+        })
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+            return json.loads(response.read().decode("utf-8", "replace"))
+
+    formats = {name: post({"format": {"id": name}, "query": "getAllIndicators"})
+               for name in ("gebiete", "raster")}
+    # One indicator that exists at every area level, so the answer names them all.
+    levels = post({"ind": {"id": "S11RG", "time": "2022"}, "format": {"id": "gebiete"},
+                   "query": "getSpatialExtend"})
+    counts = {name: sum(len(cat.get("indicators", {})) for cat in cat_json.values())
+              for name, cat_json in formats.items()}
+    payload = json.dumps({
+        "api": url,
+        "viewer": "https://monitor.ioer.de/",
+        "deep_link": "https://monitor.ioer.de/?ind=<code>&raumgl=<level>",
+        "licence": "Nutzungsbedingungen IÖR-Monitor: Namensnennung "
+                   "(Leibniz-Institut für ökologische Raumentwicklung).",
+        "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "spatial_levels": levels,
+        "formats": formats,
+    }, ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "indicators_gebiete": counts["gebiete"], "indicators_raster": counts["raster"]}
+
+
 def sha256_of(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -988,6 +1043,8 @@ def main() -> None:
                     result = fetch_db_stada(artifact["url"], target)
                 elif artifact.get("handler") == "isr_wfs_attributes":
                     result = fetch_isr_attributes(artifact["url"], target)
+                elif artifact.get("handler") == "ioer_catalogue":
+                    result = fetch_ioer_catalogue(artifact["url"], target)
                 else:
                     result = fetch_one(artifact["url"], target, insecure=bool(artifact.get("insecure")))
             except (urllib.error.URLError, urllib.error.HTTPError, OSError) as exc:

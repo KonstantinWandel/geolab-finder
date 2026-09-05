@@ -2,6 +2,8 @@
   "name": "Arbeitsmarkt kommunal - BA",
   "slug": "arbeitsmarkt-kommunal-ba",
   "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 8,
   "provider": "",
   "access_modes": [

@@ -2,6 +2,8 @@
   "name": "Ländermonitor Frühkindliche Bildungssysteme",
   "slug": "laendermonitor-fruehkindliche-bildungssysteme",
   "url": "https://www.laendermonitor.de/de/vergleich-bundeslaender-daten/uebersicht-aller-indikatoren-1/bundeslaender-1",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 26,
   "provider": "",
   "access_modes": [

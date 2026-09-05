@@ -2,6 +2,8 @@
   "name": "Arztsuche - Bundesärztekammer",
   "slug": "arztsuche-bundesaerztekammer",
   "url": "https://www.bundesaerztekammer.de/service/arztsuche/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 13,
   "provider": "",
   "access_modes": [

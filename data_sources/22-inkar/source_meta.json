@@ -2,6 +2,8 @@
   "name": "INKAR",
   "slug": "inkar",
   "url": "https://www.inkar.de/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 23,
   "provider": "",
   "access_modes": [

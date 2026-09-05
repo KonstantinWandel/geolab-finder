@@ -2,6 +2,8 @@
   "name": "Deutsche Bahn - Bahnhofsuche",
   "slug": "deutsche-bahn-bahnhofsuche",
   "url": "https://www.bahnhof.de/bahnhof-de",
+  "url_former": "",
+  "maintenance_note": "Copyright 2024, sonst keine Angabe",
   "excel_row": 17,
   "provider": "",
   "access_modes": [
@@ -43,5 +45,5 @@
   "coverage_end_month": null,
   "coverage_end_year": null,
   "update_frequency": "n/a",
-  "note": "Copyright 2024, sonst keine Angabe"
+  "note": ""
 }

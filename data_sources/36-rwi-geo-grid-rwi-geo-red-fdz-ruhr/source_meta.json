@@ -2,6 +2,8 @@
   "name": "RWI-GEO-GRID / RWI-GEO-RED (FDZ Ruhr)",
   "slug": "rwi-geo-grid-rwi-geo-red-fdz-ruhr",
   "url": "https://fdz.rwi-essen.de/",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 37,
   "provider": "",
   "access_modes": [

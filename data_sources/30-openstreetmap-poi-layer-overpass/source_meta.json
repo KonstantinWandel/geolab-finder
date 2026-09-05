@@ -2,6 +2,8 @@
   "name": "OpenStreetMap POI-Layer (Overpass)",
   "slug": "openstreetmap-poi-layer-overpass",
   "url": "https://wiki.openstreetmap.org/wiki/Map_features",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 31,
   "provider": "",
   "access_modes": [

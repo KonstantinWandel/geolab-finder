@@ -2,6 +2,8 @@
   "name": "Strukturdaten und -indikatoren - BA",
   "slug": "strukturdaten-und-indikatoren-ba",
   "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 6,
   "provider": "",
   "access_modes": [

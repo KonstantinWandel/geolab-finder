@@ -45,13 +45,13 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-08-29: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 12,037 rows**
-(11,377 GeoDB records + 660 INKAR) from **36 workbook rows, 31 of which carry real records**.
+State as of 2026-09-05: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 12,040 rows**
+(11,380 GeoDB records + 660 INKAR) from **36 workbook rows, 31 of which carry real records**.
 Tracker: **29 done, 2 partial, 5 open**. Largest: Regionalstatistik/GENESIS 3,306,
 GENESIS-Online Bund 3,027, Zensus 2022 1,441, Gigabit-Grundbuch 633, DB ISR 416,
 Wegweiser Kommune 393, BA-Glossar 314, BA Arbeitsmarktreport 289, Open Data ÖPNV 324,
 Regionalatlas 233, Migration & Integration 141, DWD Klimadaten 137, Strukturdaten BTW 99,
-IÖR-Monitor 89, Deutschlandatlas 87, BA Strukturdaten 69, G-BA 52, Bundes-Klinik-Atlas 42,
+IÖR-Monitor 92, Deutschlandatlas 87, BA Strukturdaten 69, G-BA 52, Bundes-Klinik-Atlas 42,
 Wahlergebnisse 39, DB StaDa 38, BA Arbeitsmarkt kommunal 34, FDZ Ruhr 29, OSM POI-Layer 27,
 Unfallatlas 26, BORIS-D 22, Ländermonitor 18, offeneregister 14, Hochschulkompass 12,
 Destatis Mobilität 7.
@@ -144,6 +144,33 @@ with about 124 KB, a bogus code 404 with 96 KB). Records whose link cannot be pr
 Regionalatlas belongs in that group: it is a dojo/ArcGIS app that reads TCode/ICode client-side,
 so its "indicator" links cannot be verified from here, and an earlier claim that they were is
 wrong.
+
+**A portal with no catalogue is often a portal whose own viewer has one (IÖR, 2026-09-05).** The
+IÖR-Monitor was indexed at portal level: 88 indicators read out of a PDF, all 88 pointing at the
+same overview page, on the reasoning that the documented API (`monitor_api/user?id=...&service=wms`)
+needs a personal key. The key is needed to CALL the geodata services, and for nothing else. The map
+viewer at monitor.ioer.de keeps its entire state in the query string and talks to an
+unauthenticated endpoint: `POST backend/query.php` with
+`values={"format":{"id":"gebiete"},"query":"getAllIndicators"}` returns every indicator with unit,
+years, spatial levels and description text, and `?ind=<code>&raumgl=<level>` opens exactly that
+indicator. So the source went from 88 identical links to 91 indicator-level ones, with real units
+and per-indicator years and levels. Three things generalise:
+
+- **Read the app, not the documentation.** The parameter names came from the viewer's own JS
+  (`frontend/src/menu_indikatorauswahl.js` declares `paramter: 'ind'`), and the catalogue endpoint
+  from `RequestManager.js`. A portal that renders client-side has to fetch its own metadata from
+  somewhere, and that somewhere is usually open.
+- **Name no year in a deep link when the app defaults to the newest.** The viewer picks the newest
+  year an indicator has when the link carries none, so the links do not age between refreshes.
+- **A field can be true in one catalogue and meaningless in another.** The raster catalogue marks
+  all seven area levels for every indicator, but the six indicators that exist only there render an
+  empty map at `&raumgl=krs`. Which catalogue an indicator appears in decides its link and its
+  levels; `spatial_extends` is only believed on the area side. Checked in a browser, not assumed.
+
+Because monitor.ioer.de answers the same 4.7 KB shell for any query string, `check_geodb_links.py`
+reports these as `shell` (correctly: it cannot judge them). `scripts/check_ioer_links.py` is what
+verifies them, by reading the map header the app writes once the indicator has loaded; all 91
+passed on 2026-09-05 and `refresh_all.sh` runs it as step 3c.
 
 **Every record carries `link_level`** (how precisely the link lands) and `link_verified` (whether
 that was probed). Improving the portal share and the unverified share is the quality lever.

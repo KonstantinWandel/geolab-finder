@@ -2,6 +2,8 @@
   "name": "Arbeitsmarktreport BA",
   "slug": "arbeitsmarktreport-ba",
   "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+  "url_former": "",
+  "maintenance_note": "",
   "excel_row": 7,
   "provider": "",
   "access_modes": [

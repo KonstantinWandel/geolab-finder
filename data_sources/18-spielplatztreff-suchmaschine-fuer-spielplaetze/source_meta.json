@@ -2,6 +2,8 @@
   "name": "Spielplatztreff - Suchmaschine für Spielplätze",
   "slug": "spielplatztreff-suchmaschine-fuer-spielplaetze",
   "url": "https://www.spielplatztreff.de/",
+  "url_former": "",
+  "maintenance_note": "keine Angabe , vermutlich laufend",
   "excel_row": 19,
   "provider": "",
   "access_modes": [
@@ -50,5 +52,5 @@
   "coverage_end_month": null,
   "coverage_end_year": null,
   "update_frequency": "n/a",
-  "note": "keine Angabe , vermutlich laufend"
+  "note": ""
 }
