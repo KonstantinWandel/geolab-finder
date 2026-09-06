@@ -1,0 +1,80 @@
+{
+  "name": "FDZ der Bundesagentur für Arbeit im IAB",
+  "slug": "fdz-der-bundesagentur-fuer-arbeit-im-iab",
+  "url": "https://fdz.iab.de/unsere-datenprodukte/",
+  "url_former": "",
+  "maintenance_note": "",
+  "excel_row": 40,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Beschäftigte"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitslose (-nquote)"
+    },
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Ein-/Auspendler"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Unternehmen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Bruttoentgelte"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Beschäftigte je Betrieb"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Beschäftigte",
+    "Arbeitslose (-nquote)",
+    "Ein-/Auspendler",
+    "Wirtschaft und Unternehmen",
+    "Unternehmen",
+    "Bruttoentgelte",
+    "Beschäftigte je Betrieb"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 1975,
+  "coverage_end_month": null,
+  "coverage_end_year": 2026,
+  "update_frequency": "laufend",
+  "note": "Betriebs- und Personendaten der Arbeitsverwaltung (SIAB, BHP, LIAB, IEB, IAB-Betriebspanel) mit Kreis- und Gemeindekennung; Zugang über Antrag, Gastaufenthalt oder Fernrechnen, einzelne Campus Files frei"
+}

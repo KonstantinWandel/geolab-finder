@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "workbook": "Geospatial_Data_Sources.xlsx",
-  "n_sources": 36,
+  "n_sources": 43,
   "sources": [
     {
       "name": "Regionalatlas Deutschland",
@@ -3200,6 +3200,478 @@
       "coverage_end_year": 2024,
       "update_frequency": "jährlich",
       "note": "1-km-Raster mit sozioökonomischen Merkmalen und geocodierte Immobilienanzeigen; Scientific-Use-Files auf Antrag"
+    },
+    {
+      "name": "Geobasisdaten des BKG (Open Data)",
+      "slug": "geobasisdaten-des-bkg-open-data",
+      "url": "https://gdz.bkg.bund.de/index.php/default/open-data.html",
+      "url_former": "",
+      "maintenance_note": "",
+      "excel_row": 38,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only",
+        "machine-readable API",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": true,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Regierungsbezirke",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "Adressen / Koordinaten",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Flächennutzung",
+        "Nachhaltigkeit"
+      ],
+      "topics": [
+        {
+          "group": "Flächennutzung",
+          "topic": "Flächennutzung"
+        },
+        {
+          "group": "Flächennutzung",
+          "topic": "Bodennutzung"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Umwelt"
+        }
+      ],
+      "topic_labels": [
+        "Flächennutzung",
+        "Bodennutzung",
+        "Umwelt"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 1990,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "jährlich",
+      "note": "Verwaltungsgrenzen (VG250/VG1000/VG5000, NUTS), INSPIRE-Gitter, geografische Namen, CORINE-Landbedeckung, Geländemodelle und Basiskarten; die Geometrien, auf die die Indikatoren der übrigen Quellen bezogen sind"
+    },
+    {
+      "name": "FDZ der Statistischen Ämter des Bundes und der Länder",
+      "slug": "fdz-der-statistischen-aemter-des-bundes-und-der-",
+      "url": "https://www.forschungsdatenzentrum.de/de/alle-daten",
+      "url_former": "",
+      "maintenance_note": "",
+      "excel_row": 39,
+      "provider": "",
+      "access_modes": [
+        "web UI / search form only",
+        "on request / registration needed"
+      ],
+      "access_flags": {
+        "Direkter Download": false,
+        "GUI": true,
+        "API": false,
+        "Karte": false,
+        "Beantragung": true
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Bauen / Wohnen",
+        "Bevölkerung",
+        "Gesundheit",
+        "Migration",
+        "Nachhaltigkeit",
+        "Soziales",
+        "Wirtschaft und Unternehmen"
+      ],
+      "topics": [
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Arbeitsmarkt & Beschäftigung"
+        },
+        {
+          "group": "Bauen / Wohnen",
+          "topic": "Bauen / Wohnen"
+        },
+        {
+          "group": "Bevölkerung",
+          "topic": "Bevölkerung"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Gesundheit"
+        },
+        {
+          "group": "Migration",
+          "topic": "Migration"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Bildung"
+        },
+        {
+          "group": "Soziales",
+          "topic": "Soziales"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Wirtschaft und Unternehmen"
+        }
+      ],
+      "topic_labels": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Bauen / Wohnen",
+        "Bevölkerung",
+        "Gesundheit",
+        "Migration",
+        "Bildung",
+        "Soziales",
+        "Wirtschaft und Unternehmen"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 1975,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "laufend",
+      "note": "Amtliche Mikrodaten als Scientific-Use-Files und über Gastaufenthalt: Mikrozensus, AFiD, Agrar-, Bau-, Bildungs- und Unternehmensstatistiken, überwiegend mit regionaler Kennung; Zugang auf Antrag"
+    },
+    {
+      "name": "FDZ der Bundesagentur für Arbeit im IAB",
+      "slug": "fdz-der-bundesagentur-fuer-arbeit-im-iab",
+      "url": "https://fdz.iab.de/unsere-datenprodukte/",
+      "url_former": "",
+      "maintenance_note": "",
+      "excel_row": 40,
+      "provider": "",
+      "access_modes": [
+        "web UI / search form only",
+        "on request / registration needed"
+      ],
+      "access_flags": {
+        "Direkter Download": false,
+        "GUI": true,
+        "API": false,
+        "Karte": false,
+        "Beantragung": true
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Wirtschaft und Unternehmen"
+      ],
+      "topics": [
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Arbeitsmarkt & Beschäftigung"
+        },
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Beschäftigte"
+        },
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Arbeitslose (-nquote)"
+        },
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Ein-/Auspendler"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Wirtschaft und Unternehmen"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Unternehmen"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Bruttoentgelte"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Beschäftigte je Betrieb"
+        }
+      ],
+      "topic_labels": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Beschäftigte",
+        "Arbeitslose (-nquote)",
+        "Ein-/Auspendler",
+        "Wirtschaft und Unternehmen",
+        "Unternehmen",
+        "Bruttoentgelte",
+        "Beschäftigte je Betrieb"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 1975,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "laufend",
+      "note": "Betriebs- und Personendaten der Arbeitsverwaltung (SIAB, BHP, LIAB, IEB, IAB-Betriebspanel) mit Kreis- und Gemeindekennung; Zugang über Antrag, Gastaufenthalt oder Fernrechnen, einzelne Campus Files frei"
+    },
+    {
+      "name": "Marktstammdatenregister (Bundesnetzagentur)",
+      "slug": "marktstammdatenregister-bundesnetzagentur",
+      "url": "https://www.marktstammdatenregister.de/MaStR",
+      "url_former": "",
+      "maintenance_note": "",
+      "excel_row": 41,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only",
+        "machine-readable API",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": true,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "PLZ",
+        "Adressen / Koordinaten"
+      ],
+      "topic_groups": [
+        "Nachhaltigkeit",
+        "Ver- und Entsorgung",
+        "Wirtschaft und Unternehmen"
+      ],
+      "topics": [
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Nachhaltigkeit"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Umwelt"
+        },
+        {
+          "group": "Ver- und Entsorgung",
+          "topic": "Ver- und Entsorgung"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Wirtschaft und Unternehmen"
+        },
+        {
+          "group": "Wirtschaft und Unternehmen",
+          "topic": "Unternehmen"
+        }
+      ],
+      "topic_labels": [
+        "Nachhaltigkeit",
+        "Umwelt",
+        "Ver- und Entsorgung",
+        "Wirtschaft und Unternehmen",
+        "Unternehmen"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 2019,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "täglich",
+      "note": "Amtliches Register aller Strom- und Gaserzeugungsanlagen mit Adresse, Koordinaten, Leistung und Inbetriebnahme; vollständiger Datenexport frei"
+    },
+    {
+      "name": "Luftqualitätsdaten des Umweltbundesamtes",
+      "slug": "luftqualitaetsdaten-des-umweltbundesamtes",
+      "url": "https://www.umweltbundesamt.de/daten/luft/luftdaten",
+      "url_former": "",
+      "maintenance_note": "",
+      "excel_row": 42,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only",
+        "machine-readable API",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": true,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Adressen / Koordinaten",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Gesundheit",
+        "Nachhaltigkeit"
+      ],
+      "topics": [
+        {
+          "group": "Gesundheit",
+          "topic": "Gesundheit"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Nachhaltigkeit"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Straßenverkehr"
+        },
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Umwelt"
+        }
+      ],
+      "topic_labels": [
+        "Gesundheit",
+        "Nachhaltigkeit",
+        "Straßenverkehr",
+        "Umwelt"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 1990,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "stündlich",
+      "note": "Messwerte von rund 500 Stationen (Feinstaub, Stickstoffdioxid, Ozon und weitere) mit Koordinaten und Stationstyp, offene JSON-Schnittstelle; modellierte Flächenkarten beim UBA, die Lärmkartierung liegt dagegen bei den Ländern und ist hier nicht enthalten"
+    },
+    {
+      "name": "Polizeiliche Kriminalstatistik (BKA)",
+      "slug": "polizeiliche-kriminalstatistik-bka",
+      "url": "https://www.bka.de/DE/AktuelleInformationen/StatistikenLagebilder/PolizeilicheKriminalstatistik/pks_node.html",
+      "url_former": "",
+      "maintenance_note": "",
+      "excel_row": 43,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": false,
+        "Karte": false,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Nachhaltigkeit",
+        "Soziales"
+      ],
+      "topics": [
+        {
+          "group": "Nachhaltigkeit",
+          "topic": "Straßenverkehr"
+        },
+        {
+          "group": "Soziales",
+          "topic": "Soziales"
+        }
+      ],
+      "topic_labels": [
+        "Straßenverkehr",
+        "Soziales"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 1971,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "jährlich",
+      "note": "Straftaten nach Delikt, Aufklärung, Tatverdächtige und Opfer; Zeitreihen sowie ausgewählte Straftaten für Kreise und Städte"
+    },
+    {
+      "name": "Mobilität in Deutschland (MiD)",
+      "slug": "mobilitaet-in-deutschland-mid",
+      "url": "https://www.mobilitaet-in-deutschland.de/",
+      "url_former": "",
+      "maintenance_note": "",
+      "excel_row": 44,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only",
+        "on request / registration needed"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": false,
+        "Karte": false,
+        "Beantragung": true
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "Gemeinden und Verbandsgemeinden",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Arbeitsmarkt & Beschäftigung",
+        "Verkehr / Mobilität"
+      ],
+      "topics": [
+        {
+          "group": "Arbeitsmarkt & Beschäftigung",
+          "topic": "Ein-/Auspendler"
+        },
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "Verkehr / Mobilität"
+        },
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "PKW-Dichte"
+        },
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "ÖPNV"
+        },
+        {
+          "group": "Verkehr / Mobilität",
+          "topic": "tatsächliche Mobilität (Standortdaten)"
+        }
+      ],
+      "topic_labels": [
+        "Ein-/Auspendler",
+        "Verkehr / Mobilität",
+        "PKW-Dichte",
+        "ÖPNV",
+        "tatsächliche Mobilität (Standortdaten)"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 2002,
+      "coverage_end_month": null,
+      "coverage_end_year": 2023,
+      "update_frequency": "unregelmäßig",
+      "note": "Bundesweite Haushaltsbefragung zum Verkehrsverhalten (2002, 2008, 2017, 2023) mit Regionalkennung; Scientific-Use-File über die Clearingstelle Verkehr, Ergebnisberichte und Regionaltabellen frei"
     }
   ]
 }

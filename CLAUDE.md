@@ -45,8 +45,8 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-09-05: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 12,036 rows**
-(11,376 GeoDB records + 660 INKAR) from **36 workbook rows, 31 of which carry real records**.
+State as of 2026-09-06: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 12,286 rows**
+(11,626 GeoDB records + 660 INKAR) from **43 workbook rows, 38 of which carry real records**.
 Tracker: **29 done, 2 partial, 5 open**. Largest: Regionalstatistik/GENESIS 3,306,
 GENESIS-Online Bund 3,027, Zensus 2022 1,441, Gigabit-Grundbuch 633, DB ISR 416,
 Wegweiser Kommune 393, BA-Glossar 314, BA Arbeitsmarktreport 289, Open Data ÖPNV 324,
@@ -132,6 +132,22 @@ bracket). Sanity-check any PDF flattener by printing labels and asking whether e
    the Destatis definition text are not all carried by the REGIONAL database: of 965, only 429
    exist there, 468 are federal-only and 68 in neither. They are now resolved against the
    enumerated catalogues and linked to whichever instance holds them.
+
+**Seven sources added on 2026-09-06**, the gaps a keyword pass over the whole index had shown:
+Geobasisdaten des BKG (70 products, and the first geometries in the index: VG250/VG1000/VG5000,
+NUTS, the INSPIRE grid, CLC5 land cover), the FDZ of the statistical offices (75 datasets) and the
+FDZ of the BA at the IAB (34 products), the Marktstammdatenregister (31 entity types read from the
+XSD schemas that ship with its export documentation), the UBA air quality interface (12 components
+plus the 500-station register), the Polizeiliche Kriminalstatistik (13 published parts) and
+Mobilität in Deutschland (the four waves, the BASt table tool and the microdata route). All of
+them are dataset-level links that resolve; `check_geodb_links.py` reports ok for each.
+
+Two things learned there. The BKG shop is client-rendered and its robots.txt asks GPTBot to stay
+out, while its open **data server** is a plain directory listing with no robots.txt: the catalogue
+was taken from the data server with an honest user agent and the shop was left alone. And the
+workbook comment for the UBA row originally promised the Umgebungslärm mapping, which no record
+covers because that mapping belongs to the sixteen Länder; the comment was corrected rather than
+left to overstate what the index holds.
 
 **Where the links land, after the pass of 2026-09-05** (11,376 records): 5,332 open the table,
 2,713 the dataset or file that contains the record, 1,668 the statistic that contains it, **1,470

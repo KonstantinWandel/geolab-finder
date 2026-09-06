@@ -275,10 +275,11 @@
       "slug": "genesis-online-bund",
       "name": "GENESIS-Online (Bund)",
       "url": "https://genesis.destatis.de/datenbank/online/",
-      "status": null,
-      "final_url": "",
+      "status": 200,
+      "final_url": "https://genesis.destatis.de/datenbank/online/",
       "moved": false,
-      "error": "TimeoutError: Page.goto: Timeout 75000ms exceeded.\nCall log:\n  - navigating to \"http"
+      "error": "",
+      "title": "GENESIS-Online"
     },
     {
       "slug": "zensus-2022",
@@ -359,6 +360,76 @@
       "moved": false,
       "error": "",
       "title": "FDZ"
+    },
+    {
+      "slug": "geobasisdaten-des-bkg-open-data",
+      "name": "Geobasisdaten des BKG (Open Data)",
+      "url": "https://gdz.bkg.bund.de/index.php/default/open-data.html",
+      "status": 200,
+      "final_url": "https://gdz.bkg.bund.de/index.php/default/open-data.html",
+      "moved": false,
+      "error": "",
+      "title": "Open Data"
+    },
+    {
+      "slug": "fdz-der-statistischen-aemter-des-bundes-und-der-",
+      "name": "FDZ der Statistischen Ämter des Bundes und der Länder",
+      "url": "https://www.forschungsdatenzentrum.de/de/alle-daten",
+      "status": 200,
+      "final_url": "https://www.forschungsdatenzentrum.de/de/alle-daten",
+      "moved": false,
+      "error": "",
+      "title": "Alle Daten | Forschungsdatenzentrum"
+    },
+    {
+      "slug": "fdz-der-bundesagentur-fuer-arbeit-im-iab",
+      "name": "FDZ der Bundesagentur für Arbeit im IAB",
+      "url": "https://fdz.iab.de/unsere-datenprodukte/",
+      "status": 200,
+      "final_url": "https://fdz.iab.de/unsere-datenprodukte/",
+      "moved": false,
+      "error": "",
+      "title": "Unsere Datenprodukte - FDZ - Forschungsdatenzentrum"
+    },
+    {
+      "slug": "marktstammdatenregister-bundesnetzagentur",
+      "name": "Marktstammdatenregister (Bundesnetzagentur)",
+      "url": "https://www.marktstammdatenregister.de/MaStR",
+      "status": 200,
+      "final_url": "https://www.marktstammdatenregister.de/MaStR",
+      "moved": false,
+      "error": "",
+      "title": "Startseite | MaStR"
+    },
+    {
+      "slug": "luftqualitaetsdaten-des-umweltbundesamtes",
+      "name": "Luftqualitätsdaten des Umweltbundesamtes",
+      "url": "https://www.umweltbundesamt.de/daten/luft/luftdaten",
+      "status": 200,
+      "final_url": "https://www.umweltbundesamt.de/daten/luft/luftdaten",
+      "moved": false,
+      "error": "",
+      "title": "Luftdaten | Umweltbundesamt"
+    },
+    {
+      "slug": "polizeiliche-kriminalstatistik-bka",
+      "name": "Polizeiliche Kriminalstatistik (BKA)",
+      "url": "https://www.bka.de/DE/AktuelleInformationen/StatistikenLagebilder/PolizeilicheKriminalstatistik/pks_node.html",
+      "status": 200,
+      "final_url": "https://www.bka.de/DE/AktuelleInformationen/StatistikenLagebilder/PolizeilicheKriminalstatistik/pks_node.html",
+      "moved": false,
+      "error": "",
+      "title": "BKA - Polizeiliche Kriminalstatistik"
+    },
+    {
+      "slug": "mobilitaet-in-deutschland-mid",
+      "name": "Mobilität in Deutschland (MiD)",
+      "url": "https://www.mobilitaet-in-deutschland.de/",
+      "status": 200,
+      "final_url": "https://www.mobilitaet-in-deutschland.de/",
+      "moved": false,
+      "error": "",
+      "title": "Mobilität in Deutschland"
     }
   ]
 }

@@ -1,0 +1,86 @@
+{
+  "name": "FDZ der Statistischen Ämter des Bundes und der Länder",
+  "slug": "fdz-der-statistischen-aemter-des-bundes-und-der-",
+  "url": "https://www.forschungsdatenzentrum.de/de/alle-daten",
+  "url_former": "",
+  "maintenance_note": "",
+  "excel_row": 39,
+  "provider": "",
+  "access_modes": [
+    "web UI / search form only",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Bauen / Wohnen",
+    "Bevölkerung",
+    "Gesundheit",
+    "Migration",
+    "Nachhaltigkeit",
+    "Soziales",
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Arbeitsmarkt & Beschäftigung"
+    },
+    {
+      "group": "Bauen / Wohnen",
+      "topic": "Bauen / Wohnen"
+    },
+    {
+      "group": "Bevölkerung",
+      "topic": "Bevölkerung"
+    },
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Migration",
+      "topic": "Migration"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Bildung"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Soziales"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    }
+  ],
+  "topic_labels": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Bauen / Wohnen",
+    "Bevölkerung",
+    "Gesundheit",
+    "Migration",
+    "Bildung",
+    "Soziales",
+    "Wirtschaft und Unternehmen"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 1975,
+  "coverage_end_month": null,
+  "coverage_end_year": 2026,
+  "update_frequency": "laufend",
+  "note": "Amtliche Mikrodaten als Scientific-Use-Files und über Gastaufenthalt: Mikrozensus, AFiD, Agrar-, Bau-, Bildungs- und Unternehmensstatistiken, überwiegend mit regionaler Kennung; Zugang auf Antrag"
+}

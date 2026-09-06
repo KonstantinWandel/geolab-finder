@@ -269,6 +269,60 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
                  "carries the categories in the monitor's own wording, but it lags the catalogue: "
                  "in September 2026 it still named 8 retired codes and missed 11 live ones."},
     ],
+    "geobasisdaten-des-bkg-open-data": [
+        {"name": "bkg_produkte.json", "url": "https://daten.gdz.bkg.bund.de/produkte/",
+         "kind": "catalogue", "handler": "bkg_produkte",
+         "note": "The open data server is a browsable directory: one folder per product family, "
+                 "one per product below it. That listing is the catalogue; the shop front end is "
+                 "JavaScript and its robots.txt asks GPTBot to stay out, so it is left alone."},
+    ],
+    "fdz-der-statistischen-aemter-des-bundes-und-der-": [
+        {"name": "fdz_datensaetze.json", "url": "https://www.forschungsdatenzentrum.de/de/alle-daten",
+         "kind": "catalogue", "handler": "fdz_statistik",
+         "note": "The complete dataset list plus each dataset's own page, which carries the "
+                 "description, the years and the access route."},
+    ],
+    "fdz-der-bundesagentur-fuer-arbeit-im-iab": [
+        {"name": "iab_datenprodukte.json", "url": "https://fdz.iab.de/unsere-datenprodukte/",
+         "kind": "catalogue", "handler": "fdz_iab",
+         "note": "One page per data product (SIAB, BHP, LIAB, IEB and the rest), linked from the "
+                 "product overview."},
+    ],
+    "marktstammdatenregister-bundesnetzagentur": [
+        {"name": "datendownload.html", "url": "https://www.marktstammdatenregister.de/MaStR/Datendownload",
+         "kind": "catalogue", "note": "Links to the full export and to its documentation."},
+        {"name": "gesamtdatenexport_doku.zip",
+         "url": "https://www.marktstammdatenregister.de/MaStRHilfe/files/gesamtdatenexport/"
+                "Dokumentation%20MaStR%20Gesamtdatenexport.zip",
+         "kind": "catalogue",
+         "note": "Carries an XSD per unit type, which is the field-level catalogue of the register: "
+                 "solar, wind, biomass, storage, grid connection points and the rest."},
+    ],
+    "luftqualitaetsdaten-des-umweltbundesamtes": [
+        {"name": "uba_luftdaten.json", "url": "https://www.umweltbundesamt.de/api/air_data/v3",
+         "kind": "catalogue", "handler": "uba_air",
+         "note": "The documented JSON interface: measured components, averaging periods, networks "
+                 "and every station with its coordinates, type and operating period."},
+    ],
+    "polizeiliche-kriminalstatistik-bka": [
+        {"name": "pks_jahr.html",
+         "url": "https://www.bka.de/DE/AktuelleInformationen/StatistikenLagebilder/"
+                "PolizeilicheKriminalstatistik/PKS2025/pks2025_node.html",
+         "kind": "catalogue", "note": "The current edition with its tables and reports."},
+        {"name": "pks_tabellen.html",
+         "url": "https://www.bka.de/DE/AktuelleInformationen/StatistikenLagebilder/"
+                "PolizeilicheKriminalstatistik/PKS2025/pksTabellen_Interpretationshilfen/"
+                "pksTabellen_Interpretationshilfen_node.html",
+         "kind": "catalogue",
+         "note": "Table sets and the documents that explain them, including the district-level "
+                 "selection and the offence catalogue."},
+    ],
+    "mobilitaet-in-deutschland-mid": [
+        {"name": "portal.html", "url": "https://www.mobilitaet-in-deutschland.de/", "kind": "portal",
+         "note": "Waves 2002, 2008, 2017 and 2023."},
+        {"name": "downloads.html", "url": "https://www.mobilitaet-in-deutschland.de/downloads.html",
+         "kind": "catalogue", "note": "Reports, tables and the data access routes per wave."},
+    ],
     "rwi-geo-grid-rwi-geo-red-fdz-ruhr": [
         {"name": "portal.html", "url": "https://fdz.rwi-essen.de/", "kind": "portal", "note": ""},
         {"name": "fdz_datasets.json", "url": "https://fdz.rwi-essen.de/", "kind": "catalogue",
@@ -828,6 +882,171 @@ def fetch_ioer_catalogue(url: str, target: Path) -> Dict[str, Any]:
             "indicators_gebiete": counts["gebiete"], "indicators_raster": counts["raster"]}
 
 
+def fetch_bkg_produkte(url: str, target: Path) -> Dict[str, Any]:
+    """The BKG open data server, read as what it is: a directory of products.
+
+    The shop front end is a JavaScript catalogue and its robots.txt asks GPTBot not to crawl it,
+    so nothing here touches it. The data server has no robots.txt and serves plain nginx index
+    pages, one level of product families and one level of products, which is exactly the list a
+    finder needs. Only those index pages are fetched, never the data behind them.
+    """
+    started = time.time()
+    honest = "geolab-geodb-indexer/1.0 (+https://geodb.geolab.soz.uni-bielefeld.de)"
+
+    def listing(address: str) -> List[str]:
+        request = urllib.request.Request(address, headers={"User-Agent": honest})
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+            body = response.read().decode("utf-8", "replace")
+        return [name for name in re.findall(r'href="([^"?]+)/"', body) if name not in {"..", "."}]
+
+    families: Dict[str, List[str]] = {}
+    for family in listing(url):
+        families[family] = listing(f"{url.rstrip('/')}/{family}/")
+        time.sleep(0.2)
+    payload = json.dumps({
+        "server": url,
+        "licence": "Datenlizenz Deutschland Namensnennung 2.0 (© GeoBasis-DE / BKG)",
+        "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "families": families,
+    }, ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "families": len(families), "products": sum(len(v) for v in families.values())}
+
+
+def _page_text(address: str, timeout: int = TIMEOUT) -> str:
+    request = urllib.request.Request(address, headers={
+        "User-Agent": "geolab-geodb-indexer/1.0 (+https://geodb.geolab.soz.uni-bielefeld.de)",
+        "Accept": "text/html"})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return response.read().decode("utf-8", "replace")
+
+
+def _clean_html(fragment: str) -> str:
+    text = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", fragment, flags=re.S | re.I)
+    return " ".join(html.unescape(re.sub(r"<[^>]+>", " ", text)).split())
+
+
+def fetch_fdz_statistik(url: str, target: Path) -> Dict[str, Any]:
+    """Every dataset the statistical offices' research data centre offers, with its own page.
+
+    The overview lists /de/<topic>/<dataset> for each of them, and the dataset page carries the
+    description, the years and the access route. That is the level a researcher needs: these are
+    files you apply for, so the record has to say what the file contains before the application.
+    """
+    started = time.time()
+    index = _page_text(url)
+    paths = sorted({p for p in re.findall(r'href="(/de/[a-z0-9_-]+/[a-z0-9_-]+)"', index)})
+    base = "https://www.forschungsdatenzentrum.de"
+    datasets: List[Dict[str, Any]] = []
+    for path in paths:
+        try:
+            body = _page_text(base + path)
+        except Exception as exc:  # noqa: BLE001
+            print(f"       fdz {path}: {exc}")
+            continue
+        # The <h1> is the topic block ("AFiD") and the first <p> is the service footer; the
+        # dataset's own name is the <h2> above its text, and the description is the first
+        # paragraph long enough to be prose rather than a phone number.
+        # The first <h2> is the breadcrumb label, so navigation headings are skipped rather than
+        # taking a fixed position, which would break the moment the template changes.
+        NAV = {"pfadnavigation", "servicenavigation", "hauptnavigation", "suche", "sprachwahl"}
+        headings = [_clean_html(fragment) for fragment in re.findall(r"<h2[^>]*>(.*?)</h2>", body, re.S)]
+        heading = next((h for h in headings if h and h.lower() not in NAV), "")
+        paragraphs = [_clean_html(fragment) for fragment in re.findall(r"<p[^>]*>(.*?)</p>", body, re.S)]
+        prose = [text for text in paragraphs if len(text) > 80 and "@" not in text]
+        short = re.search(r"<title>([^<|]+)", body)
+        years = sorted({y for y in re.findall(r"\b(19[7-9]\d|20[0-4]\d)\b", " ".join(prose))})
+        datasets.append({
+            "path": path, "url": base + path,
+            "topic": path.split("/")[2],
+            "code": (short.group(1).strip() if short else path.rsplit("/", 1)[-1]),
+            "title": heading or path.rsplit("/", 1)[-1],
+            "description": " ".join(prose[:3])[:1200],
+            "years": [years[0], years[-1]] if years else [],
+        })
+        time.sleep(0.2)
+    payload = json.dumps({"source": url, "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                          "datasets": datasets}, ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "datasets": len(datasets)}
+
+
+def fetch_fdz_iab(url: str, target: Path) -> Dict[str, Any]:
+    """The IAB research data centre's data products, one page each.
+
+    The overview is a menu rather than a list, so the product pages are collected from the links
+    under /unsere-datenprodukte/ and read individually.
+    """
+    started = time.time()
+    index = _page_text(url)
+    paths = sorted({p for p in re.findall(r'href="(https://fdz\.iab\.de/unsere-datenprodukte/[^"]+/)"', index)
+                    if p.rstrip("/") != url.rstrip("/")})
+    products: List[Dict[str, Any]] = []
+    for path in paths:
+        try:
+            body = _page_text(path)
+        except Exception as exc:  # noqa: BLE001
+            print(f"       iab {path}: {exc}")
+            continue
+        title = re.search(r"<h1[^>]*>(.*?)</h1>", body, re.S)
+        paragraphs = [_clean_html(p) for p in re.findall(r"<p[^>]*>(.*?)</p>", body, re.S)]
+        description = next((p for p in paragraphs if len(p) > 120), "")
+        years = sorted({y for y in re.findall(r"\b(19[7-9]\d|20[0-4]\d)\b", " ".join(paragraphs))})
+        products.append({
+            "url": path,
+            "slug": path.rstrip("/").rsplit("/", 1)[-1],
+            "group": path.rstrip("/").split("/")[-2],
+            "title": _clean_html(title.group(1)) if title else path.rstrip("/").rsplit("/", 1)[-1],
+            "description": description[:800],
+            "years": [years[0], years[-1]] if years else [],
+        })
+        time.sleep(0.2)
+    payload = json.dumps({"source": url, "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                          "products": products}, ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "products": len(products)}
+
+
+def fetch_uba_air(url: str, target: Path) -> Dict[str, Any]:
+    """The UBA air quality interface: what is measured, how it is averaged, and where.
+
+    Four documented calls, no key. The station list is the valuable part for this finder: 500-odd
+    measuring sites with coordinates, station type (traffic, background, industrial) and their
+    operating period, which is what an exposure variable has to be joined on.
+    """
+    started = time.time()
+
+    def get(path: str) -> Any:
+        request = urllib.request.Request(f"{url.rstrip('/')}/{path}", headers={
+            "User-Agent": "geolab-geodb-indexer/1.0 (+https://geodb.geolab.soz.uni-bielefeld.de)",
+            "Accept": "application/json"})
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+            return json.loads(response.read().decode("utf-8", "replace"))
+
+    payload = json.dumps({
+        "api": url,
+        "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "licence": "Datenlizenz Deutschland Namensnennung 2.0 (Umweltbundesamt)",
+        "components": get("components/json?lang=de"),
+        "scopes": get("scopes/json?lang=de"),
+        "networks": get("networks/json?lang=de"),
+        "stations": get("stations/json?lang=de&use=measure"),
+    }, ensure_ascii=False, indent=1).encode("utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2)}
+
+
 def sha256_of(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -1045,6 +1264,14 @@ def main() -> None:
                     result = fetch_isr_attributes(artifact["url"], target)
                 elif artifact.get("handler") == "ioer_catalogue":
                     result = fetch_ioer_catalogue(artifact["url"], target)
+                elif artifact.get("handler") == "bkg_produkte":
+                    result = fetch_bkg_produkte(artifact["url"], target)
+                elif artifact.get("handler") == "fdz_statistik":
+                    result = fetch_fdz_statistik(artifact["url"], target)
+                elif artifact.get("handler") == "fdz_iab":
+                    result = fetch_fdz_iab(artifact["url"], target)
+                elif artifact.get("handler") == "uba_air":
+                    result = fetch_uba_air(artifact["url"], target)
                 else:
                     result = fetch_one(artifact["url"], target, insecure=bool(artifact.get("insecure")))
             except (urllib.error.URLError, urllib.error.HTTPError, OSError) as exc:
