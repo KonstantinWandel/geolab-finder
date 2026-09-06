@@ -856,9 +856,11 @@ def write_progress_table(rows: List[Dict[str, Any]], stamp: str) -> Optional[Pat
         detail = getattr(exc, "stderr", b"")
         print(f"[warn] progress table not rendered: {exc} {detail[-400:] if detail else ''}")
         return csv_path
-    # The clean folder holds deliverables only; tinytable's LaTeX run drops id*.tex/.log there.
+    # The clean folder holds deliverables only; tinytable's LaTeX run drops id*.tex/.log and, when
+    # it compiles, an id*.pdf beside the named output. The pdf was missing from this list and rode
+    # along to the Kühne share on 2026-09-06, where it looks like a second, nameless deliverable.
     for debris in DELIVERABLES.glob("id*"):
-        if debris.suffix in {".tex", ".log", ".aux", ".out"}:
+        if debris.suffix in {".tex", ".log", ".aux", ".out", ".pdf"}:
             debris.unlink(missing_ok=True)
     return DELIVERABLES / f"{PROGRESS_BASE}.pdf"
 
