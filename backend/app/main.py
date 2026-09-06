@@ -1,4 +1,5 @@
 from fastapi import APIRouter, FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Union, Any
@@ -12,8 +13,11 @@ from app.services.soep_aggregator import SOEPAggregatorService
 from app.services.soep_search import SOEPSearchService
 from app.services.soep_rag_advisor import SOEPRagAdvisorService
 from app.services import usage_log
+from app.services.inkar_permalink import from_environment as inkar_permalinks_from_environment
 
 app = FastAPI(title="Destatis Local RAG", version="1.0.0")
+
+inkar_permalinks = inkar_permalinks_from_environment()
 
 ALLOW_ORIGINS = [
     origin.strip()
@@ -203,6 +207,24 @@ async def soep_filter_options(source: Optional[str] = None, include_raw: bool = 
     # `include_raw` mirrors the UI checkbox: with the raw questionnaire files hidden, the
     # dataset dropdown must not offer the datasets only they live in.
     return soep_rag_advisor.get_filter_options(source, include_raw=include_raw)
+
+# INKAR has no address for a single indicator, so a link into it has to be a query stored on the
+# BBSR server. This endpoint creates that query the first time somebody opens an indicator and
+# reuses it afterwards, which keeps what we leave in their system to the indicators people
+# actually look at. See app/services/inkar_permalink.py; GEOLAB_INKAR_PERMALINKS=0 turns it off
+# and every link falls back to inkar.de.
+@app.get("/api/inkar/open/{m_id}")
+def inkar_open(m_id: str):
+    target = inkar_permalinks.link(m_id)
+    return RedirectResponse(url=target, status_code=302,
+                            headers={"X-Robots-Tag": "noindex, nofollow",
+                                     "Cache-Control": "no-store"})
+
+
+@app.get("/api/inkar/permalinks")
+def inkar_permalink_status():
+    return inkar_permalinks.status()
+
 
 @app.get("/health")
 def health_check():

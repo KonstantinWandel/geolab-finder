@@ -36,6 +36,18 @@ BBSR_REFERENCE_URL = (
 # What scripts/fetch_inkar_geodienste.py collected: the subset of INKAR indicators the BBSR also
 # publishes as a WMS layer and as a metadata record in the national Geodatenkatalog.
 GEODIENSTE_PATH = Path(__file__).resolve().parents[1] / "data_sources" / "22-inkar" / "raw" / "geodienste.json"
+# Which indicators can be linked one by one (scripts/fetch_inkar_wizard_catalogue.py). The link
+# does not point at inkar.de directly: INKAR has no address for a single indicator, so it points at
+# our own endpoint, which creates the stored query on first use and then redirects. See
+# backend/app/services/inkar_permalink.py.
+WIZARD_KATALOG_PATH = Path(__file__).resolve().parents[1] / "data_sources" / "22-inkar" / "raw" / "wizard_katalog.json"
+PERMALINK_BASE = "https://geodb.geolab.soz.uni-bielefeld.de/api/inkar/open"
+
+
+def load_wizard_katalog(path: Path = WIZARD_KATALOG_PATH) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8")).get("indicators") or {}
 
 
 def normalise_title(text: str) -> str:
@@ -245,6 +257,7 @@ def geodienste_for(record: Dict[str, Any], geodienste: Dict[str, Any]) -> Dict[s
 
 def flatten_workbook(input_path: Path, bbsr_reference: Dict[str, Any]) -> List[Dict[str, Any]]:
     geodienste = load_geodienste()
+    wizard = load_wizard_katalog()
     excel = pd.ExcelFile(input_path)
     rows: List[Dict[str, Any]] = []
     skipped_sheets = {"Nutzungshinweise"}
@@ -274,6 +287,8 @@ def flatten_workbook(input_path: Path, bbsr_reference: Dict[str, Any]) -> List[D
                     current_theme_path = theme_parts["theme_path"]
                 continue
 
+            wizard_entry = wizard.get(str(m_id))
+            permalink = f"{PERMALINK_BASE}/{m_id}" if wizard_entry else ""
             spatial_coverage = format_spatial_levels(row)
             spatial_year_meta = parse_years(" ".join(spatial_coverage.values()))
             record: Dict[str, Any] = {
@@ -305,20 +320,24 @@ def flatten_workbook(input_path: Path, bbsr_reference: Dict[str, Any]) -> List[D
                 ),
                 "bbsr_reference_url": BBSR_REFERENCE_URL,
                 "bbsr_reference_context": bbsr_context,
-                "source_url": INKAR_SOURCE_URL,
+                "source_url": permalink or INKAR_SOURCE_URL,
                 "selector_url": INKAR_SELECTOR_URL,
-                "indicator_url": INKAR_SOURCE_URL,
+                "indicator_url": permalink or INKAR_SOURCE_URL,
                 "portal_url": INKAR_SOURCE_URL,
                 # INKAR keeps no state in its address: the table and map windows read their
                 # selection from the window that opened them, and the only thing a URL can carry
                 # is the id of a query stored on the BBSR server. So the link is the portal, and
                 # saying so is what lets the finder show the reader which name to search for.
-                "link_level": "portal",
+                "link_level": "indicator" if permalink else "portal",
                 "link_verified": True,
                 "api_hint": (
                     f"INKAR indicator code/Kuerzel={indicator_code}; M_ID={m_id}. "
-                    f"In INKAR unter „{current_theme_path}“ nach „{short_name or name}“ suchen. "
-                    "Use the INKAR UI or an INKAR API wrapper such as inkaR with this indicator identifier."
+                    + (f"Der Link öffnet diesen Indikator direkt als Tabelle "
+                       f"({wizard_entry.get('level_name') or wizard_entry.get('level')}, "
+                       f"{wizard_entry.get('year', '')}); in INKAR lässt sich Ebene und Jahr dort ändern. "
+                       if wizard_entry else
+                       f"In INKAR unter „{current_theme_path}“ nach „{short_name or name}“ suchen. ")
+                    + "Use the INKAR UI or an INKAR API wrapper such as inkaR with this indicator identifier."
                 ),
             }
             services = geodienste_for(record, geodienste)

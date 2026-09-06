@@ -208,11 +208,39 @@ ssh vm "sudo systemctl reload caddy"    # wenn das ausgelieferte älter ist als 
 - **Keine Forschungsdaten in die Repos.** Sie enthalten Quelltext, keine Daten und keine Modelle.
 - **RegioPress-Volltexte** (aus dem Genios-Bestand) dürfen nicht öffentlich werden. Sie haben mit
   den Findern nichts zu tun, liegen aber auf derselben Maschine; die Regel gilt trotzdem.
-- **INKAR/BBSR: nichts auf deren Server schreiben.** Zwischen dem Projekt und dem BBSR besteht eine
-  eigene Vereinbarung, deren Reichweite offen ist (Stand 2026-09-05, Konstantin klärt sie). Bis das
-  geklärt ist: keine gespeicherten Abfragen über `Main/SaveQuery` anlegen, keine automatisierten
-  Abrufe in Serie, kein Ausschöpfen der Anwendung. Lesen der öffentlichen Kataloge und Geodienste
-  ist davon nicht berührt. Warum das überhaupt eine Frage ist, steht in `CLAUDE.md`.
+- **INKAR/BBSR: sparsam bleiben.** Zwischen dem Projekt und dem BBSR besteht eine eigene
+  Vereinbarung, deren Reichweite offen ist. Konstantin hat am 2026-09-06 entschieden, die
+  Tiefenlinks trotzdem zu bauen, weil eine Klärung Monate dauern kann. Was daraus folgt: keine
+  Serienabrufe gegen die Anwendung, kein Abgrasen, und die gespeicherten Abfragen entstehen nur
+  einzeln beim ersten Klick (siehe unten). Lesen der öffentlichen Kataloge und Geodienste ist
+  ohnehin unbedenklich.
+
+## Die INKAR-Tiefenlinks
+
+INKAR kennt keine Adresse für einen einzelnen Indikator. Das Einzige, was seine Adresszeile
+transportiert, ist die Kennung einer **auf dem BBSR-Server gespeicherten Abfrage**. Deshalb zeigen
+unsere INKAR-Treffer auf `geodb.geolab.soz.uni-bielefeld.de/api/inkar/open/<M_ID>`. Dieser Punkt
+legt die Abfrage beim **ersten** Klick an, merkt sich die Kennung und leitet danach immer dorthin
+weiter. Für Indikatoren, die niemand öffnet, entsteht beim BBSR nichts.
+
+- Anlage und Ablage: `backend/app/services/inkar_permalink.py`, Ablage
+  `/opt/geolab/app/destatis-rag/soep_metadata_output/inkar_permalinks.json`.
+- Zuordnung der Kennungen: `data_sources/22-inkar/raw/wizard_katalog.json`, erzeugt von
+  `scripts/fetch_inkar_wizard_catalogue.py` (nach einer neuen INKAR-Ausgabe neu erzeugen).
+- Ansehen, prüfen, zurücknehmen, alles auf der VM:
+
+```bash
+python3 ~/health/repo/scripts/inkar_permalinks_admin.py --list
+python3 ~/health/repo/scripts/inkar_permalinks_admin.py --check 5
+python3 ~/health/repo/scripts/inkar_permalinks_admin.py --delete-all   # alles zurücknehmen
+```
+
+- **Abschalten** geht ohne neuen Index: `GEOLAB_INKAR_PERMALINKS=0` in der Dienstumgebung setzen und
+  `sudo systemctl restart geolab-inkar`. Danach führt jeder INKAR-Treffer wieder auf inkar.de.
+- Der Wochenbericht prüft eine Stichprobe der angelegten Abfragen (`inkar=ok(3)` in der
+  Zusammenfassung). Fehlende sind kein Notfall: der Dienst legt sie beim nächsten Klick neu an.
+- Falls sich das BBSR meldet: `--delete-all` entfernt jede von uns angelegte Abfrage, danach
+  `GEOLAB_INKAR_PERMALINKS=0`. Beides zusammen dauert eine Minute.
 
 ## Was ein Skript nicht kann
 

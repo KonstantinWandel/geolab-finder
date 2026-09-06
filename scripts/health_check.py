@@ -387,6 +387,44 @@ def check_frontends() -> dict:
     return {"verdict": verdict, "detail": detail}
 
 
+def check_inkar_links() -> dict:
+    """Halten die INKAR-Tiefenlinks noch?
+
+    Diese Links hängen an Abfragen, die auf dem Server des BBSR liegen (siehe
+    backend/app/services/inkar_permalink.py). Räumt das BBSR dort auf, zeigen unsere Links ins
+    Leere, und niemand würde es merken: die Weiterleitung antwortet weiter, nur die Zieltabelle
+    ist dann weg. Deshalb wird eine Stichprobe wirklich abgerufen. Fehlende Abfragen sind kein
+    Notfall, der Dienst legt sie beim nächsten Klick neu an, aber gelb ist es allemal.
+    """
+    ablage = Path("/opt/geolab/app/destatis-rag/soep_metadata_output/inkar_permalinks.json")
+    if not ablage.exists():
+        return {"verdict": "ok", "detail": "noch keine Tiefenlinks angelegt"}
+    try:
+        cache = json.loads(ablage.read_text(encoding="utf-8"))
+    except Exception as fehler:  # noqa: BLE001
+        return {"verdict": "warn", "detail": f"Ablage unlesbar: {fehler}"}
+    links = cache.get("links") or {}
+    if not links:
+        return {"verdict": "ok", "detail": "noch keine Tiefenlinks angelegt"}
+    stichprobe = list(links.items())[:5]
+    gut, weg = 0, []
+    for m_id, eintrag in stichprobe:
+        try:
+            antwort = urllib.request.urlopen(
+                urllib.request.Request(f"https://www.inkar.de/Main/GetUserQuery/{eintrag['id']}",
+                                       headers={"User-Agent": "geolab-healthcheck"}),
+                timeout=30, context=ssl._create_unverified_context()).read().decode("utf-8", "replace")
+            if "IndicatorCollection" in antwort:
+                gut += 1
+            else:
+                weg.append(m_id)
+        except Exception:  # noqa: BLE001
+            weg.append(m_id)
+    return {"verdict": "ok" if not weg else "warn",
+            "angelegt": len(links), "geprüft": len(stichprobe), "vorhanden": gut,
+            "verschwunden": weg}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -405,6 +443,7 @@ def main() -> int:
               "modus": "quick" if args.quick else "vollständig"}
     report["dienst"] = check_services(heal=not args.no_heal)
     report["oberfläche"] = check_frontends()
+    report["inkar_links"] = check_inkar_links()
     report["alter"] = check_freshness()
     report["zertifikat"] = check_certificate(heal=not args.no_heal)
     report["maschine"] = check_host()
@@ -416,7 +455,7 @@ def main() -> int:
         report["links"] = check_links(sys.executable, args.per_source)
 
     gesamt = "ok"
-    for key in ("dienst", "oberfläche", "quellen", "links", "alter", "zertifikat", "maschine"):
+    for key in ("dienst", "oberfläche", "inkar_links", "quellen", "links", "alter", "zertifikat", "maschine"):
         gesamt = worse(gesamt, report[key].get("verdict", "ok"))
 
     # Eine Reparatur darf den Anlass nicht verschlucken. Ein Dienst, der jede Woche neu gestartet
@@ -434,6 +473,8 @@ def main() -> int:
     zeile = (f"[{report['gelaufen']}] {gesamt.upper():<4} "
              f"dienst={report['dienst']['verdict']} "
              f"oberfläche={report['oberfläche']['verdict']} "
+             f"inkar={report['inkar_links']['verdict']}"
+             f"({report['inkar_links'].get('angelegt', 0)}) "
              f"quellen={report['quellen']['verdict']} "
              f"links={report['links']['verdict']}"
              f"({report['links'].get('quote', '-')}) "
@@ -444,7 +485,7 @@ def main() -> int:
     with (LOGS / "health.log").open("a", encoding="utf-8") as handle:
         handle.write(zeile + "\n")
     print(zeile)
-    for key in ("dienst", "oberfläche", "quellen", "links", "alter", "zertifikat", "maschine"):
+    for key in ("dienst", "oberfläche", "inkar_links", "quellen", "links", "alter", "zertifikat", "maschine"):
         if report[key].get("verdict", "ok") != "ok":
             print(f"  {key}: {json.dumps(report[key], ensure_ascii=False)[:600]}")
     return {"ok": 0, "warn": 1, "bad": 2}[gesamt]

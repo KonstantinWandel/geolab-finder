@@ -221,6 +221,98 @@ Also worth remembering: **a build that reads a file another job is still writing
 answer without an error.** The first rebuild after starting the resolver picked up its half-written
 output and produced link counts that were neither the old nor the new state.
 
+**INKAR is linked through an endpoint of ours, because it has no address of its own (2026-09-06).**
+The project has its own arrangement with the BBSR and its scope is not written down; Konstantin
+decided to build the deep links anyway rather than wait months for that to be settled, so this is a
+decision on the record, not a cleared permission. Treat it as such: no series of automated requests
+against the application, no scraping, and nothing written to their server beyond what a reader
+actually asks for.
+
+The mechanics follow from that. inkar.de keeps no state in its address (its table and map windows
+read the selection from the window that opened them), and the one thing a URL carries is the id of
+a query **stored on the BBSR server**. Writing all 660 up front would leave 660 rows there for
+indicators nobody may ever open, so the records link to
+`geodb.geolab.soz.uni-bielefeld.de/api/inkar/open/<M_ID>` instead: that endpoint creates one stored
+query the first time an indicator is opened, remembers it, and redirects. 654 of 660 indicators are
+reachable this way; the six left are the ZOM classification variables, which the wizard does not
+offer as indicators.
+
+Three details worth keeping:
+
+- **INKAR uses two identifiers and they are not interchangeable.** The workbook's `M_ID` is what the
+  application's time selection calls `indicator`; its catalogue uses `Gruppe`, a different number
+  (1101 vs 12 for Arbeitslosenquote). Only 11 of 660 coincide. Mixing them up produces a query that
+  saves happily and then loads forever, because `Table/GetDataTable` answers 400.
+  `scripts/fetch_inkar_wizard_catalogue.py` joins the two catalogues by name within a theme block,
+  which is unambiguous because our four workbook sheets have exactly the sizes of the
+  application's four area groups (413 / 109 / 89 / 43).
+- **The query shape came from the application, not from guessing.** Driving the wizard once in a
+  browser and reading `getSelections()` before it closes itself is what settled the field names
+  (`visited`, the id in `TimeCollection.indicator`) after a hand-built version had failed silently.
+- **It is reversible in one command.** `scripts/inkar_permalinks_admin.py --delete-all` removes
+  every query we created; `GEOLAB_INKAR_PERMALINKS=0` turns the endpoint off and every link falls
+  back to the portal. The weekly health check samples the stored queries, because if the BBSR ever
+  purges them our links would fail silently otherwise (the redirect still answers, the target is
+  gone). A missing one is not an outage: the next click recreates it.
+
+**A portal with no catalogue is often a portal whose own viewer has one (IÖR, 2026-09-05).** The
+IÖR-Monitor was indexed at portal level: 88 indicators read out of a PDF, all 88 pointing at the
+same overview page, on the reasoning that the documented API (`monitor_api/user?id=...&service=wms`)
+needs a personal key. The key is needed to CALL the geodata services, and for nothing else. The map
+viewer at monitor.ioer.de keeps its entire state in the query string and talks to an
+unauthenticated endpoint: `POST backend/query.php` with
+`values={"format":{"id":"gebiete"},"query":"getAllIndicators"}` returns every indicator with unit,
+years, spatial levels and description text, and `?ind=<code>&raumgl=<level>` opens exactly that
+indicator. So the source went from 88 identical links to 91 indicator-level ones, with real units
+and per-indicator years and levels. Three things generalise:
+
+- **Read the app, not the documentation.** The parameter names came from the viewer's own JS
+  (`frontend/src/menu_indikatorauswahl.js` declares `paramter: 'ind'`), and the catalogue endpoint
+  from `RequestManager.js`. A portal that renders client-side has to fetch its own metadata from
+  somewhere, and that somewhere is usually open.
+- **Name no year in a deep link when the app defaults to the newest.** The viewer picks the newest
+  year an indicator has when the link carries none, so the links do not age between refreshes.
+- **A field can be true in one catalogue and meaningless in another.** The raster catalogue marks
+  all seven area levels for every indicator, but the six indicators that exist only there render an
+  empty map at `&raumgl=krs`. Which catalogue an indicator appears in decides its link and its
+  levels; `spatial_extends` is only believed on the area side. Checked in a browser, not assumed.
+
+**Three ways a link check lied in one afternoon (2026-09-05).** The question was simple: which of
+2,439 GENESIS Merkmale have a page of their own, so their record can link to the Merkmal instead of
+to the statistic that contains it. Getting an answer that survived checking took three attempts,
+and every wrong answer looked like a good one.
+
+1. **Six parallel fetches of the portal page** reported 2,268 hits. The Regionalstatistik portal
+   keeps the current selection in server-side state, so concurrent requests from one client bleed
+   into each other and each answer is a perfectly normal page for the wrong code. A browser sample
+   of fifteen found twelve empty.
+2. **Sequential fetches, deciding by the absence of the "keine Objekte" phrase**, reported 1,704.
+   Absence of a failure is not evidence of success: over a long run the portal also returns error
+   and session pages, and after about 1,700 requests it began doing so. The truth anchors added
+   after attempt 1 caught this at the end of the run, when they came back 5/10.
+3. **The documented API** (`catalogue/variables?selection=<CODE>` on the Regionaldatenbank, with
+   the token) answers the same question in six minutes: **624**. It agrees with every one of the
+   ten hand-checked codes, and it puts no load on the public UI, which attempts 1 and 2 had been
+   hammering with about 6,500 requests.
+
+What to carry: **a positive has to be positive evidence** (the page names the code and carries a
+non-empty Inhalt line), **hold every probe against a small hand-verified truth set before and
+after the run** (`TRUTH` in `scripts/resolve_merkmal_pages.py`, which aborts rather than produce a
+plausible lie), and **when a service has an interface for the question, ask it there** instead of
+reading its HTML. A stateless service is still fine to probe in parallel: the IÖR link check runs
+five browsers at once because monitor.ioer.de holds no per-client state.
+
+The same API call also showed the labels had drifted. These Merkmale come from a 2020 Datenguide
+snapshot, and 116 of the 624 read differently in the database today, a few in substance: BEV012 is
+"Sterbefälle je 1 000 Einwohner" now rather than Wanderungssaldo, and two rates changed their
+denominator from 10.000 to 1.000 Einwohner. The records now carry the live wording and keep the old
+one as an alias. One eval query then "regressed" because its pattern `pendl` no longer matched the
+official "Einpendelnde über Gemeindegrenze"; the answer was right and the test had aged.
+
+Also worth remembering: **a build that reads a file another job is still writing gets a partial
+answer without an error.** The first rebuild after starting the resolver picked up its half-written
+output and produced link counts that were neither the old nor the new state.
+
 **INKAR is a special case with an agreement behind it, so ask before acting on it.** The project
 has its own arrangement with the BBSR over INKAR, and its scope is not written down here because it
 is not yet known: Konstantin is checking with his boss what it does and does not allow (open as of
