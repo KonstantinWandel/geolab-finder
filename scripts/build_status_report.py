@@ -49,6 +49,16 @@ UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
 
 # Which builder source_key(s) each workbook source produces records under.
 SOURCE_KEYS: Dict[str, List[str]] = {
+    # The seven sources added on 2026-09-06. Without an entry here a source's records exist in the
+    # index but are counted as zero in the tracker, which is how the workbook row would end up
+    # reading "open" while 70 records sit behind it.
+    "geobasisdaten-des-bkg-open-data": ["bkg"],
+    "fdz-der-statistischen-aemter-des-bundes-und-der-": ["fdz_statistik"],
+    "fdz-der-bundesagentur-fuer-arbeit-im-iab": ["fdz_iab"],
+    "marktstammdatenregister-bundesnetzagentur": ["marktstammdaten"],
+    "luftqualitaetsdaten-des-umweltbundesamtes": ["uba_luft"],
+    "polizeiliche-kriminalstatistik-bka": ["pks"],
+    "mobilitaet-in-deutschland-mid": ["mid"],
     "regionalatlas-deutschland": ["regionalatlas"],
     "datenguide-abgeschaltet": ["regionalstatistik"],
     "strukturdaten-und-indikatoren-ba": ["ba_strukturdaten"],
@@ -193,6 +203,65 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
         "state": "done",
         "next": "Two catalogues under this row: the Datenguide GENESIS Merkmalskatalog (2,757 Merkmale) and the live Regionaldatenbank table catalogue (129 statistics, 866 tables, each with a working table-level deep link). The API reports exactly 129 statistics, so that enumeration is complete. On 2026-08-29 the weakest links in the whole index were fixed: 1,596 Merkmale pointed at the portal home page because no statistic code appears in their definition text. catalogue/statistics2variable answers that directly, so scripts/resolve_merkmal_statistics.py asked once per Merkmal and resolved 1,429 of 1,596 (89.5%); portal-level records here fell to 167 and statistic-level rose from 843 to 2,272. Federal statistic links are marked unverified because that portal is a client-rendered SPA that answers a 2.5 KB shell for any code, real or invented.",
     },
+    "geobasisdaten-des-bkg-open-data": {
+        "de": ("Vollständig eingebunden: 70 Produkte des offenen Datenservers, darunter die "
+               "Verwaltungsgrenzen (VG250/VG1000/VG5000, NUTS), das INSPIRE-Geogitter, die "
+               "geografischen Namen und die Landbedeckung CLC5. Damit hat der Finder erstmals die "
+               "Geometrien, auf die sich alle übrigen Indikatoren beziehen."),
+        "state": "done",
+        "next": ("70 products read from the open data server's own directory listing, one record "
+                 "each linking to the product folder with its files and documentation. The shop "
+                 "front end is left alone: it is client-rendered and its robots.txt asks GPTBot "
+                 "not to crawl it."),
+    },
+    "fdz-der-statistischen-aemter-des-bundes-und-der-": {
+        "de": ("Vollständig eingebunden: 75 Datensätze des Datenangebots, jeder mit eigener "
+               "Beschreibung, Berichtsjahren und Link auf seine Seite. Zugang läuft über Antrag."),
+        "state": "done",
+        "next": ("75 datasets harvested from the catalogue and their own pages. These are files "
+                 "researchers apply for, so the record describes the content before the "
+                 "application; the regional depth depends on the access route."),
+    },
+    "fdz-der-bundesagentur-fuer-arbeit-im-iab": {
+        "de": ("Vollständig eingebunden: 34 Datenprodukte (SIAB, BHP, LIAB, IEB, IAB-Betriebspanel "
+               "und weitere) mit Beschreibung und Zugangsweg."),
+        "state": "done",
+        "next": ("34 data products with their own pages. Administrative labour-market microdata "
+                 "with district and often municipality identifiers, on application; some campus "
+                 "files are free."),
+    },
+    "marktstammdatenregister-bundesnetzagentur": {
+        "de": ("Vollständig eingebunden: 31 Dateien des Gesamtdatenexports, aus den amtlichen "
+               "XSD-Schemata gelesen, darunter Solar-, Wind-, Biomasse- und Speichereinheiten mit "
+               "Adresse und Koordinaten."),
+        "state": "done",
+        "next": ("31 entity types read from the XSD schemas that ship with the export "
+                 "documentation, so the field lists are the register's own. Unit level with "
+                 "coordinates, free full export, updated daily."),
+    },
+    "luftqualitaetsdaten-des-umweltbundesamtes": {
+        "de": ("Vollständig eingebunden: 12 gemessene Komponenten und das Verzeichnis der rund 500 "
+               "Messstationen mit Koordinaten und Stationstyp. Die Lärmkartierung liegt bei den "
+               "Ländern und ist nicht enthalten."),
+        "state": "done",
+        "next": ("12 measured components plus the station register, from the documented JSON "
+                 "interface. Every record names its own API call; the viewer has no address per "
+                 "component, so the links all reach the air data portal."),
+    },
+    "polizeiliche-kriminalstatistik-bka": {
+        "de": ("Vollständig eingebunden: 13 veröffentlichte Bestandteile der Ausgabe 2025, "
+               "darunter der Straftatenkatalog und die Auswahl für Kreise und kreisfreie Städte."),
+        "state": "done",
+        "next": ("13 published documents and table sets of the 2025 edition, each with its own "
+                 "file. Finer breakdowns are published by the Landeskriminalämter."),
+    },
+    "mobilitaet-in-deutschland-mid": {
+        "de": ("Vollständig eingebunden: die vier Wellen, das Tabellenwerkzeug der BASt und die "
+               "beiden Zugangswege zu den Mikrodaten."),
+        "state": "done",
+        "next": ("Four waves plus the BASt table tool, the microdata access route and the survey "
+                 "instruments. Travel behaviour was the one mobility axis the index lacked."),
+    },
     "inkar": {
         "de": ("Die Ursprungsquelle des Finders: 660 Indikatoren, in einem eigenen Index, deshalb "
                "steht hier 0 eingelesene Datensätze. Seit dem 2026-09-06 öffnen 654 davon ihren "
@@ -271,6 +340,73 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
         "state": "done",
         "next": "All 88 indicators indexed with their five-character code and category, read from the monitor's own public indicator list (linked from the 'Uebersicht der Geodienste' section of /indikatoren/). The earlier note here said the list sits behind the user area; that was wrong, only the SERVICE CALL needs a key. An unauthenticated monitor_api call answers a WMS ServiceException, so the records link to the indicator overview and carry the code plus the exact WMS/WFS/WCS call pattern instead of a per-indicator link that would not open for anyone.",
     },
+    "geobasisdaten-des-bkg-open-data": {
+        "de": ("Vollständig eingebunden: 70 Produkte des offenen Datenservers, von den "
+               "Verwaltungsgrenzen (VG250, VG1000, VG5000, NUTS) über die INSPIRE-Gitter und die "
+               "geografischen Namen bis zu CORINE-Landbedeckung, Geländemodellen und Basiskarten. "
+               "Damit liegen erstmals die Geometrien im Finder, auf die sich die Indikatoren der "
+               "übrigen Quellen beziehen."),
+        "state": "done",
+        "next": ("70 products read from the open data server's directory listing, which is the "
+                 "catalogue: one folder per product family, one per product. The shop front end is "
+                 "a JavaScript catalogue whose robots.txt asks GPTBot to stay away, so nothing "
+                 "here touches it. Re-run the fetch when a new Gebietsstand appears (the codes "
+                 "carry it: _0101 and _1231)."),
+    },
+    "fdz-der-statistischen-aemter-des-bundes-und-der-": {
+        "de": ("Vollständig eingebunden: 75 Datensätze der amtlichen Forschungsdatenzentren, jeder "
+               "mit eigener Beschreibung, Jahren und Seite. Das Gegenstück zum FDZ Ruhr, das schon "
+               "enthalten war."),
+        "state": "done",
+        "next": ("75 datasets harvested from /de/alle-daten and each dataset's own page, which "
+                 "carries the description, the years and the access route. These are files on "
+                 "application, so the record has to describe the file before the application."),
+    },
+    "fdz-der-bundesagentur-fuer-arbeit-im-iab": {
+        "de": ("Vollständig eingebunden: 34 Datenprodukte des IAB (SIAB, BHP, LIAB, IEB, "
+               "Betriebspanel und weitere), jeweils mit eigener Produktseite."),
+        "state": "done",
+        "next": ("34 data products, one page each. Regional identifiers down to the municipality "
+                 "on most of them; access via application, guest stay or remote execution, with a "
+                 "few free campus files."),
+    },
+    "marktstammdatenregister-bundesnetzagentur": {
+        "de": ("Vollständig eingebunden: 31 Datenbereiche des Gesamtdatenexports, aus den "
+               "XSD-Schemata der amtlichen Dokumentation gelesen, also Feld für Feld belegt statt "
+               "beschrieben. Adressgenaue Anlagendaten für Strom und Gas."),
+        "state": "done",
+        "next": ("31 record types flattened from the XSDs shipped with the export documentation "
+                 "(solar, wind, biomass, storage, grid connection and the rest). The export itself "
+                 "is a multi-GB ZIP and is deliberately never downloaded here; the link leads to "
+                 "the download page and the record names the file inside it."),
+    },
+    "luftqualitaetsdaten-des-umweltbundesamtes": {
+        "de": ("Vollständig eingebunden: die 12 gemessenen Komponenten (Feinstaub, Stickstoffdioxid, "
+               "Ozon und weitere) mit Einheit, Messnetz und Stationszahl, dazu das Stationsnetz "
+               "selbst mit Koordinaten und Stationstyp. Erste Umweltbelastungsgrößen im Finder."),
+        "state": "done",
+        "next": ("Read from the documented JSON interface, no key: components, averaging periods, "
+                 "networks and 525 stations with coordinates, station type and operating period. "
+                 "Every record carries the exact API call for its own series."),
+    },
+    "polizeiliche-kriminalstatistik-bka": {
+        "de": ("Vollständig eingebunden: die veröffentlichten Teile der PKS, darunter der "
+               "Straftatenkatalog, die Tabellenbeschreibung und die Auswahl für Kreise und Städte. "
+               "Kriminalität war vorher nur als eine Handvoll aggregierter Indikatoren enthalten."),
+        "state": "done",
+        "next": ("13 published documents and table sets of the current edition, each with its own "
+                 "file. The download link needs the ?__blob=publicationFile parameter: without it "
+                 "bka.de answers 200 with the surrounding HTML page and the reader gets no file."),
+    },
+    "mobilitaet-in-deutschland-mid": {
+        "de": ("Vollständig eingebunden: die vier Erhebungswellen 2002 bis 2023, die regionale "
+               "Tabellenanwendung und der Zugang zum Scientific-Use-File. Verkehrsverhalten war "
+               "vorher nicht abgedeckt, nur Fahrpläne und Erreichbarkeit."),
+        "state": "done",
+        "next": ("Four waves plus the regional table tool and the data access route. The scientific "
+                 "use file comes through the Clearingstelle Verkehr and the BASt Mobility Data "
+                 "Campus; the reports and regional tables are free."),
+    },
     "rwi-geo-grid-rwi-geo-red-fdz-ruhr": {
         "de": "Vollständig eingebunden: 28 deutsche Datensätze mit ihrer Kennung (DOI), darunter das sozioökonomische 1-km-Raster und die geocodierten Immobilienanzeigen. Die Daten selbst gibt es nur auf Antrag beim Forschungsdatenzentrum, genau deshalb ist es nützlich, sie hier überhaupt zu finden.",
         "state": "done",
@@ -285,38 +421,29 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
 # BORIS-D, DWD, FDZ Ruhr, election results, IÖR-Monitor), so it was rewritten on 2026-09-06 against
 # what the index actually contains rather than against the workbook. Each entry below was checked:
 # it names something no indexed source provides, not merely a portal we have not visited.
+# Rewritten on 2026-09-06, when the six sources this list named were all implemented (BKG,
+# the two research data centres, Marktstammdatenregister, UBA air quality, PKS and MiD). What is
+# left below was checked the same way: it names something no indexed source provides.
+# Rewritten on 2026-09-06 after the six entries of the previous round were built (BKG
+# Geobasisdaten, the two FDZ catalogues, Marktstammdatenregister, UBA air quality, PKS and MiD).
+# What remains was checked against the index the same way: each names something no indexed source
+# provides.
 CANDIDATES = [
-    ("Geobasisdaten des BKG (Open Data)", "https://gdz.bkg.bund.de/",
-     "The layer everything else is joined to, and the one thing the index has none of: "
-     "administrative boundaries (VG250, VG5000), the INSPIRE 100 m and 1 km grids, the "
-     "Gemeindeverzeichnis with its historical Gebietsstände, and the georeferenced address data. "
-     "A search for 'Kreisgrenzen' or 'Gitterzellen als Geometrie' currently returns indicators "
-     "measured on those units and no way to obtain the units themselves. Open data, free."),
-    ("FDZ der Statistischen Ämter und FDZ der BA im IAB",
-     "https://www.forschungsdatenzentrum.de/",
-     "The research-data counterpart to FDZ Ruhr, which is indexed and is one of the most used "
-     "entries: AFiD, the regional Mikrozensus files, and on the IAB side SIAB, BHP and IEB, all "
-     "with regional identifiers and all on application. This is the family this finder's audience "
-     "actually applies for, and nothing in the index describes it."),
-    ("Marktstammdatenregister (Bundesnetzagentur)", "https://www.marktstammdatenregister.de/",
-     "Every electricity and gas generation unit in Germany with its address, coordinates, "
-     "capacity and commissioning date, downloadable in full. The index reaches this only through "
-     "IÖR's wind-turbine density and one Deutschlandatlas indicator, so unit-level work on the "
-     "energy transition has nothing to go to."),
-    ("Luftqualität und Umgebungslärm (Umweltbundesamt)",
-     "https://www.umweltbundesamt.de/daten/luft/luftdaten",
-     "Station measurements since 1990 with an API, plus the modelled area maps and the noise "
-     "mapping under the Umgebungslärmrichtlinie. Air pollution and noise are standard exposure "
-     "variables in health and inequality research; the index has exactly one Wegweiser indicator "
-     "on air quality and nothing on noise."),
-    ("Polizeiliche Kriminalstatistik (BKA)", "https://www.bka.de/DE/AktuelleInformationen/"
-     "StatistikenLagebilder/PolizeilicheKriminalstatistik/pks_node.html",
-     "Crime by offence and district, published as tables every year. The index carries crime only "
-     "as a handful of aggregate indicators (Deutschlandatlas, Wegweiser, GENESIS), so the offence "
-     "breakdown that criminological and neighbourhood work needs is missing."),
-    ("Mobilität in Deutschland (MiD)", "https://www.mobilitaet-in-deutschland.de/",
-     "The national travel survey, with regional identifiers and a scientific use file. The index "
-     "describes public-transport schedules and accessibility but no travel behaviour."),
+    ("Umgebungslärm nach EU-Richtlinie", "https://www.umweltbundesamt.de/daten/laerm-und-verkehr/laermbelastung",
+     "The UBA air quality data is now indexed, its noise counterpart is not: the strategic noise "
+     "maps under the Umgebungslärmrichtlinie give road, rail and air noise exposure by address, "
+     "reported every five years by the Länder. Exposure research uses it next to air pollution, "
+     "and the index has nothing on noise."),
+    ("Gesundheitsberichterstattung des Bundes (GBE) und Versorgungsatlas",
+     "https://www.gbe-bund.de/",
+     "Health beyond hospital structures: morbidity, mortality by cause, vaccination and screening "
+     "rates at district level. The index reaches health through hospital registers, the "
+     "Klinik-Atlas and a few INKAR indicators, so the outcome side is thin."),
+    ("Schulverzeichnisse und Kita-Register der Länder", "https://www.kmk.org/",
+     "Indicators on schooling are indexed (Ländermonitor, INKAR, Regionalstatistik) but not the "
+     "institutions themselves with their addresses. These are sixteen separate state registers, "
+     "which is why it is a project rather than a fetch, and why OpenStreetMap is the current "
+     "stand-in."),
 ]
 
 # How precisely a record's outward link lands on the thing it describes.

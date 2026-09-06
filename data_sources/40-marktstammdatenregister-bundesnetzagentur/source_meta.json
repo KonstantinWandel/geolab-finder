@@ -1,0 +1,69 @@
+{
+  "name": "Marktstammdatenregister (Bundesnetzagentur)",
+  "slug": "marktstammdatenregister-bundesnetzagentur",
+  "url": "https://www.marktstammdatenregister.de/MaStR",
+  "url_former": "",
+  "maintenance_note": "",
+  "excel_row": 41,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "web UI / search form only",
+    "machine-readable API",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": true,
+    "API": true,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "PLZ",
+    "Adressen / Koordinaten"
+  ],
+  "topic_groups": [
+    "Nachhaltigkeit",
+    "Ver- und Entsorgung",
+    "Wirtschaft und Unternehmen"
+  ],
+  "topics": [
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Nachhaltigkeit"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Umwelt"
+    },
+    {
+      "group": "Ver- und Entsorgung",
+      "topic": "Ver- und Entsorgung"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Wirtschaft und Unternehmen"
+    },
+    {
+      "group": "Wirtschaft und Unternehmen",
+      "topic": "Unternehmen"
+    }
+  ],
+  "topic_labels": [
+    "Nachhaltigkeit",
+    "Umwelt",
+    "Ver- und Entsorgung",
+    "Wirtschaft und Unternehmen",
+    "Unternehmen"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2019,
+  "coverage_end_month": null,
+  "coverage_end_year": 2026,
+  "update_frequency": "täglich",
+  "note": "Amtliches Register aller Strom- und Gaserzeugungsanlagen mit Adresse, Koordinaten, Leistung und Inbetriebnahme; vollständiger Datenexport frei"
+}

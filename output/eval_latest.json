@@ -434,6 +434,7 @@
       "top_source": "regionalstatistik",
       "top_label": "Schulden beim nicht-öffentlichen Bereich je Einw.",
       "sources_in_top": [
+        "fdz_statistik",
         "genesis_bund",
         "inkar",
         "regionalstatistik",
@@ -502,7 +503,7 @@
       "query": "Wanderungssaldo je 1000 Einwohner",
       "rank": 1,
       "top_source": "wegweiser_kommune",
-      "top_label": "Wanderungssaldo - Ist-Daten",
+      "top_label": "Wanderungssaldo - Wanderungen nach Ziel und Herkunft",
       "sources_in_top": [
         "deutschlandatlas",
         "inkar",
@@ -564,6 +565,7 @@
       "top_source": "regionalstatistik",
       "top_label": "Studierende je 100 000 Einwohner",
       "sources_in_top": [
+        "fdz_statistik",
         "genesis_bund",
         "hochschulkompass",
         "regionalstatistik"
@@ -577,7 +579,9 @@
       "sources_in_top": [
         "deutschlandatlas",
         "genesis_bund",
+        "geoportal",
         "inkar",
+        "pks",
         "regionalstatistik",
         "wegweiser_kommune"
       ]

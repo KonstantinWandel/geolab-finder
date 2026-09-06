@@ -4045,6 +4045,632 @@ def flatten_fdz_ruhr(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     return records
 
 
+# ---------------------------------------------------------------------------
+# Geobasisdaten des BKG
+# ---------------------------------------------------------------------------
+# What each product family is, in one sentence, because the directory names alone ("dlm", "dtk")
+# say nothing to a social scientist. The product codes inside them do follow a convention, which
+# `_bkg_product_gloss` reads: scale (250 = 1:250 000), Gebietsstand (_0101 / _1231), and packaging
+# (kompakt / ebenen / -ew with inhabitant counts).
+BKG_FAMILIES: Dict[str, Tuple[str, str, List[str]]] = {
+    "vg": ("Verwaltungsgebiete und NUTS-Gebiete",
+           "Die amtlichen Verwaltungsgrenzen von der Staatsgrenze bis zur Gemeinde, mit "
+           "Gemeindeschlüssel (AGS), sowie die NUTS-Gebiete der EU. Das ist die Geometrie, auf "
+           "die sich die Regionalindikatoren dieses Finders beziehen.",
+           ["Bundesland", "Regierungsbezirke", "Kreise & kreisfreie Städte",
+            "Gemeinden und Verbandsgemeinden", "weitere räumliche Gliederungen"]),
+    "sonstige": ("Gitter, geografische Namen und weitere Geobasisdaten",
+                 "Unter anderem das INSPIRE-konforme Geogitter Deutschland (100 m bis 10 km), die "
+                 "geografischen Namen (GN250) und Gemeindegrenzen in weiteren Auflösungen.",
+                 ["weitere räumliche Gliederungen", "Adressen / Koordinaten"]),
+    "dlm": ("Digitale Landschaftsmodelle und Landbedeckung",
+            "Objektstrukturierte Beschreibung der Landschaft (DLM) sowie die Landbedeckungsmodelle "
+            "CLC5 und LBM-DE, die europäische CORINE-Landbedeckung in deutscher Umsetzung.",
+            ["weitere räumliche Gliederungen"]),
+    "dgm": ("Digitale Geländemodelle",
+            "Höhen des Geländes im Gitter von 1 m bis 1000 m. Grundlage für Hangneigung, "
+            "Sichtbarkeit und Erreichbarkeitsmodelle.",
+            ["weitere räumliche Gliederungen"]),
+    "dtk": ("Digitale Topographische Karten",
+            "Amtliche topographische Karten in den Maßstäben 1:100 000 bis 1:1 000 000, als "
+            "Raster und teilweise als Vektor.",
+            ["weitere räumliche Gliederungen"]),
+    "basiskarten": ("Basiskarten (basemap.de)",
+                    "Die gemeinsame Basiskarte von Bund und Ländern als Raster- und Vektorkachel, "
+                    "gedacht als Hintergrund für eigene Karten.",
+                    ["weitere räumliche Gliederungen"]),
+    "topplus_open": ("TopPlusOpen",
+                     "Weltweite freie Webkarte des BKG in mehreren Darstellungen, als "
+                     "Kacheldienst nutzbar.",
+                     ["weitere räumliche Gliederungen"]),
+    "aerial": ("Luftbilder und Orthophotos",
+               "Digitale Orthophotos des BKG.",
+               ["weitere räumliche Gliederungen"]),
+}
+
+
+def _bkg_product_gloss(code: str) -> str:
+    """Read the BKG naming convention, so a record says more than the folder name."""
+    parts: List[str] = []
+    scale = re.match(r"^(?:vg|nuts|dgm|dtk|dlm|ge|gn|clc5|vz|tk|vk)[a-z]*?(\d{2,4})", code)
+    if scale:
+        number = scale.group(1)
+        parts.append(f"Maßstab 1:{int(number) * 1000:,}".replace(",", " ") if len(number) <= 4
+                     and code.startswith(("vg", "nuts", "dtk", "dlm", "ge", "gn", "vz", "tk", "vk"))
+                     else f"Gitterweite {number} m")
+    if code.endswith("_0101"):
+        parts.append("Gebietsstand 1. Januar")
+    if code.endswith("_1231"):
+        parts.append("Gebietsstand 31. Dezember")
+    if "-ew" in code:
+        parts.append("mit Einwohnerzahlen je Gebiet")
+    if "kompakt" in code:
+        parts.append("kompakte Abgabe (eine Ebene je Datei)")
+    if "ebenen" in code:
+        parts.append("nach Verwaltungsebenen getrennt")
+    if "hist" in code:
+        parts.append("historische Gebietsstände")
+    if code.startswith("clc5"):
+        parts.append("CORINE Land Cover, 5 ha Mindestfläche")
+    if code.startswith("geogitter"):
+        parts.append("INSPIRE-Gitter, 100 m bis 10 km")
+    return "; ".join(parts)
+
+
+def flatten_bkg(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """One record per BKG open-data product, read from the server's own directory listing.
+
+    This closes the gap the index had until 2026-09-06: it measured indicators on districts,
+    municipalities and grid cells and offered no way to obtain those geometries. The link goes to
+    the product folder on the data server, which lists the files and their documentation, rather
+    than to the shop, whose catalogue is client-rendered and whose robots.txt asks GPTBot to stay
+    away.
+    """
+    path = source["folder"] / "raw" / "bkg_produkte.json"
+    if not path.exists():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    server = (document.get("server") or "https://daten.gdz.bkg.bund.de/produkte/").rstrip("/")
+    records: List[Dict[str, Any]] = []
+    for family, products in sorted((document.get("families") or {}).items()):
+        label, gloss, levels = BKG_FAMILIES.get(
+            family, (family, "Produktgruppe des BKG.", ["weitere räumliche Gliederungen"]))
+        mapped = map_spatial(levels)
+        for product in sorted(products):
+            detail = _bkg_product_gloss(product)
+            records.append(
+                make_record(
+                    source_key="bkg",
+                    source_label="Geobasisdaten des BKG (Bundesamt für Kartographie und Geodäsie)",
+                    item_type="dataset",
+                    item_id=f"bkg:{family}:{product}",
+                    variable_name=product,
+                    label=f"{product} ({label})",
+                    dataset_label=label,
+                    theme="Geobasisdaten",
+                    description=join_nonempty([
+                        f"Produkt {product} aus der Gruppe „{label}“ der offenen Geobasisdaten des BKG.",
+                        detail,
+                        gloss,
+                        "Frei nutzbar unter der Datenlizenz Deutschland Namensnennung 2.0; "
+                        "Quellenangabe © GeoBasis-DE / BKG.",
+                    ]),
+                    aliases="; ".join(part for part in [family, label] if part),
+                    spatial_levels=mapped["spatial_levels"],
+                    nuts_levels=mapped["nuts_levels"],
+                    source_url=f"{server}/{family}/{product}/",
+                    indicator_url=f"{server}/{family}/{product}/",
+                    link_level="dataset",
+                    access_modes=["direct file download", "machine-readable API"],
+                    update_frequency=source["update_frequency"] or "jährlich",
+                    api_hint=(f"Verzeichnis {server}/{family}/{product}/ listet die Dateien und die "
+                              "Dokumentation. Dieselben Daten liegen auch als WMS/WFS unter "
+                              "sgx.geodatenzentrum.de."),
+                )
+            )
+    return records
+
+
+# ---------------------------------------------------------------------------
+# Forschungsdatenzentren: Statistische Ämter und IAB
+# ---------------------------------------------------------------------------
+def flatten_fdz_statistik(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The statistical offices' research data centre, one record per dataset.
+
+    These are files you apply for, so the record has to say what is inside before the application
+    is written. Each dataset has its own page with the description and the reporting years, and
+    that page is the link.
+    """
+    path = source["folder"] / "raw" / "fdz_datensaetze.json"
+    if not path.exists():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    records: List[Dict[str, Any]] = []
+    for entry in document.get("datasets", []):
+        years = [int(y) for y in entry.get("years", []) if str(y).isdigit()]
+        topic = clean(entry.get("topic", "")).replace("-", " ").title()
+        records.append(
+            make_record(
+                source_key="fdz_statistik",
+                source_label="FDZ der Statistischen Ämter des Bundes und der Länder",
+                item_type="dataset",
+                item_id=f"fdz_statistik:{entry.get('path', '').strip('/').replace('/', ':')}",
+                variable_name=clean(entry.get("code", "")),
+                label=clean(entry.get("title")) or clean(entry.get("code")),
+                dataset_label=topic or "Amtliche Mikrodaten",
+                theme="Amtliche Mikrodaten",
+                description=join_nonempty([
+                    clean(entry.get("description"))[:1200],
+                    "Amtliche Mikrodaten des FDZ der Statistischen Ämter. Zugang über Scientific-Use-File, "
+                    "Gastaufenthalt an einem Standort oder kontrollierte Datenfernverarbeitung, jeweils "
+                    "auf Antrag; die regionale Tiefe hängt vom Zugangsweg ab und reicht bei "
+                    "On-Site-Nutzung bis auf Kreis- und teilweise Gemeindeebene.",
+                ]),
+                aliases=clean(entry.get("code")),
+                spatial_levels=["Bundesländer", "Kreise", "Gemeinden", "Weitere Gliederungen"],
+                nuts_levels=["Bundesländer", "NUTS1", "Kreise", "NUTS3", "Gemeinden", "LAU",
+                             "Weitere Gliederungen"],
+                year_start=min(years) if years else None,
+                year_end=max(years) if years else None,
+                years_text=f"{min(years)}-{max(years)}" if len(years) > 1 else (str(years[0]) if years else ""),
+                source_url=entry.get("url", ""),
+                indicator_url=entry.get("url", ""),
+                link_level="dataset",
+                access_modes=["on request / registration needed", "web UI / search form only"],
+                update_frequency=source["update_frequency"] or "laufend",
+                api_hint=("Zugang über den Antrag beim FDZ (forschungsdatenzentrum.de/de/antrag); "
+                          "Entgelte und Bedingungen stehen dort. Für viele Statistiken gibt es "
+                          "zusätzlich ein Campus File zum Üben."),
+            )
+        )
+    return records
+
+
+def flatten_fdz_iab(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The IAB research data centre's products: the administrative labour-market microdata.
+
+    SIAB, BHP, LIAB and the rest carry district and often municipality identifiers, which is why
+    they belong in a finder about georeferenced data even though nothing can be downloaded.
+    """
+    path = source["folder"] / "raw" / "iab_datenprodukte.json"
+    if not path.exists():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    records: List[Dict[str, Any]] = []
+    for entry in document.get("products", []):
+        title = clean(entry.get("title"))
+        if not title or len(title) < 3:
+            continue
+        years = [int(y) for y in entry.get("years", []) if str(y).isdigit()]
+        group = clean(entry.get("group", "")).replace("-", " ")
+        records.append(
+            make_record(
+                source_key="fdz_iab",
+                source_label="FDZ der Bundesagentur für Arbeit im IAB",
+                item_type="dataset",
+                item_id=f"fdz_iab:{entry.get('slug', '')}",
+                variable_name=clean(entry.get("slug", "")).upper(),
+                label=title,
+                dataset_label=group.title() or "IAB-Daten",
+                theme="Arbeitsmarkt & Beschäftigung",
+                description=join_nonempty([
+                    clean(entry.get("description"))[:1200],
+                    "Prozessdaten der Arbeitsverwaltung, aufbereitet vom FDZ der BA im IAB. Zugang "
+                    "über Antrag mit Gastaufenthalt oder Fernrechnen (JoSuA); einzelne Campus Files "
+                    "sind frei. Die Datensätze führen Kreis- und je nach Produkt Gemeindekennungen, "
+                    "sodass sie sich mit den Regionalindikatoren dieses Finders verbinden lassen.",
+                ]),
+                spatial_levels=["Bundesländer", "Kreise", "Gemeinden", "Weitere Gliederungen"],
+                nuts_levels=["Bundesländer", "NUTS1", "Kreise", "NUTS3", "Gemeinden", "LAU",
+                             "Weitere Gliederungen"],
+                year_start=min(years) if years else None,
+                year_end=max(years) if years else None,
+                years_text=f"{min(years)}-{max(years)}" if len(years) > 1 else (str(years[0]) if years else ""),
+                source_url=entry.get("url", ""),
+                indicator_url=entry.get("url", ""),
+                link_level="dataset",
+                access_modes=["on request / registration needed"],
+                update_frequency=source["update_frequency"] or "laufend",
+                api_hint=("Datenzugang: fdz.iab.de/datenzugang. Campus Files und Testdaten stehen "
+                          "ohne Antrag zur Verfügung, alles andere über Antrag und JoSuA."),
+            )
+        )
+    return records
+
+# ---------------------------------------------------------------------------
+# Marktstammdatenregister
+# ---------------------------------------------------------------------------
+# What the export's entity types are, in plain words. The XSD names are precise and unreadable
+# ("AnlagenEegGeothermieGrubengasDruckentspannung"), and a searcher types "Solaranlagen" or
+# "Windräder", so the record has to carry both.
+MASTR_ENTITIES: Dict[str, Tuple[str, str]] = {
+    "EinheitenSolar": ("Solaranlagen (Einheiten)",
+                       "Jede gemeldete Photovoltaikanlage mit Standort, Bruttoleistung, "
+                       "Inbetriebnahmedatum und Ausrichtung. Der größte Bestand im Register."),
+    "EinheitenWind": ("Windkraftanlagen (Einheiten)",
+                      "Windenergieanlagen an Land und auf See mit Koordinaten, Nabenhöhe, "
+                      "Rotordurchmesser und Leistung."),
+    "EinheitenBiomasse": ("Biomasseanlagen (Einheiten)", "Biomasse- und Biogasanlagen mit Standort und Leistung."),
+    "EinheitenWasser": ("Wasserkraftanlagen (Einheiten)", "Laufwasser- und Speicherkraftwerke mit Standort und Leistung."),
+    "EinheitenGeothermieGrubengasDruckentspannung": ("Geothermie, Grubengas und Druckentspannung (Einheiten)",
+                                                     "Anlagen dieser Erzeugungsarten mit Standort und Leistung."),
+    "EinheitenVerbrennung": ("Verbrennungsanlagen (Einheiten)",
+                             "Kraftwerke auf Basis von Gas, Kohle, Öl und Abfall mit Standort, "
+                             "Energieträger und Leistung."),
+    "EinheitenKernkraft": ("Kernkraftwerke (Einheiten)", "Kernkraftwerksblöcke mit Standort und Status."),
+    "EinheitenStromSpeicher": ("Stromspeicher (Einheiten)",
+                               "Batterie- und Pumpspeicher mit Standort, Leistung und Kapazität."),
+    "EinheitenGasSpeicher": ("Gasspeicher (Einheiten)", "Gasspeicher mit Standort und Kapazität."),
+    "EinheitenGasVerbraucher": ("Gasverbraucher (Einheiten)", "Gasverbrauchseinheiten mit Standort."),
+    "EinheitenStromVerbraucher": ("Stromverbraucher (Einheiten)", "Verbrauchseinheiten mit Standort."),
+    "EinheitenGasErzeuger": ("Gaserzeuger (Einheiten)", "Gaserzeugungseinheiten mit Standort."),
+    "Netzanschlusspunkte": ("Netzanschlusspunkte",
+                            "Anschlusspunkte der Einheiten an das Netz, mit Spannungsebene und Netzbetreiber."),
+    "Netze": ("Netze", "Strom- und Gasnetze der Netzbetreiber."),
+    "Marktakteure": ("Marktakteure",
+                     "Betreiber, Netzbetreiber und weitere Marktrollen mit Anschrift; über die "
+                     "Betreiber-ID mit den Einheiten verknüpfbar."),
+    "Bilanzierungsgebiete": ("Bilanzierungsgebiete", "Bilanzierungsgebiete der Netzbetreiber."),
+    "Katalogwerte": ("Katalogwerte", "Schlüsseltabelle: die Bedeutung aller codierten Felder im Export."),
+    "Katalogkategorien": ("Katalogkategorien", "Kategorien der Schlüsseltabelle."),
+    "Lokationen": ("Lokationen", "Markt- und Messlokationen der Einheiten."),
+}
+
+# The Anlagen* files are not units but the EEG side of them: subsidy, tender and remuneration
+# attributes, joined to the unit by its MaStR number. Named generically so a new energy carrier
+# does not silently fall back to the raw schema name.
+MASTR_EEG_PREFIX = "AnlagenEeg"
+
+
+def flatten_marktstammdaten(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """One record per entity type of the MaStR full export, read from its XSD schemas.
+
+    The register itself is a unit-level dataset with coordinates, which is exactly what work on the
+    energy transition needs and what the index reached before only through IÖR's wind-turbine
+    density. The export is a set of XML files, one per entity type, and the documentation ships the
+    schema of each, so the field list here is the register's own rather than a summary of it.
+    """
+    archive_path = source["folder"] / "raw" / "gesamtdatenexport_doku.zip"
+    if not archive_path.exists():
+        return []
+    fields: Dict[str, List[str]] = {}
+    with zipfile.ZipFile(archive_path) as archive:
+        for name in archive.namelist():
+            if not name.endswith(".xsd"):
+                continue
+            stem = name.rsplit("/", 1)[-1][:-4]
+            body = archive.read(name).decode("utf-8", "replace")
+            found = [f for f in re.findall(r'<xs:element name="([^"]+)"', body)]
+            # The first two elements are the wrapper and the row element, not fields.
+            fields[stem] = [f for f in found[2:] if not f.endswith("_nv")]
+
+    download = "https://www.marktstammdatenregister.de/MaStR/Datendownload"
+    records: List[Dict[str, Any]] = []
+    for stem, columns in sorted(fields.items()):
+        if not columns:
+            continue
+        if stem in MASTR_ENTITIES:
+            label, gloss = MASTR_ENTITIES[stem]
+        elif stem.startswith(MASTR_EEG_PREFIX):
+            traeger = re.sub(r"(?<!^)(?=[A-Z])", " ", stem[len(MASTR_EEG_PREFIX):]).strip()
+            label = f"EEG-Angaben zu {traeger}anlagen"
+            gloss = ("Förder- und Ausschreibungsangaben nach dem EEG zu den Anlagen dieses "
+                     "Energieträgers, über die MaStR-Nummer mit der Einheit verknüpfbar.")
+        elif stem.startswith("Anlagen"):
+            traeger = re.sub(r"(?<!^)(?=[A-Z])", " ", stem[len("Anlagen"):]).strip()
+            label = f"Anlagenangaben: {traeger}"
+            gloss = ("Anlagenbezogene Angaben dieses Typs, über die MaStR-Nummer mit der Einheit "
+                     "verknüpfbar.")
+        else:
+            label, gloss = stem, "Bestandteil des MaStR-Gesamtdatenexports."
+        geo = [c for c in columns if re.search(r"Ort|Plz|Strasse|Gemeinde|Landkreis|Koordinate|Breitengrad|Laengengrad", c)]
+        records.append(
+            make_record(
+                source_key="marktstammdaten",
+                source_label="Marktstammdatenregister (Bundesnetzagentur)",
+                item_type="dataset",
+                item_id=f"mastr:{stem}",
+                variable_name=stem,
+                label=label,
+                dataset_label="MaStR-Gesamtdatenexport",
+                theme="Ver- und Entsorgung",
+                description=join_nonempty([
+                    gloss,
+                    f"Im Gesamtdatenexport als Datei {stem} mit {len(columns)} Feldern.",
+                    ("Räumlich auswertbar über " + ", ".join(geo[:6]) + ".") if geo else "",
+                    "Der vollständige Export ist frei herunterladbar und täglich aktuell; die "
+                    "Einzelanlagen lassen sich über Gemeindeschlüssel, Postleitzahl oder "
+                    "Koordinaten mit den Regionaldaten dieses Finders verbinden.",
+                ]),
+                aliases="; ".join([stem] + columns[:8]),
+                spatial_levels=["Adressen/Koordinaten", "Gemeinden", "Kreise", "Bundesländer", "PLZ"],
+                nuts_levels=["Adressen/Koordinaten", "Gemeinden", "LAU", "Kreise", "NUTS3",
+                             "Bundesländer", "NUTS1", "PLZ"],
+                year_start=2019,
+                year_end=date.today().year,
+                years_text="laufend seit 2019, täglicher Export",
+                source_url=download,
+                indicator_url=download,
+                link_level="dataset",
+                access_modes=["direct file download", "machine-readable API", "interactive map viewer"],
+                update_frequency=source["update_frequency"] or "täglich",
+                api_hint=(f"Datei {stem} im Gesamtdatenexport (ZIP, XML) unter {download}; die "
+                          "Feldbedeutungen stehen in der beiliegenden Dokumentation und in der "
+                          "Datei Katalogwerte. Einzelabfragen gehen über die Weboberfläche."),
+            )
+        )
+    return records
+
+
+# ---------------------------------------------------------------------------
+# Luftqualität (Umweltbundesamt)
+# ---------------------------------------------------------------------------
+def flatten_uba_luft(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The measured air pollutants, plus the station network they are measured at.
+
+    Air pollution is a standard exposure variable and the index had one indicator on it. The UBA
+    interface names every component with its unit, and every station with coordinates, type and
+    operating period, which is what makes the values joinable to a place.
+    """
+    path = source["folder"] / "raw" / "uba_luftdaten.json"
+    if not path.exists():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    portal = "https://www.umweltbundesamt.de/daten/luft/luftdaten"
+
+    stations = document.get("stations", {}).get("data", {}) or {}
+    by_type: Dict[str, int] = {}
+    for row in stations.values():
+        if isinstance(row, list) and len(row) > 16:
+            by_type[str(row[16])] = by_type.get(str(row[16]), 0) + 1
+    station_note = ", ".join(f"{name} {count}" for name, count in sorted(by_type.items(), key=lambda kv: -kv[1]) if name)
+
+    records: List[Dict[str, Any]] = []
+    components = document.get("components", {})
+    for key, row in components.items():
+        # The answer carries its own column names under "indices" and a "count"; only the numbered
+        # keys are components, and without this check the header row became a record called
+        # "component name (component symbol)".
+        if key in {"indices", "count", "request"} or not isinstance(row, list) or len(row) < 5:
+            continue
+        code, symbol, unit, name = row[1], row[2], row[3], row[4]
+        records.append(
+            make_record(
+                source_key="uba_luft",
+                source_label="Luftqualitätsdaten des Umweltbundesamtes",
+                item_type="regional_indicator",
+                item_id=f"uba:{code}",
+                variable_name=code,
+                label=f"{name} ({symbol})",
+                dataset_label="Luftmessnetz",
+                theme="Umwelt",
+                description=join_nonempty([
+                    f"Gemessene Konzentration von {name} ({symbol}) in {unit}.",
+                    f"Erhoben an {len(stations)} Messstationen des Bundes und der Länder, jede mit "
+                    f"Koordinaten, Stationstyp und Betriebszeitraum" + (f" ({station_note})." if station_note else "."),
+                    "Stundenwerte, Tages- und Jahresmittel sowie Überschreitungen sind über eine "
+                    "offene Schnittstelle abrufbar und lassen sich über die Stationskoordinaten "
+                    "einem Ort zuordnen. Für flächendeckende Werte veröffentlicht das UBA "
+                    "zusätzlich modellierte Karten.",
+                ]),
+                aliases="; ".join(part for part in [code, symbol, name] if part),
+                unit=unit,
+                spatial_levels=["Adressen/Koordinaten", "Kreise", "Bundesländer", "Weitere Gliederungen"],
+                nuts_levels=["Adressen/Koordinaten", "Kreise", "NUTS3", "Bundesländer", "NUTS1",
+                             "Weitere Gliederungen"],
+                year_start=1990,
+                year_end=date.today().year,
+                years_text="ab 1990, stündlich fortgeschrieben",
+                source_url=portal,
+                indicator_url=portal,
+                link_level="dataset",
+                access_modes=["machine-readable API", "interactive map viewer", "direct file download"],
+                update_frequency=source["update_frequency"] or "stündlich",
+                api_hint=(f"Komponente {code} in der Luftdaten-Schnittstelle: "
+                          f"umweltbundesamt.de/api/air_data/v3/measures/json?component={key}&scope=2"
+                          "&station=<id>&date_from=…; die Stationsliste mit Koordinaten liefert "
+                          "stations/json, die Mittelungszeiträume scopes/json. Ohne Schlüssel."),
+            )
+        )
+
+    records.append(
+        make_record(
+            source_key="uba_luft",
+            source_label="Luftqualitätsdaten des Umweltbundesamtes",
+            item_type="register_attribute",
+            item_id="uba:stationen",
+            variable_name="stations",
+            label="Messstationen des Luftmessnetzes (Standorte)",
+            dataset_label="Luftmessnetz",
+            theme="Umwelt",
+            description=join_nonempty([
+                f"Verzeichnis der {len(stations)} Messstationen mit Koordinaten, Ort, "
+                "Stationsumgebung und Stationstyp sowie dem Betriebszeitraum.",
+                f"Verteilung nach Typ: {station_note}." if station_note else "",
+                "Die Datei ist der räumliche Schlüssel zu allen Messwerten: ohne sie sind die "
+                "Konzentrationen keinem Ort zuzuordnen.",
+            ]),
+            spatial_levels=["Adressen/Koordinaten", "Kreise", "Bundesländer"],
+            nuts_levels=["Adressen/Koordinaten", "Kreise", "NUTS3", "Bundesländer", "NUTS1"],
+            year_start=1990,
+            year_end=date.today().year,
+            years_text="laufend",
+            source_url=portal,
+            indicator_url=portal,
+            link_level="dataset",
+            access_modes=["machine-readable API", "direct file download"],
+            update_frequency="laufend",
+            api_hint=("umweltbundesamt.de/api/air_data/v3/stations/json?lang=de&use=measure liefert "
+                      "die vollständige Liste als JSON."),
+        )
+    )
+    return records
+
+# ---------------------------------------------------------------------------
+# Polizeiliche Kriminalstatistik und Mobilität in Deutschland
+# ---------------------------------------------------------------------------
+def _bka_documents(page: Path, base: str) -> List[Tuple[str, str]]:
+    """Title and address of every published file linked from a PKS page."""
+    if not page.exists():
+        return []
+    body = page.read_text(encoding="utf-8", errors="replace")
+    out: List[Tuple[str, str]] = []
+    # The query has to come along: on bka.de the same path without `?__blob=publicationFile`
+    # answers 200 with the HTML page around the document instead of the document itself, so a
+    # link that drops it looks fine in a status check and gives the reader no file.
+    for href, label in re.findall(
+            r'<a[^>]+href="([^"]+\.(?:pdf|xlsx|xls|csv|zip)(?:\?[^"]*)?)"[^>]*>(.*?)</a>',
+            body, re.S):
+        title = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", label)).split())
+        if not title or len(title) < 6:
+            continue
+        address = href if href.startswith("http") else base + href.lstrip("/")
+        out.append((title, html.unescape(address)))
+    return out
+
+
+def flatten_pks(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The published parts of the Polizeiliche Kriminalstatistik, each with its own file.
+
+    Crime existed in the index only as a handful of aggregate indicators. The PKS itself publishes
+    the offence catalogue, the table descriptions, the time series and, importantly for this
+    finder, a district and city level selection; those are the records here. The values themselves
+    are in the tables the BKA publishes per edition, and the link leads to them.
+    """
+    raw = source["folder"] / "raw"
+    base = "https://www.bka.de/"
+    seen: set = set()
+    documents: List[Tuple[str, str]] = []
+    for name in ("pks_tabellen.html", "pks_jahr.html"):
+        for title, address in _bka_documents(raw / name, base):
+            key = address.split("?")[0]
+            if key in seen:
+                continue
+            seen.add(key)
+            documents.append((title, address))
+    if not documents:
+        return []
+
+    year = 2025
+    records: List[Dict[str, Any]] = []
+    for title, address in documents:
+        regional = re.search(r"Kreis|Stadt|Gemeinde|Land", title, re.I)
+        records.append(
+            make_record(
+                source_key="pks",
+                source_label="Polizeiliche Kriminalstatistik (Bundeskriminalamt)",
+                item_type="dataset",
+                item_id="pks:" + re.sub(r"[^a-z0-9]+", "_", title.lower())[:60].strip("_"),
+                variable_name=address.rsplit("/", 1)[-1].split("?")[0],
+                label=title,
+                dataset_label=f"PKS {year}",
+                theme="Soziales",
+                description=join_nonempty([
+                    f"Bestandteil der Polizeilichen Kriminalstatistik {year} des BKA.",
+                    "Die PKS zählt die der Polizei bekannt gewordenen Straftaten nach Delikt, "
+                    "Aufklärung, Tatverdächtigen und Opfern. Bundesweite Tabellen erscheinen "
+                    "jährlich; die Auswahl für Kreise und kreisfreie Städte macht sie regional "
+                    "auswertbar, feiner veröffentlichen die Landeskriminalämter.",
+                    "Deckt ausgewählte Straftaten auf Kreis- und Stadtebene ab." if regional else "",
+                ]),
+                spatial_levels=(["Kreise", "Bundesländer", "Gemeinden"] if regional
+                                else ["Bundesländer", "Weitere Gliederungen"]),
+                nuts_levels=(["Kreise", "NUTS3", "Bundesländer", "NUTS1", "Gemeinden", "LAU"] if regional
+                             else ["Bundesländer", "NUTS1", "Weitere Gliederungen"]),
+                year_start=1971,
+                year_end=year,
+                years_text=f"Ausgabe {year}, Zeitreihen ab 1971",
+                source_url=address,
+                indicator_url=address,
+                link_level="dataset",
+                access_modes=["direct file download", "web UI / search form only"],
+                update_frequency=source["update_frequency"] or "jährlich",
+                api_hint=("Ältere Ausgaben stehen unter bka.de über „PKS der Vorjahre“. Die "
+                          "Landeskriminalämter veröffentlichen dieselben Merkmale feiner "
+                          "gegliedert, teils bis auf Gemeindeebene."),
+            )
+        )
+    return records
+
+
+# One record per wave and per access route. The waves are the datasets people cite; the regional
+# table tool and the two access routes are what someone actually needs to get at the numbers.
+MID_ENTRIES: List[Tuple[str, str, str, int, int, str]] = [
+    ("MiD 2023", "https://www.mobilitaet-in-deutschland.de/publikationen2023.html",
+     "Jüngste Welle der bundesweiten Haushaltsbefragung zum Verkehrsverhalten: Wege, "
+     "Verkehrsmittelwahl, Wegezwecke, Pkw-Verfügbarkeit und Zeitverwendung, erhoben an einem "
+     "Stichtag je Person. Ergebnisberichte und Tabellen frei, Mikrodaten auf Antrag.",
+     2023, 2023, "Kreise"),
+    ("MiD 2017", "https://www.mobilitaet-in-deutschland.de/archive/publikationen2017.html",
+     "Welle 2017 mit rund 316.000 befragten Personen, die meistgenutzte Ausgabe für regionale "
+     "Auswertungen, inklusive regionaler Aufstockungen einzelner Länder und Kreise.",
+     2017, 2017, "Kreise"),
+    ("MiD 2008", "https://www.mobilitaet-in-deutschland.de/archive/mid2008-publikationen.html",
+     "Welle 2008, Grundlage vieler Zeitvergleiche des Verkehrsverhaltens.", 2008, 2008, "Bundesländer"),
+    ("MiD 2002", "https://www.mobilitaet-in-deutschland.de/archive/mid2002-publikationen.html",
+     "Erste Welle der Reihe, Nachfolgerin der KONTIV-Erhebungen.", 2002, 2002, "Bundesländer"),
+    ("Mobilität in Tabellen (MiD 2023)", "https://mobilitaet-in-tabellen-2023.bast.de/",
+     "Interaktives Tabellenwerkzeug der BASt zur MiD 2023: Kennwerte nach Raumtyp, Bundesland und "
+     "weiteren Merkmalen, ohne Antrag nutzbar. Der schnellste Weg zu regionalen MiD-Kennzahlen.",
+     2023, 2023, "Kreise"),
+    ("MobilityData Campus (Datenzugang)",
+     "https://www.bast.de/DE/Publikationen/Daten/VerhaltenundSicherheit/MDC/MobilityData-Campus_node.html",
+     "Zugangsweg der BASt zu den Mikrodaten der MiD und weiterer Verkehrserhebungen; "
+     "Scientific-Use-Files auf Antrag, mit Regionalkennung je nach Vertrag bis auf Kreisebene.",
+     2002, 2023, "Kreise"),
+    ("Erhebungsinstrumente MiD 2023",
+     "https://www.mobilitaet-in-deutschland.de/downloads.html",
+     "Haushalts-, Personen- und Wegefragebögen sowie Wegeblätter der Welle 2023. Sie definieren, "
+     "welche Variablen der Datensatz enthält, und sind vor einem Antrag das Nützlichste.",
+     2023, 2023, "Weitere Gliederungen"),
+]
+
+
+def flatten_mid(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Mobilität in Deutschland: the waves, the regional table tool and the way to the microdata.
+
+    The index describes timetables and accessibility but no travel behaviour. MiD is the national
+    travel survey behind most German mobility research; its published parts are free and its
+    microdata carry regional identifiers.
+    """
+    records: List[Dict[str, Any]] = []
+    for title, address, gloss, start, end, level in MID_ENTRIES:
+        mapped = map_spatial({"Kreise": "Kreise & kreisfreie Städte",
+                              "Bundesländer": "Bundesland",
+                              "Weitere Gliederungen": "weitere räumliche Gliederungen"}.get(level, level))
+        records.append(
+            make_record(
+                source_key="mid",
+                source_label="Mobilität in Deutschland (MiD)",
+                item_type="dataset",
+                item_id="mid:" + re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_"),
+                variable_name=title.replace(" ", "_"),
+                label=title,
+                dataset_label="Mobilität in Deutschland",
+                theme="Verkehr / Mobilität",
+                description=join_nonempty([
+                    gloss,
+                    "Die Erhebung wird im Auftrag des Bundesverkehrsministeriums durchgeführt; "
+                    "Ergebnisberichte, Tabellen und Fragebögen sind frei, die Mikrodaten laufen "
+                    "über die BASt beziehungsweise die Clearingstelle Verkehr.",
+                ]),
+                spatial_levels=mapped["spatial_levels"] + ["Weitere Gliederungen"],
+                nuts_levels=mapped["nuts_levels"],
+                year_start=start,
+                year_end=end,
+                years_text=f"{start}" if start == end else f"{start}-{end}",
+                source_url=address,
+                indicator_url=address,
+                link_level="dataset",
+                access_modes=["direct file download", "on request / registration needed",
+                              "web UI / search form only"],
+                update_frequency=source["update_frequency"] or "unregelmäßig",
+                api_hint=("Mikrodaten über die BASt (MobilityData Campus) oder die Clearingstelle "
+                          "Verkehr des DLR; Regionalkennungen je nach Vertrag bis Kreisebene."),
+            )
+        )
+    return records
+
 FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "openstreetmap-poi-layer-overpass": flatten_osm_poi,
     "wegweiser-kommune-bertelsmann-stiftung": flatten_wegweiser,
@@ -4053,6 +4679,13 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "wahlergebnisse-bundeswahlleiterin": flatten_wahlergebnisse,
     "ioer-monitor-flaechennutzung": flatten_ioer,
     "rwi-geo-grid-rwi-geo-red-fdz-ruhr": flatten_fdz_ruhr,
+    "geobasisdaten-des-bkg-open-data": flatten_bkg,
+    "fdz-der-statistischen-aemter-des-bundes-und-der-": flatten_fdz_statistik,
+    "fdz-der-bundesagentur-fuer-arbeit-im-iab": flatten_fdz_iab,
+    "marktstammdatenregister-bundesnetzagentur": flatten_marktstammdaten,
+    "luftqualitaetsdaten-des-umweltbundesamtes": flatten_uba_luft,
+    "polizeiliche-kriminalstatistik-bka": flatten_pks,
+    "mobilitaet-in-deutschland-mid": flatten_mid,
     "regionalatlas-deutschland": flatten_regionalatlas,
     "datenguide-abgeschaltet": lambda source: (flatten_datenguide_genesis(source)
                                                + flatten_genesis_tables(source, ["regionalstatistik"])),

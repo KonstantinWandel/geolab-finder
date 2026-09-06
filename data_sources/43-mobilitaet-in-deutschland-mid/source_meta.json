@@ -1,0 +1,66 @@
+{
+  "name": "Mobilität in Deutschland (MiD)",
+  "slug": "mobilitaet-in-deutschland-mid",
+  "url": "https://www.mobilitaet-in-deutschland.de/",
+  "url_former": "",
+  "maintenance_note": "",
+  "excel_row": 44,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "web UI / search form only",
+    "on request / registration needed"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Arbeitsmarkt & Beschäftigung",
+    "Verkehr / Mobilität"
+  ],
+  "topics": [
+    {
+      "group": "Arbeitsmarkt & Beschäftigung",
+      "topic": "Ein-/Auspendler"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "Verkehr / Mobilität"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "PKW-Dichte"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "ÖPNV"
+    },
+    {
+      "group": "Verkehr / Mobilität",
+      "topic": "tatsächliche Mobilität (Standortdaten)"
+    }
+  ],
+  "topic_labels": [
+    "Ein-/Auspendler",
+    "Verkehr / Mobilität",
+    "PKW-Dichte",
+    "ÖPNV",
+    "tatsächliche Mobilität (Standortdaten)"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 2002,
+  "coverage_end_month": null,
+  "coverage_end_year": 2023,
+  "update_frequency": "unregelmäßig",
+  "note": "Bundesweite Haushaltsbefragung zum Verkehrsverhalten (2002, 2008, 2017, 2023) mit Regionalkennung; Scientific-Use-File über die Clearingstelle Verkehr, Ergebnisberichte und Regionaltabellen frei"
+}

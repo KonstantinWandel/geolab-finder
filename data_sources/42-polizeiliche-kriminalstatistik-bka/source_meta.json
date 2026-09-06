@@ -1,0 +1,50 @@
+{
+  "name": "Polizeiliche Kriminalstatistik (BKA)",
+  "slug": "polizeiliche-kriminalstatistik-bka",
+  "url": "https://www.bka.de/DE/AktuelleInformationen/StatistikenLagebilder/PolizeilicheKriminalstatistik/pks_node.html",
+  "url_former": "",
+  "maintenance_note": "",
+  "excel_row": 43,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "web UI / search form only"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": true,
+    "API": false,
+    "Karte": false,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Gemeinden und Verbandsgemeinden",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Nachhaltigkeit",
+    "Soziales"
+  ],
+  "topics": [
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Straßenverkehr"
+    },
+    {
+      "group": "Soziales",
+      "topic": "Soziales"
+    }
+  ],
+  "topic_labels": [
+    "Straßenverkehr",
+    "Soziales"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 1971,
+  "coverage_end_month": null,
+  "coverage_end_year": 2026,
+  "update_frequency": "jährlich",
+  "note": "Straftaten nach Delikt, Aufklärung, Tatverdächtige und Opfer; Zeitreihen sowie ausgewählte Straftaten für Kreise und Städte"
+}

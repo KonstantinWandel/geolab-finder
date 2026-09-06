@@ -138,6 +138,108 @@ NEW_ROWS: List[Dict[str, Any]] = [
                    "Bevölkerung", "Bevölkerungsstand", "Soziales", "Einkünfte",
                    "Armutsgefährdung"],
     },
+    {
+        "name": "Geobasisdaten des BKG (Open Data)",
+        "url": "https://gdz.bkg.bund.de/index.php/default/open-data.html",
+        "start_year": 1990,
+        "end_year": 2026,
+        "turnus": "jährlich",
+        "kommentar": "Verwaltungsgrenzen (VG250/VG1000/VG5000, NUTS), INSPIRE-Gitter, geografische "
+                     "Namen, CORINE-Landbedeckung, Geländemodelle und Basiskarten; die Geometrien, "
+                     "auf die die Indikatoren der übrigen Quellen bezogen sind",
+        "access": ["Direkter Download", "GUI", "API", "Karte"],
+        "levels": ["Bundesland", "Regierungsbezirke", "Kreise & kreisfreie Städte",
+                   "Gemeinden und Verbandsgemeinden", "Adressen / Koordinaten",
+                   "weitere räumliche Gliederungen"],
+        "topics": ["Flächennutzung", "Bodennutzung", "Umwelt"],
+    },
+    {
+        "name": "FDZ der Statistischen Ämter des Bundes und der Länder",
+        "url": "https://www.forschungsdatenzentrum.de/de/alle-daten",
+        "start_year": 1975,
+        "end_year": 2026,
+        "turnus": "laufend",
+        "kommentar": "Amtliche Mikrodaten als Scientific-Use-Files und über Gastaufenthalt: "
+                     "Mikrozensus, AFiD, Agrar-, Bau-, Bildungs- und Unternehmensstatistiken, "
+                     "überwiegend mit regionaler Kennung; Zugang auf Antrag",
+        "access": ["Beantragung", "GUI"],
+        "levels": ["Bundesland", "Kreise & kreisfreie Städte",
+                   "Gemeinden und Verbandsgemeinden", "weitere räumliche Gliederungen"],
+        "topics": ["Bevölkerung", "Bildung", "Bauen / Wohnen", "Wirtschaft und Unternehmen",
+                   "Arbeitsmarkt & Beschäftigung", "Soziales", "Gesundheit", "Migration"],
+    },
+    {
+        "name": "FDZ der Bundesagentur für Arbeit im IAB",
+        "url": "https://fdz.iab.de/unsere-datenprodukte/",
+        "start_year": 1975,
+        "end_year": 2026,
+        "turnus": "laufend",
+        "kommentar": "Betriebs- und Personendaten der Arbeitsverwaltung (SIAB, BHP, LIAB, IEB, "
+                     "IAB-Betriebspanel) mit Kreis- und Gemeindekennung; Zugang über Antrag, "
+                     "Gastaufenthalt oder Fernrechnen, einzelne Campus Files frei",
+        "access": ["Beantragung", "GUI"],
+        "levels": ["Bundesland", "Kreise & kreisfreie Städte",
+                   "Gemeinden und Verbandsgemeinden", "weitere räumliche Gliederungen"],
+        "topics": ["Arbeitsmarkt & Beschäftigung", "Beschäftigte", "Arbeitslose (-nquote)",
+                   "Ein-/Auspendler", "Wirtschaft und Unternehmen", "Unternehmen",
+                   "Beschäftigte je Betrieb", "Bruttoentgelte"],
+    },
+    {
+        "name": "Marktstammdatenregister (Bundesnetzagentur)",
+        "url": "https://www.marktstammdatenregister.de/MaStR",
+        "start_year": 2019,
+        "end_year": 2026,
+        "turnus": "täglich",
+        "kommentar": "Amtliches Register aller Strom- und Gaserzeugungsanlagen mit Adresse, "
+                     "Koordinaten, Leistung und Inbetriebnahme; vollständiger Datenexport frei",
+        "access": ["Direkter Download", "GUI", "API", "Karte"],
+        "levels": ["Bundesland", "Kreise & kreisfreie Städte",
+                   "Gemeinden und Verbandsgemeinden", "PLZ", "Adressen / Koordinaten"],
+        "topics": ["Ver- und Entsorgung", "Nachhaltigkeit", "Umwelt",
+                   "Wirtschaft und Unternehmen", "Unternehmen"],
+    },
+    {
+        "name": "Luftqualitätsdaten des Umweltbundesamtes",
+        "url": "https://www.umweltbundesamt.de/daten/luft/luftdaten",
+        "start_year": 1990,
+        "end_year": 2026,
+        "turnus": "stündlich",
+        "kommentar": "Messwerte von rund 500 Stationen (Feinstaub, Stickstoffdioxid, Ozon und "
+                     "weitere) mit Koordinaten und Stationstyp, offene JSON-Schnittstelle; dazu "
+                     "die Lärmkartierung nach Umgebungslärmrichtlinie",
+        "access": ["Direkter Download", "GUI", "API", "Karte"],
+        "levels": ["Bundesland", "Kreise & kreisfreie Städte", "Adressen / Koordinaten",
+                   "weitere räumliche Gliederungen"],
+        "topics": ["Umwelt", "Nachhaltigkeit", "Gesundheit", "Straßenverkehr"],
+    },
+    {
+        "name": "Polizeiliche Kriminalstatistik (BKA)",
+        "url": "https://www.bka.de/DE/AktuelleInformationen/StatistikenLagebilder/PolizeilicheKriminalstatistik/pks_node.html",
+        "start_year": 1971,
+        "end_year": 2026,
+        "turnus": "jährlich",
+        "kommentar": "Straftaten nach Delikt, Aufklärung, Tatverdächtige und Opfer; Zeitreihen "
+                     "sowie ausgewählte Straftaten für Kreise und Städte",
+        "access": ["Direkter Download", "GUI"],
+        "levels": ["Bundesland", "Kreise & kreisfreie Städte",
+                   "Gemeinden und Verbandsgemeinden", "weitere räumliche Gliederungen"],
+        "topics": ["Soziales", "Straßenverkehr"],
+    },
+    {
+        "name": "Mobilität in Deutschland (MiD)",
+        "url": "https://www.mobilitaet-in-deutschland.de/",
+        "start_year": 2002,
+        "end_year": 2023,
+        "turnus": "unregelmäßig",
+        "kommentar": "Bundesweite Haushaltsbefragung zum Verkehrsverhalten (2002, 2008, 2017, "
+                     "2023) mit Regionalkennung; Scientific-Use-File über die Clearingstelle "
+                     "Verkehr, Ergebnisberichte und Regionaltabellen frei",
+        "access": ["Direkter Download", "Beantragung", "GUI"],
+        "levels": ["Bundesland", "Kreise & kreisfreie Städte",
+                   "Gemeinden und Verbandsgemeinden", "weitere räumliche Gliederungen"],
+        "topics": ["Verkehr / Mobilität", "PKW-Dichte", "ÖPNV",
+                   "tatsächliche Mobilität (Standortdaten)", "Ein-/Auspendler"],
+    },
 ]
 
 

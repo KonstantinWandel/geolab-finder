@@ -1,0 +1,62 @@
+{
+  "name": "Luftqualitätsdaten des Umweltbundesamtes",
+  "slug": "luftqualitaetsdaten-des-umweltbundesamtes",
+  "url": "https://www.umweltbundesamt.de/daten/luft/luftdaten",
+  "url_former": "",
+  "maintenance_note": "",
+  "excel_row": 42,
+  "provider": "",
+  "access_modes": [
+    "direct file download",
+    "web UI / search form only",
+    "machine-readable API",
+    "interactive map viewer"
+  ],
+  "access_flags": {
+    "Direkter Download": true,
+    "GUI": true,
+    "API": true,
+    "Karte": true,
+    "Beantragung": false
+  },
+  "spatial_levels": [
+    "Bundesland",
+    "Kreise & kreisfreie Städte",
+    "Adressen / Koordinaten",
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [
+    "Gesundheit",
+    "Nachhaltigkeit"
+  ],
+  "topics": [
+    {
+      "group": "Gesundheit",
+      "topic": "Gesundheit"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Nachhaltigkeit"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Straßenverkehr"
+    },
+    {
+      "group": "Nachhaltigkeit",
+      "topic": "Umwelt"
+    }
+  ],
+  "topic_labels": [
+    "Gesundheit",
+    "Nachhaltigkeit",
+    "Straßenverkehr",
+    "Umwelt"
+  ],
+  "coverage_start_month": null,
+  "coverage_start_year": 1990,
+  "coverage_end_month": null,
+  "coverage_end_year": 2026,
+  "update_frequency": "stündlich",
+  "note": "Messwerte von rund 500 Stationen (Feinstaub, Stickstoffdioxid, Ozon und weitere) mit Koordinaten und Stationstyp, offene JSON-Schnittstelle; modellierte Flächenkarten beim UBA, die Lärmkartierung liegt dagegen bei den Ländern und ist hier nicht enthalten"
+}
