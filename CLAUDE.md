@@ -45,8 +45,8 @@ pass-through `_normalise_geodb_row`. The schema is defined by example in `_norma
 `theme`, `spatial_levels`, `nuts_levels`, `year_start`/`year_end`, `available_years_text`,
 `search_description`, `source_url`, `indicator_url`, `api_hint`, `embedding_context`.
 
-State as of 2026-09-06: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 12,286 rows**
-(11,626 GeoDB records + 660 INKAR) from **43 workbook rows, 38 of which carry real records**.
+State as of 2026-09-06: **live at <https://geodb.geolab.soz.uni-bielefeld.de/> with 12,299 rows**
+(11,639 GeoDB records + 660 INKAR) from **43 workbook rows, 38 of which carry real records**.
 Tracker: **29 done, 2 partial, 5 open**. Largest: Regionalstatistik/GENESIS 3,306,
 GENESIS-Online Bund 3,027, Zensus 2022 1,441, Gigabit-Grundbuch 633, DB ISR 416,
 Wegweiser Kommune 393, BA-Glossar 314, BA Arbeitsmarktreport 289, Open Data ÖPNV 324,
@@ -166,6 +166,30 @@ its 24 letter pages, Breitband from the portal front door to the download page (
 file, sheet and column in `api_hint`), BORIS-D from 14 to 16 Länder (Baden-Württemberg and Berlin
 publish outside the national catalogue and were verified by hand), and Migration/Integration got
 the 18 of its 140 columns that the Destatis map offers as a view of its own.
+
+**The facet audit earns its place after every batch of new sources (2026-09-06).** Adding seven
+sources broke three things that no link check would have caught, because the links were fine and
+the facets were not:
+
+- `map_spatial` takes a **list** of workbook level labels. The MiD flattener handed it a single
+  string, so it iterated over the characters, matched nothing, and all seven records came out with
+  only the "Weitere Gliederungen" that is appended afterwards. Every one of them was invisible to
+  the level filter.
+- The 70 BKG products carried **no year at all**, because the product code names the Gebietsstand
+  day (_0101, _1231) and not the year. The directory listing has the date, so the fetcher keeps it
+  now and the year comes from the code where it has one (clc5_2018) and from the folder otherwise.
+- The PKS records stopped at Bundesländer although the statistic is published for districts, and
+  the audit found eleven records whose own text says Kreise.
+
+`scripts/audit_geodb_facets.py` reported all three. Its output needs reading rather than obeying:
+most of what it flags is a record whose prose mentions a level it is not published at, which is
+correct as it stands. Grid cells are the sharpest example: a statistical grid and an elevation
+model belong in the Rasterzellen facet, a raster map does not, and only the first two got it.
+
+The filter path itself was checked against the running service the same day: every facet offers
+the new sources, source, level, year, theme and combinations all hold, and a record without a year
+is not dropped by a year range, which matters for the 3,105 records (glossary terms, data formats,
+GENESIS Merkmale) that have no reference year by nature.
 
 **Link health is audited, not assumed.** `scripts/check_geodb_links.py` samples records per source,
 fetches the outward link, and compares the response against what that host returns for a

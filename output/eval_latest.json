@@ -544,6 +544,7 @@
       "top_label": "Kinderärztliche Versorgung",
       "sources_in_top": [
         "deutschlandatlas",
+        "gbe",
         "inkar"
       ]
     },

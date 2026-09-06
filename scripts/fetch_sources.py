@@ -323,6 +323,12 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
         {"name": "downloads.html", "url": "https://www.mobilitaet-in-deutschland.de/downloads.html",
          "kind": "catalogue", "note": "Reports, tables and the data access routes per wave."},
     ],
+    "gesundheitsberichterstattung-des-bundes-gbe-und-": [
+        {"name": "portal.html", "url": "https://www.gbe-bund.de/", "kind": "portal",
+         "note": "Entry to the federal health reporting system; the records name its theme fields."},
+        {"name": "versorgungsatlas.html", "url": "https://www.versorgungsatlas.de/themen",
+         "kind": "catalogue", "note": "The Zi's small-area analyses of ambulatory care, by topic."},
+    ],
     "rwi-geo-grid-rwi-geo-red-fdz-ruhr": [
         {"name": "portal.html", "url": "https://fdz.rwi-essen.de/", "kind": "portal", "note": ""},
         {"name": "fdz_datasets.json", "url": "https://fdz.rwi-essen.de/", "kind": "catalogue",
@@ -893,15 +899,26 @@ def fetch_bkg_produkte(url: str, target: Path) -> Dict[str, Any]:
     started = time.time()
     honest = "geolab-geodb-indexer/1.0 (+https://geodb.geolab.soz.uni-bielefeld.de)"
 
-    def listing(address: str) -> List[str]:
+    def listing(address: str) -> List[Dict[str, str]]:
         request = urllib.request.Request(address, headers={"User-Agent": honest})
         with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
             body = response.read().decode("utf-8", "replace")
-        return [name for name in re.findall(r'href="([^"?]+)/"', body) if name not in {"..", "."}]
+        # The index line carries the date the product folder last changed, which is the only
+        # edition marker these products have: the code says the Gebietsstand day (_0101, _1231)
+        # but not the year, so without this the year filter cannot reach any of them.
+        found = []
+        for name, stamp in re.findall(
+                r'href="([^"?]+)/"[^\n]*?(\d{2}-[A-Za-z]{3}-\d{4})', body):
+            if name not in {"..", "."}:
+                found.append({"name": name, "changed": stamp})
+        if not found:  # a listing without dates is still a listing
+            found = [{"name": n, "changed": ""} for n in re.findall(r'href="([^"?]+)/"', body)
+                     if n not in {"..", "."}]
+        return found
 
-    families: Dict[str, List[str]] = {}
+    families: Dict[str, List[Dict[str, str]]] = {}
     for family in listing(url):
-        families[family] = listing(f"{url.rstrip('/')}/{family}/")
+        families[family["name"]] = listing(f"{url.rstrip('/')}/{family['name']}/")
         time.sleep(0.2)
     payload = json.dumps({
         "server": url,

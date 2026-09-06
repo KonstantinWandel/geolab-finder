@@ -4135,9 +4135,20 @@ def flatten_bkg(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     for family, products in sorted((document.get("families") or {}).items()):
         label, gloss, levels = BKG_FAMILIES.get(
             family, (family, "Produktgruppe des BKG.", ["weitere räumliche Gliederungen"]))
-        mapped = map_spatial(levels)
-        for product in sorted(products):
+        for entry in sorted(products, key=lambda item: item["name"] if isinstance(item, dict) else item):
+            product = entry["name"] if isinstance(entry, dict) else entry
+            changed = entry.get("changed", "") if isinstance(entry, dict) else ""
             detail = _bkg_product_gloss(product)
+            # The edition year: from the code where it carries one (clc5_2018, lbm-de_2021),
+            # otherwise from the day the product folder last changed. Without either, none of
+            # these 70 products can be reached through the year filter.
+            in_code = re.findall(r"(?:^|[_-])(19\d{2}|20\d{2})(?:$|[_-])", product)
+            in_stamp = re.findall(r"(\d{4})$", changed)
+            year = int(in_code[-1]) if in_code else (int(in_stamp[0]) if in_stamp else None)
+            # A statistical grid and an elevation model are published per cell; a raster map is a
+            # picture. Only the first kind belongs in the grid-cell facet.
+            per_cell = product.startswith(("geogitter", "dgm"))
+            levels_here = (levels + ["Rasterzellen"]) if per_cell else levels
             records.append(
                 make_record(
                     source_key="bkg",
@@ -4156,8 +4167,11 @@ def flatten_bkg(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                         "Quellenangabe © GeoBasis-DE / BKG.",
                     ]),
                     aliases="; ".join(part for part in [family, label] if part),
-                    spatial_levels=mapped["spatial_levels"],
-                    nuts_levels=mapped["nuts_levels"],
+                    spatial_levels=map_spatial(levels_here)["spatial_levels"],
+                    nuts_levels=map_spatial(levels_here)["nuts_levels"],
+                    year_start=year,
+                    year_end=year,
+                    years_text=(f"Stand {changed}" if changed else ""),
                     source_url=f"{server}/{family}/{product}/",
                     indicator_url=f"{server}/{family}/{product}/",
                     link_level="dataset",
@@ -4573,8 +4587,11 @@ def flatten_pks(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                     "auswertbar, feiner veröffentlichen die Landeskriminalämter.",
                     "Deckt ausgewählte Straftaten auf Kreis- und Stadtebene ab." if regional else "",
                 ]),
+                # The whole statistic is published for districts, not only the document that says
+                # so in its title: the audit flagged eleven records whose text names Kreise while
+                # the facet stopped at Bundesländer, which put them out of reach of that filter.
                 spatial_levels=(["Kreise", "Bundesländer", "Gemeinden"] if regional
-                                else ["Bundesländer", "Weitere Gliederungen"]),
+                                else ["Bundesländer", "Kreise", "Weitere Gliederungen"]),
                 nuts_levels=(["Kreise", "NUTS3", "Bundesländer", "NUTS1", "Gemeinden", "LAU"] if regional
                              else ["Bundesländer", "NUTS1", "Weitere Gliederungen"]),
                 year_start=1971,
@@ -4635,9 +4652,16 @@ def flatten_mid(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     records: List[Dict[str, Any]] = []
     for title, address, gloss, start, end, level in MID_ENTRIES:
-        mapped = map_spatial({"Kreise": "Kreise & kreisfreie Städte",
-                              "Bundesländer": "Bundesland",
-                              "Weitere Gliederungen": "weitere räumliche Gliederungen"}.get(level, level))
+        # map_spatial takes the workbook's level labels as a LIST. Handing it a single string
+        # made it iterate over the characters, so every record here came out with nothing but the
+        # "Weitere Gliederungen" that is appended below, and the level filter could not reach one
+        # of them. Found by the facet audit on 2026-09-06.
+        LEVELS = {
+            "Kreise": ["Bundesland", "Kreise & kreisfreie Städte"],
+            "Bundesländer": ["Bundesland"],
+            "Weitere Gliederungen": [],
+        }
+        mapped = map_spatial(LEVELS.get(level, []))
         records.append(
             make_record(
                 source_key="mid",
@@ -4671,6 +4695,182 @@ def flatten_mid(source: Dict[str, Any]) -> List[Dict[str, Any]]:
         )
     return records
 
+
+# ---------------------------------------------------------------------------
+# Umgebungslärm: gehört zum UBA-Datensatz, wird aber getrennt beschrieben
+# ---------------------------------------------------------------------------
+# Hand-checked on 2026-09-06, every address opened. The noise mapping has no open catalogue the
+# way the air quality data does: it is a map application plus the reporting obligations of the
+# Länder, so these entries name what exists rather than pretending to a machine-readable list.
+LAERM_ENTRIES: List[Tuple[str, str, str, List[str]]] = [
+    ("Lärmkartierung nach EU-Umgebungslärmrichtlinie (Kartenanwendung)",
+     "https://gis.uba.de/maps/?lang=de#/apps/laermkartierung",
+     "Bundesweite Zusammenführung der strategischen Lärmkarten: Belastung durch Straßen-, "
+     "Schienen-, Flug- und Industrielärm als Lden (Tag-Abend-Nacht) und Lnight, alle fünf Jahre "
+     "nach einheitlichem Verfahren erhoben. Die Karten zeigen die Pegelklassen flächenhaft und "
+     "sind die Grundlage der Lärmaktionspläne.",
+     ["Gemeinden und Verbandsgemeinden", "Adressen / Koordinaten",
+      "weitere räumliche Gliederungen"]),
+    ("Umgebungslärmrichtlinie: Verfahren und Betroffenenzahlen",
+     "https://www.umweltbundesamt.de/themen/laerm/umgebungslaermrichtlinie",
+     "Beschreibung der Kartierungsrunden, der Schwellenwerte und der veröffentlichten "
+     "Betroffenenzahlen je Lärmart. Wer Belastung als Expositionsvariable braucht, findet hier, "
+     "was gemessen wurde und was die Pegelklassen bedeuten.",
+     ["Bundesland", "Gemeinden und Verbandsgemeinden", "weitere räumliche Gliederungen"]),
+    ("Verkehrslärm (Straße und Schiene)",
+     "https://www.umweltbundesamt.de/themen/laerm/verkehrslaerm",
+     "Belastung durch Straßen- und Schienenverkehrslärm mit den Auswertungen des UBA: "
+     "Hauptverkehrsstraßen, Haupteisenbahnstrecken und Ballungsräume.",
+     ["Gemeinden und Verbandsgemeinden", "Adressen / Koordinaten"]),
+    ("Fluglärm",
+     "https://www.umweltbundesamt.de/themen/laerm/fluglaerm",
+     "Belastung durch Fluglärm an den Großflughäfen, mit den Kartierungsergebnissen und den "
+     "Schutzzonen nach Fluglärmgesetz.",
+     ["Gemeinden und Verbandsgemeinden", "Adressen / Koordinaten"]),
+    ("Lärmwirkungen auf die Gesundheit",
+     "https://www.umweltbundesamt.de/themen/laerm/laermwirkungen",
+     "Zusammenstellung der Wirkungsforschung: Schlafstörungen, Belästigung und Herz-Kreislauf-"
+     "Risiken je Pegelklasse. Nützlich, um Belastungswerte in Wirkungsgrößen zu übersetzen.",
+     ["Bundesland", "weitere räumliche Gliederungen"]),
+    ("Lärmkartierung der Eisenbahn (Eisenbahn-Bundesamt)",
+     "https://laermkartierung1.eisenbahn-bundesamt.de/",
+     "Kartierung des Schienenlärms an Haupteisenbahnstrecken des Bundes, geführt vom "
+     "Eisenbahn-Bundesamt und getrennt von der Kartierung der Länder.",
+     ["Gemeinden und Verbandsgemeinden", "Adressen / Koordinaten"]),
+]
+
+
+def flatten_laerm(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The noise side of the UBA row: strategic noise mapping under the EU directive.
+
+    Air pollution and noise are the two standard exposure variables, and the index had the first
+    and none of the second. There is no open catalogue here in the sense the air quality API is
+    one, so these six entries are hand-checked, each address opened on 2026-09-06.
+    """
+    records: List[Dict[str, Any]] = []
+    for title, address, gloss, levels in LAERM_ENTRIES:
+        mapped = map_spatial(levels)
+        records.append(
+            make_record(
+                source_key="uba_laerm",
+                source_label="Umgebungslärm (Umweltbundesamt, Länder und Eisenbahn-Bundesamt)",
+                item_type="dataset",
+                item_id="laerm:" + re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")[:48],
+                variable_name=title.split("(")[0].strip().replace(" ", "_"),
+                label=title,
+                dataset_label="Lärmkartierung nach EU-Umgebungslärmrichtlinie",
+                theme="Umwelt",
+                description=join_nonempty([
+                    gloss,
+                    "Die Kartierung läuft in Fünfjahresrunden; die Länder kartieren Ballungsräume "
+                    "und Hauptverkehrswege, der Bund die Haupteisenbahnstrecken. Die Ergebnisse "
+                    "sind flächenhafte Pegelklassen, keine Einzelmesswerte.",
+                ]),
+                spatial_levels=mapped["spatial_levels"],
+                nuts_levels=mapped["nuts_levels"],
+                year_start=2007,
+                year_end=2022,
+                years_text="Kartierungsrunden 2007, 2012, 2017, 2022",
+                source_url=address,
+                indicator_url=address,
+                link_level="dataset",
+                access_modes=["interactive map viewer", "direct file download"],
+                update_frequency="alle fünf Jahre",
+                api_hint=("Die Rohdaten der Kartierung liegen bei den Ländern, die "
+                          "Zusammenführung beim UBA; für einzelne Länder gibt es WMS-Dienste "
+                          "über die jeweiligen Geoportale."),
+            )
+        )
+    return records
+
+
+# ---------------------------------------------------------------------------
+# Gesundheitsberichterstattung des Bundes und Versorgungsatlas
+# ---------------------------------------------------------------------------
+GBE_ENTRIES: List[Tuple[str, str, str, List[str]]] = [
+    ("Gesundheitliche Lage (GBE-Themenfeld)",
+     "https://www.gbe-bund.de/gbe/isgbe.indikatoren?p_uid=gast&p_sprache=D&p_thema_id=30000",
+     "Sterblichkeit, Lebenserwartung, verlorene Lebensjahre und subjektive Gesundheit, "
+     "überwiegend für Bund und Länder, teils tiefer gegliedert.",
+     ["Bundesland", "weitere räumliche Gliederungen"]),
+    ("Krankheiten und Gesundheitsprobleme (GBE-Themenfeld)",
+     "https://www.gbe-bund.de/gbe/isgbe.indikatoren?p_uid=gast&p_sprache=D&p_thema_id=60000",
+     "Herz-Kreislauf-Erkrankungen, Krebs, Infektionen und meldepflichtige Krankheiten, "
+     "Berufskrankheiten, Verletzungen und Vergiftungen.",
+     ["Bundesland", "weitere räumliche Gliederungen"]),
+    ("Gesundheitsausgaben, Personal und Einrichtungen (GBE-Themenfeld)",
+     "https://www.gbe-bund.de/gbe/isgbe.indikatoren?p_uid=gast&p_sprache=D&p_thema_id=80000",
+     "Ausgabenrechnung, Beschäftigte im Gesundheitswesen, Einrichtungen und Kosten nach "
+     "Krankheitsarten.",
+     ["Bundesland", "weitere räumliche Gliederungen"]),
+    ("Themenrecherche der Gesundheitsberichterstattung",
+     "https://www.gbe-bund.de/",
+     "Einstieg in den gesamten Bestand: rund 1.000 Tabellen und Indikatoren aus Statistiken, "
+     "Surveys und Registern, jeweils mit Definition, Quelle und Zeitreihe. Das Gegenstück zu "
+     "GENESIS für den Gesundheitsbereich.",
+     ["Bundesland", "Kreise & kreisfreie Städte", "weitere räumliche Gliederungen"]),
+    ("Versorgungsatlas (Zentralinstitut für die kassenärztliche Versorgung)",
+     "https://www.versorgungsatlas.de/",
+     "Kleinräumige Analysen der ambulanten Versorgung auf Basis der vertragsärztlichen "
+     "Abrechnungsdaten: Prävalenzen, Verordnungen, Impfquoten und Inanspruchnahme, meist auf "
+     "Kreis- oder KV-Regionsebene, jede Analyse mit Datengrundlage und Methodik.",
+     ["Kreise & kreisfreie Städte", "Bundesland", "weitere räumliche Gliederungen"]),
+    ("Versorgungsatlas nach Themen",
+     "https://www.versorgungsatlas.de/themen",
+     "Die Analysen nach Themenfeldern geordnet, von Diabetes und Impfungen bis zu "
+     "Arzneimittelverordnungen und Inanspruchnahme.",
+     ["Kreise & kreisfreie Städte", "Bundesland"]),
+]
+
+
+def flatten_gbe(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Health reporting: the outcome side the index was missing.
+
+    Health was represented by hospital registers, the Klinik-Atlas and a few INKAR indicators, so
+    the index could say where hospitals are but little about health itself. GBE-Bund is the
+    federal health reporting system and the Versorgungsatlas adds small-area analyses of
+    ambulatory care. Neither publishes an open catalogue endpoint, so these are the entry points
+    of the two systems, each opened by hand on 2026-09-06.
+    """
+    records: List[Dict[str, Any]] = []
+    for title, address, gloss, levels in GBE_ENTRIES:
+        mapped = map_spatial(levels)
+        records.append(
+            make_record(
+                source_key="gbe",
+                source_label="Gesundheitsberichterstattung des Bundes und Versorgungsatlas",
+                item_type="dataset",
+                item_id="gbe:" + re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")[:48],
+                variable_name=title.split("(")[0].strip().replace(" ", "_"),
+                label=title,
+                dataset_label=("Versorgungsatlas" if "Versorgungsatlas" in title
+                               else "Gesundheitsberichterstattung des Bundes"),
+                theme="Gesundheit",
+                description=join_nonempty([
+                    gloss,
+                    "Die GBE führt Statistiken, Surveys und Register zusammen und weist zu jeder "
+                    "Zahl Quelle und Definition aus; der Versorgungsatlas arbeitet mit den "
+                    "Abrechnungsdaten der vertragsärztlichen Versorgung.",
+                ]),
+                spatial_levels=mapped["spatial_levels"],
+                nuts_levels=mapped["nuts_levels"],
+                year_start=1990,
+                year_end=2026,
+                years_text="je Indikator unterschiedlich, überwiegend ab 1990",
+                source_url=address,
+                indicator_url=address,
+                link_level="dataset",
+                access_modes=["web UI / search form only", "direct file download"],
+                update_frequency=source["update_frequency"] or "laufend",
+                api_hint=("GBE-Tabellen lassen sich als CSV und Excel exportieren; die "
+                          "Themen-Kennung steht als p_thema_id in der Adresse. Der "
+                          "Versorgungsatlas veröffentlicht je Analyse einen Bericht mit "
+                          "Datengrundlage und meist einen Kartendatensatz."),
+            )
+        )
+    return records
+
+
 FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "openstreetmap-poi-layer-overpass": flatten_osm_poi,
     "wegweiser-kommune-bertelsmann-stiftung": flatten_wegweiser,
@@ -4683,7 +4883,9 @@ FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
     "fdz-der-statistischen-aemter-des-bundes-und-der-": flatten_fdz_statistik,
     "fdz-der-bundesagentur-fuer-arbeit-im-iab": flatten_fdz_iab,
     "marktstammdatenregister-bundesnetzagentur": flatten_marktstammdaten,
-    "luftqualitaetsdaten-des-umweltbundesamtes": flatten_uba_luft,
+    "luftqualitaetsdaten-des-umweltbundesamtes": lambda source: (flatten_uba_luft(source)
+                                                                 + flatten_laerm(source)),
+    "gesundheitsberichterstattung-des-bundes-gbe-und-": flatten_gbe,
     "polizeiliche-kriminalstatistik-bka": flatten_pks,
     "mobilitaet-in-deutschland-mid": flatten_mid,
     "regionalatlas-deutschland": flatten_regionalatlas,
