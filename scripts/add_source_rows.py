@@ -240,6 +240,21 @@ NEW_ROWS: List[Dict[str, Any]] = [
         "topics": ["Verkehr / Mobilität", "PKW-Dichte", "ÖPNV",
                    "tatsächliche Mobilität (Standortdaten)", "Ein-/Auspendler"],
     },
+    {
+        "name": "Gesundheitsberichterstattung des Bundes (GBE) und Versorgungsatlas",
+        "url": "https://www.gbe-bund.de/",
+        "start_year": 1990,
+        "end_year": 2026,
+        "turnus": "laufend",
+        "kommentar": "Gesundheitsindikatoren von Sterblichkeit über Krankheiten bis zu Ausgaben "
+                     "und Personal, überwiegend auf Landesebene; der Versorgungsatlas des Zi "
+                     "ergänzt kleinräumige Analysen der ambulanten Versorgung",
+        "access": ["Direkter Download", "GUI", "Karte"],
+        "levels": ["Bundesland", "Kreise & kreisfreie Städte", "weitere räumliche Gliederungen"],
+        "topics": ["Gesundheit", "Lebenserwartung", "Behandlungen und Todesursachen",
+                   "Pflege und Personal", "Krankenhäuser (Bettendichte)",
+                   "Einwohner je Arzt", "Soziales"],
+    },
 ]
 
 

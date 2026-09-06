@@ -275,11 +275,10 @@
       "slug": "genesis-online-bund",
       "name": "GENESIS-Online (Bund)",
       "url": "https://genesis.destatis.de/datenbank/online/",
-      "status": 200,
-      "final_url": "https://genesis.destatis.de/datenbank/online/",
+      "status": null,
+      "final_url": "",
       "moved": false,
-      "error": "",
-      "title": "GENESIS-Online"
+      "error": "TimeoutError: Page.goto: Timeout 75000ms exceeded.\nCall log:\n  - navigating to \"http"
     },
     {
       "slug": "zensus-2022",
@@ -430,6 +429,16 @@
       "moved": false,
       "error": "",
       "title": "Mobilität in Deutschland"
+    },
+    {
+      "slug": "gesundheitsberichterstattung-des-bundes-gbe-und-",
+      "name": "Gesundheitsberichterstattung des Bundes (GBE) und Versorgungsatlas",
+      "url": "https://www.gbe-bund.de/",
+      "status": 200,
+      "final_url": "https://www.gbe-bund.de/gbe/",
+      "moved": false,
+      "error": "",
+      "title": "GBE - Gesundheitsberichterstattung des Bundes"
     }
   ]
 }

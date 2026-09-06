@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "workbook": "Geospatial_Data_Sources.xlsx",
-  "n_sources": 43,
+  "n_sources": 44,
   "sources": [
     {
       "name": "Regionalatlas Deutschland",
@@ -3672,6 +3672,81 @@
       "coverage_end_year": 2023,
       "update_frequency": "unregelmäßig",
       "note": "Bundesweite Haushaltsbefragung zum Verkehrsverhalten (2002, 2008, 2017, 2023) mit Regionalkennung; Scientific-Use-File über die Clearingstelle Verkehr, Ergebnisberichte und Regionaltabellen frei"
+    },
+    {
+      "name": "Gesundheitsberichterstattung des Bundes (GBE) und Versorgungsatlas",
+      "slug": "gesundheitsberichterstattung-des-bundes-gbe-und-",
+      "url": "https://www.gbe-bund.de/",
+      "url_former": "",
+      "maintenance_note": "",
+      "excel_row": 45,
+      "provider": "",
+      "access_modes": [
+        "direct file download",
+        "web UI / search form only",
+        "interactive map viewer"
+      ],
+      "access_flags": {
+        "Direkter Download": true,
+        "GUI": true,
+        "API": false,
+        "Karte": true,
+        "Beantragung": false
+      },
+      "spatial_levels": [
+        "Bundesland",
+        "Kreise & kreisfreie Städte",
+        "weitere räumliche Gliederungen"
+      ],
+      "topic_groups": [
+        "Gesundheit",
+        "Soziales"
+      ],
+      "topics": [
+        {
+          "group": "Gesundheit",
+          "topic": "Gesundheit"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Lebenserwartung"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Krankenhäuser (Bettendichte)"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Pflege und Personal"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Behandlungen und Todesursachen"
+        },
+        {
+          "group": "Gesundheit",
+          "topic": "Einwohner je Arzt"
+        },
+        {
+          "group": "Soziales",
+          "topic": "Soziales"
+        }
+      ],
+      "topic_labels": [
+        "Gesundheit",
+        "Lebenserwartung",
+        "Krankenhäuser (Bettendichte)",
+        "Pflege und Personal",
+        "Behandlungen und Todesursachen",
+        "Einwohner je Arzt",
+        "Soziales"
+      ],
+      "coverage_start_month": null,
+      "coverage_start_year": 1990,
+      "coverage_end_month": null,
+      "coverage_end_year": 2026,
+      "update_frequency": "laufend",
+      "note": "Gesundheitsindikatoren von Sterblichkeit über Krankheiten bis zu Ausgaben und Personal, überwiegend auf Landesebene; der Versorgungsatlas des Zi ergänzt kleinräumige Analysen der ambulanten Versorgung"
     }
   ]
 }

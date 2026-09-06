@@ -203,6 +203,17 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
         "state": "done",
         "next": "Two catalogues under this row: the Datenguide GENESIS Merkmalskatalog (2,757 Merkmale) and the live Regionaldatenbank table catalogue (129 statistics, 866 tables, each with a working table-level deep link). The API reports exactly 129 statistics, so that enumeration is complete. On 2026-08-29 the weakest links in the whole index were fixed: 1,596 Merkmale pointed at the portal home page because no statistic code appears in their definition text. catalogue/statistics2variable answers that directly, so scripts/resolve_merkmal_statistics.py asked once per Merkmal and resolved 1,429 of 1,596 (89.5%); portal-level records here fell to 167 and statistic-level rose from 843 to 2,272. Federal statistic links are marked unverified because that portal is a client-rendered SPA that answers a 2.5 KB shell for any code, real or invented.",
     },
+    "gesundheitsberichterstattung-des-bundes-gbe-und-": {
+        "de": ("Vollständig eingebunden: die Themenfelder der Gesundheitsberichterstattung des "
+               "Bundes und der Versorgungsatlas des Zi. Gesundheit war vorher über "
+               "Krankenhausregister abgedeckt, also über die Einrichtungen, nicht über die "
+               "gesundheitliche Lage selbst."),
+        "state": "done",
+        "next": ("Six entry points: the GBE theme fields (health status, diseases, expenditure and "
+                 "personnel), its topic search, and the Versorgungsatlas with its topic listing. "
+                 "Neither system publishes an open catalogue endpoint, so these are hand-checked "
+                 "entries; the GBE theme id is the stable part of its address (p_thema_id)."),
+    },
     "geobasisdaten-des-bkg-open-data": {
         "de": ("Vollständig eingebunden: 70 Produkte des offenen Datenservers, darunter die "
                "Verwaltungsgrenzen (VG250/VG1000/VG5000, NUTS), das INSPIRE-Geogitter, die "
@@ -383,11 +394,16 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
     "luftqualitaetsdaten-des-umweltbundesamtes": {
         "de": ("Vollständig eingebunden: die 12 gemessenen Komponenten (Feinstaub, Stickstoffdioxid, "
                "Ozon und weitere) mit Einheit, Messnetz und Stationszahl, dazu das Stationsnetz "
-               "selbst mit Koordinaten und Stationstyp. Erste Umweltbelastungsgrößen im Finder."),
+               "selbst mit Koordinaten und Stationstyp, sowie sechs Einträge zur Lärmkartierung "
+               "nach EU-Umgebungslärmrichtlinie. Damit sind beide Belastungsgrößen abgedeckt."),
         "state": "done",
         "next": ("Read from the documented JSON interface, no key: components, averaging periods, "
                  "networks and 525 stations with coordinates, station type and operating period. "
-                 "Every record carries the exact API call for its own series."),
+                 "Every record carries the exact API call for its own series. Six more records "
+                 "cover the strategic noise mapping under the EU directive (road, rail, air and "
+                 "industrial noise, the exposure figures and the rail mapping of the "
+                 "Eisenbahn-Bundesamt); that side has no open catalogue, so those entries are "
+                 "hand-checked entry points rather than a harvested list."),
     },
     "polizeiliche-kriminalstatistik-bka": {
         "de": ("Vollständig eingebunden: die veröffentlichten Teile der PKS, darunter der "
@@ -428,22 +444,18 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
 # Geobasisdaten, the two FDZ catalogues, Marktstammdatenregister, UBA air quality, PKS and MiD).
 # What remains was checked against the index the same way: each names something no indexed source
 # provides.
+# Rewritten again on 2026-09-06: the noise mapping and the health reporting were built, so what
+# is left is the one entry that turned out not to be a fetch at all.
 CANDIDATES = [
-    ("Umgebungslärm nach EU-Richtlinie", "https://www.umweltbundesamt.de/daten/laerm-und-verkehr/laermbelastung",
-     "The UBA air quality data is now indexed, its noise counterpart is not: the strategic noise "
-     "maps under the Umgebungslärmrichtlinie give road, rail and air noise exposure by address, "
-     "reported every five years by the Länder. Exposure research uses it next to air pollution, "
-     "and the index has nothing on noise."),
-    ("Gesundheitsberichterstattung des Bundes (GBE) und Versorgungsatlas",
-     "https://www.gbe-bund.de/",
-     "Health beyond hospital structures: morbidity, mortality by cause, vaccination and screening "
-     "rates at district level. The index reaches health through hospital registers, the "
-     "Klinik-Atlas and a few INKAR indicators, so the outcome side is thin."),
-    ("Schulverzeichnisse und Kita-Register der Länder", "https://www.kmk.org/",
-     "Indicators on schooling are indexed (Ländermonitor, INKAR, Regionalstatistik) but not the "
-     "institutions themselves with their addresses. These are sixteen separate state registers, "
-     "which is why it is a project rather than a fetch, and why OpenStreetMap is the current "
-     "stand-in."),
+    ("Schul- und Kitaverzeichnisse der Länder", "https://www.kmk.org/",
+     "Indicators on schooling are indexed (Ländermonitor, INKAR, Regionalstatistik, the FDZ "
+     "education statistics) but not the institutions with their addresses. This stays out on "
+     "purpose rather than for lack of time: there is no national register, only sixteen state "
+     "portals, and a check of the best-known addresses on 2026-09-06 found ten of sixteen already "
+     "dead or redirecting. Indexing them would add a block of records that rots quietly, which is "
+     "the opposite of what this finder promises. Until a state-independent register exists, "
+     "OpenStreetMap (amenity=school, amenity=kindergarten, indexed here) is the systematic "
+     "stand-in, and the school statistics themselves come through Regionalstatistik and the FDZ."),
 ]
 
 # How precisely a record's outward link lands on the thing it describes.
