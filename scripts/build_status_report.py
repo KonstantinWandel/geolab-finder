@@ -194,9 +194,17 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
         "next": "Two catalogues under this row: the Datenguide GENESIS Merkmalskatalog (2,757 Merkmale) and the live Regionaldatenbank table catalogue (129 statistics, 866 tables, each with a working table-level deep link). The API reports exactly 129 statistics, so that enumeration is complete. On 2026-08-29 the weakest links in the whole index were fixed: 1,596 Merkmale pointed at the portal home page because no statistic code appears in their definition text. catalogue/statistics2variable answers that directly, so scripts/resolve_merkmal_statistics.py asked once per Merkmal and resolved 1,429 of 1,596 (89.5%); portal-level records here fell to 167 and statistic-level rose from 843 to 2,272. Federal statistic links are marked unverified because that portal is a client-rendered SPA that answers a 2.5 KB shell for any code, real or invented.",
     },
     "inkar": {
-        "de": "Die Ursprungsquelle des Finders: 660 Indikatoren, unverändert enthalten.",
+        "de": ("Die Ursprungsquelle des Finders: 660 Indikatoren, in einem eigenen Index, deshalb "
+               "steht hier 0 eingelesene Datensätze. Seit dem 2026-09-06 öffnen 654 davon ihren "
+               "Indikator direkt als Tabelle; 80 nennen zusätzlich ihre WMS-Ebene und ihre Seite "
+               "im nationalen Geodatenkatalog."),
         "state": "done",
-        "next": "Already the finder's original source (660 indicators).",
+        "next": ("The finder's original source, kept in its own index (hence 0 records counted "
+                 "here). INKAR has no address for a single indicator, so 654 of the 660 are linked "
+                 "through /api/inkar/open/<M_ID>, which creates one stored query per indicator "
+                 "somebody opens; the six left out are the ZOM classification variables. 80 "
+                 "indicators also carry their BBSR WMS layer and their record in the national "
+                 "Geodatenkatalog."),
     },
     "german-companies": {
         "de": "Vollständig eingebunden: die Felder, die der Dienst je Unternehmen führt. Ein vollständiger Download ist nicht möglich, er beantwortet nur Anfragen zu einzelnen, namentlich bekannten Unternehmen.",
@@ -273,29 +281,42 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
 
 # Sources NOT in the workbook that a German regional-data finder arguably should carry.
 # Ordered by what they would add that nothing already indexed provides.
+# Everything the first version of this list suggested is now indexed (OSM POI, Wegweiser Kommune,
+# BORIS-D, DWD, FDZ Ruhr, election results, IÖR-Monitor), so it was rewritten on 2026-09-06 against
+# what the index actually contains rather than against the workbook. Each entry below was checked:
+# it names something no indexed source provides, not merely a portal we have not visited.
 CANDIDATES = [
-    ("OpenStreetMap / Overpass POI layers", "https://overpass-turbo.eu/",
-     "The systematic replacement for the crowd-sourced portals in the workbook: playgrounds, "
-     "pharmacies, GP practices, schools, kindergartens, stops, supermarkets, all as coordinates "
-     "with a documented tag schema. Free, no registration, reproducible queries."),
-    ("Wegweiser Kommune (Bertelsmann Stiftung)", "https://www.wegweiser-kommune.de/",
-     "About 100 indicators for every municipality above 5,000 inhabitants plus demographic "
-     "projections to 2040. Complements INKAR on the projection side, which nothing here has."),
-    ("BORIS-D / Bodenrichtwerte", "https://www.bodenrichtwerte-boris.de/",
-     "Official land values from the Gutachterausschüsse, parcel level. The land-price counterpart "
-     "to INKAR's asking rents."),
-    ("DWD Climate Data Center", "https://opendata.dwd.de/climate_environment/CDC/",
-     "Station and gridded climate series (temperature, precipitation, heat days) at 1 km. The only "
-     "environmental/climate axis; free and openly downloadable."),
-    ("RWI-GEO-GRID / RWI-GEO-RED (FDZ Ruhr)", "https://fdz.rwi-essen.de/",
-     "1 km grid socio-economic data and geocoded real-estate advertisements. Scientific-use files "
-     "on application, heavily used in German regional research."),
-    ("Election results (Bundeswahlleiter and the Länder)", "https://www.bundeswahlleiter.de/",
-     "We index the 2021 structural data but not the results. Constituency and municipality level "
-     "results for federal, European and state elections are downloadable as CSV."),
-    ("IÖR-Monitor", "https://www.ioer-monitor.de/",
-     "Around 90 land-use and landscape-quality indicators at fine spatial resolution, with a WMS/WFS "
-     "API. Deeper on land use than the ALKIS shares in INKAR and Regionalatlas."),
+    ("Geobasisdaten des BKG (Open Data)", "https://gdz.bkg.bund.de/",
+     "The layer everything else is joined to, and the one thing the index has none of: "
+     "administrative boundaries (VG250, VG5000), the INSPIRE 100 m and 1 km grids, the "
+     "Gemeindeverzeichnis with its historical Gebietsstände, and the georeferenced address data. "
+     "A search for 'Kreisgrenzen' or 'Gitterzellen als Geometrie' currently returns indicators "
+     "measured on those units and no way to obtain the units themselves. Open data, free."),
+    ("FDZ der Statistischen Ämter und FDZ der BA im IAB",
+     "https://www.forschungsdatenzentrum.de/",
+     "The research-data counterpart to FDZ Ruhr, which is indexed and is one of the most used "
+     "entries: AFiD, the regional Mikrozensus files, and on the IAB side SIAB, BHP and IEB, all "
+     "with regional identifiers and all on application. This is the family this finder's audience "
+     "actually applies for, and nothing in the index describes it."),
+    ("Marktstammdatenregister (Bundesnetzagentur)", "https://www.marktstammdatenregister.de/",
+     "Every electricity and gas generation unit in Germany with its address, coordinates, "
+     "capacity and commissioning date, downloadable in full. The index reaches this only through "
+     "IÖR's wind-turbine density and one Deutschlandatlas indicator, so unit-level work on the "
+     "energy transition has nothing to go to."),
+    ("Luftqualität und Umgebungslärm (Umweltbundesamt)",
+     "https://www.umweltbundesamt.de/daten/luft/luftdaten",
+     "Station measurements since 1990 with an API, plus the modelled area maps and the noise "
+     "mapping under the Umgebungslärmrichtlinie. Air pollution and noise are standard exposure "
+     "variables in health and inequality research; the index has exactly one Wegweiser indicator "
+     "on air quality and nothing on noise."),
+    ("Polizeiliche Kriminalstatistik (BKA)", "https://www.bka.de/DE/AktuelleInformationen/"
+     "StatistikenLagebilder/PolizeilicheKriminalstatistik/pks_node.html",
+     "Crime by offence and district, published as tables every year. The index carries crime only "
+     "as a handful of aggregate indicators (Deutschlandatlas, Wegweiser, GENESIS), so the offence "
+     "breakdown that criminological and neighbourhood work needs is missing."),
+    ("Mobilität in Deutschland (MiD)", "https://www.mobilitaet-in-deutschland.de/",
+     "The national travel survey, with regional identifiers and a scientific use file. The index "
+     "describes public-transport schedules and accessibility but no travel behaviour."),
 ]
 
 # How precisely a record's outward link lands on the thing it describes.
