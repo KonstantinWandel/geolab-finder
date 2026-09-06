@@ -34,8 +34,8 @@
     {
       "query": "Krankenhausbetten je Einwohner",
       "rank": 1,
-      "top_source": "regionalstatistik",
-      "top_label": "Krankenhausbetten je 10 000 Einwohner",
+      "top_source": "inkar",
+      "top_label": "Krankenhausbetten je 1000 Einwohner",
       "sources_in_top": [
         "bundes_klinik_atlas",
         "gba_qualitaetsbericht",
@@ -242,7 +242,7 @@
       "top_label": "Spielplätze (OpenStreetMap)",
       "sources_in_top": [
         "geoportal",
-        "ioer_monitor",
+        "inkar",
         "osm_poi",
         "regionalstatistik",
         "wegweiser_kommune"
@@ -295,7 +295,6 @@
       "top_source": "regionalstatistik",
       "top_label": "Einpendelnde über Gemeindegrenze (Arbeitsort)",
       "sources_in_top": [
-        "deutschlandatlas",
         "inkar",
         "regionalstatistik"
       ]
@@ -412,8 +411,7 @@
       "top_label": "Pendlersaldo",
       "sources_in_top": [
         "deutschlandatlas",
-        "inkar",
-        "regionalstatistik"
+        "inkar"
       ]
     },
     {
@@ -622,7 +620,7 @@
     {
       "query": "Erwerbstätigenquote von Frauen",
       "rank": 1,
-      "top_source": "regionalstatistik",
+      "top_source": "inkar",
       "top_label": "Erwerbstätigenquote Frauen",
       "sources_in_top": [
         "deutschlandatlas",
@@ -671,6 +669,7 @@
       "top_label": "Gästeübernachtungen",
       "sources_in_top": [
         "genesis_bund",
+        "inkar",
         "regionalatlas",
         "regionalstatistik"
       ]
@@ -682,7 +681,6 @@
       "top_label": "Sozialhilfeträger",
       "sources_in_top": [
         "ba_glossar",
-        "btw_strukturdaten",
         "genesis_bund",
         "inkar",
         "regionalatlas",
@@ -695,7 +693,6 @@
       "top_source": "wegweiser_kommune",
       "top_label": "Verhältnis der Schulabbrecher:innenquote von Ausländer:innen zur Schulabbrecher:innenquote gesamt - Ist-Daten",
       "sources_in_top": [
-        "ba_glossar",
         "inkar",
         "regionalatlas",
         "regionalstatistik",

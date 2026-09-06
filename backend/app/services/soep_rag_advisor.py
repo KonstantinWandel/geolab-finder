@@ -680,11 +680,13 @@ class SOEPRagAdvisorService:
             "year_end": year_end,
             "available_years_text": year_text or self._as_text(row.get("spatial_coverage_text")),
             "geography_reference": "BBSR Raumgliederungssystem 2023; includes municipalities, districts/NUTS3, NUTS2 and BBSR urban-rural typologies.",
-            # INKAR predates the GeoDB record schema. Without these two fields its rows were
-            # the only ones in the result table with no link chip, which read as a gap rather
-            # than as what it is: inkar.de has no per-indicator URL, so the link is the portal.
-            "link_level": "portal",
-            "link_verified": True,
+            # INKAR predates the GeoDB record schema, and without these two fields its rows were
+            # the only ones in the result table with no link chip. The level now comes from the
+            # record: inkar.de still has no per-indicator URL, but 654 of the 660 indicators are
+            # reachable through the permalink endpoint, and those rows land on the indicator.
+            "link_level": self._as_text(row.get("link_level")) or "portal",
+            "link_verified": row.get("link_verified", True),
+            "portal_url": self._as_text(row.get("portal_url")) or "https://www.inkar.de/",
             "embedding_context": row.get("embedding_context", ""),
         }
 
