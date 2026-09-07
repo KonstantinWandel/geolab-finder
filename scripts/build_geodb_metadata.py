@@ -4831,6 +4831,13 @@ def flatten_gbe(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     federal health reporting system and the Versorgungsatlas adds small-area analyses of
     ambulatory care. Neither publishes an open catalogue endpoint, so these are the entry points
     of the two systems, each opened by hand on 2026-09-06.
+
+    Since 2026-09-07 the entry points are joined by the indicator set of the GBE der Länder, 198
+    indicators, each with its own address. The set is the one part of GBE-Bund that is regionally
+    resolved: its regional dimension is the Länder, which is why the records claim Bundesland and
+    nothing finer. ECHI and HSPA come with the same fetch and are deliberately skipped here: they
+    are European and national indicator sets with no German regional breakdown, so they would add
+    36 rows that no regional question can use.
     """
     records: List[Dict[str, Any]] = []
     for title, address, gloss, levels in GBE_ENTRIES:
@@ -4868,6 +4875,66 @@ def flatten_gbe(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                           "Datengrundlage und meist einen Kartendatensatz."),
             )
         )
+
+    # Der Indikatorensatz der GBE der Länder, ein Datensatz je Indikator.
+    katalog = source["folder"] / "raw" / "gbe_indikatoren.json"
+    if katalog.exists():
+        document = json.loads(katalog.read_text(encoding="utf-8"))
+        felder: Dict[str, str] = {}
+        laender = next((system for system in document.get("systems", [])
+                        if "GBE der Länder" in system.get("name", "")), None)
+        if laender:
+            for feld in laender.get("theme_fields", []):
+                nummer = re.match(r"Themenfeld\s+(\d+)", feld)
+                if nummer:
+                    felder[nummer.group(1)] = feld
+            mapped = map_spatial(["Bundesland"])
+            for eintrag in laender.get("indicators", []):
+                label = eintrag["label"]
+                kopf = re.match(r"Indikator\s+([0-9.]+):\s*(.+)$", label)
+                nummer = kopf.group(1) if kopf else ""
+                titel = (kopf.group(2) if kopf else label).strip()
+                thema_id = re.search(r"p_thema_id=(\d+)", eintrag["url"])
+                if not thema_id:
+                    continue
+                feld = felder.get(nummer.split(".")[0], "")
+                jahr = re.search(r"\bab\s+(\d{4})", titel)
+                spanne = re.search(r"(\d{4})\s*(?:bis|-)\s*(\d{4})", titel)
+                records.append(
+                    make_record(
+                        source_key="gbe",
+                        source_label="Gesundheitsberichterstattung des Bundes und Versorgungsatlas",
+                        item_type="indicator",
+                        item_id=f"gbe:ind:{thema_id.group(1)}",
+                        variable_name=("GBE_" + nummer.replace(".", "_")) if nummer else "GBE",
+                        label=titel,
+                        dataset_label=feld or "Indikatorensatz der GBE der Länder",
+                        theme="Gesundheit",
+                        description=join_nonempty([
+                            titel,
+                            (f"Indikator {nummer} des Indikatorensatzes der Gesundheits"
+                             f"berichterstattung der Länder" + (f", {feld}." if feld else ".")),
+                            "Der Indikatorensatz ist die abgestimmte Grundlage der Länder-"
+                            "Gesundheitsberichte; die regionale Gliederung sind die Bundesländer. "
+                            "Die Fundstellenseite führt zu den Tabellen mit Definition, Quelle und "
+                            "Zeitreihe.",
+                        ]),
+                        spatial_levels=mapped["spatial_levels"],
+                        nuts_levels=mapped["nuts_levels"],
+                        year_start=int(jahr.group(1)) if jahr else (int(spanne.group(1)) if spanne else None),
+                        year_end=int(spanne.group(2)) if spanne else None,
+                        years_text=("ab " + jahr.group(1)) if jahr else (
+                            f"{spanne.group(1)} bis {spanne.group(2)}" if spanne else ""),
+                        source_url="https://www.gbe-bund.de/",
+                        indicator_url=eintrag["url"],
+                        link_level="indicator",
+                        access_modes=["web UI / search form only", "direct file download"],
+                        update_frequency=source["update_frequency"] or "laufend",
+                        api_hint=("Die Adresse eines Indikators ist isgbe.fundstellen mit seiner "
+                                  "p_thema_id; die Sitzungsnummer p_aid ist nicht nötig. Die "
+                                  "Tabellen dahinter lassen sich als CSV und Excel exportieren."),
+                    )
+                )
     return records
 
 

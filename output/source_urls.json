@@ -1,5 +1,5 @@
 {
-  "checked": "2026-09-06",
+  "checked": "2026-09-07",
   "results": [
     {
       "slug": "regionalatlas-deutschland",
@@ -275,10 +275,11 @@
       "slug": "genesis-online-bund",
       "name": "GENESIS-Online (Bund)",
       "url": "https://genesis.destatis.de/datenbank/online/",
-      "status": null,
-      "final_url": "",
+      "status": 200,
+      "final_url": "https://genesis.destatis.de/datenbank/online/",
       "moved": false,
-      "error": "TimeoutError: Page.goto: Timeout 75000ms exceeded.\nCall log:\n  - navigating to \"http"
+      "error": "",
+      "title": "GENESIS-Online"
     },
     {
       "slug": "zensus-2022",
