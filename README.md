@@ -55,6 +55,11 @@ scripts/        Metadata flattening + index building (e.g. build_inkar_metadata_
 deploy/         Container stacks (secure-soep, secure-inkar) + Caddyfiles
 ```
 
+## Author
+
+Konstantin Wandel, research fellow at Universität Bielefeld (SOEP-RegioHub):
+<https://konstantinwandel.github.io/>
+
 ## Citing
 
 If you use this software, please cite it via the archived release (see `CITATION.cff`). A Zenodo DOI is minted per GitHub release.
