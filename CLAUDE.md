@@ -747,10 +747,17 @@ A landing page carrying such a box is staged, unlisted, at
 `geolab_regiohub/_preview/` (regenerate with `_preview/make_preview.py`). The site build ignores
 `_preview/`, so it cannot publish itself by accident.
 
-Frontends are built with the `nodejs` env, which is not on PATH by default:
-`PATH=$HOME/miniconda3/envs/nodejs/bin:$PATH VITE_APP_MODE=inkar VITE_PAGE_TITLE="GeoDB Geodata
-Index" node node_modules/.bin/vite build --outDir dist-inkar --emptyOutDir` (and `soep` /
-`dist-soep` / "SOEP Variable Finder" for the other). The live sites before the handover are kept
+Frontends are built with **`bash frontend/build.sh inkar`** (or `soep`), which sets the `nodejs`
+env, the app mode, the page title and the page description and writes `dist-inkar` / `dist-soep`.
+Add `--print` to see what it would pass without building anything.
+
+Use the script rather than a hand-written `vite build`. The live GeoDB page carried "12 037
+Indikatoren ... aus 33 amtlichen Quellen" in its meta description, and that sentence existed
+nowhere in the repo: it had been passed on the command line once. A rebuild with the previously
+documented command would have written the literal placeholder `%VITE_PAGE_DESCRIPTION%` into the
+page, which is what Vite does with an unset variable and what a search engine would then show as
+the snippet. The script composes that sentence from `geodb_build_info.json` instead, so the count
+cannot drift from the index (2026-09-07: 12,497 records, 41 sources). The live sites before the handover are kept
 in `/opt/geolab/backups/pre_qhandover_20260829/`.
 
 ## Branding
