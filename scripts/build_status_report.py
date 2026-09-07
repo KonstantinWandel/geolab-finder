@@ -461,6 +461,12 @@ def gather(link_check: bool) -> List[Dict[str, Any]]:
     unverified: Dict[str, int] = {}
     for record in records:
         key = record["source_key"]
+        # Portal cards all share the source key "geoportal", one card per source, so counting by
+        # key alone attributed none of them to the source they describe: 43 records that the finder
+        # does return showed up nowhere, and the five sources whose only entry IS their card
+        # reported zero. The card carries its own slug in item_id, so it is counted under that.
+        if key == "geoportal" and str(record.get("item_id", "")).startswith("portal:"):
+            key = record["item_id"]
         counts[key] = counts.get(key, 0) + 1
         level = record.get("link_level", "portal")
         link_levels.setdefault(key, {})
@@ -479,10 +485,11 @@ def gather(link_check: bool) -> List[Dict[str, Any]]:
         size = sum(p.stat().st_size for p in files if p.is_file())
         log_path = raw / "FETCH_LOG.json"
         log = json.loads(log_path.read_text(encoding="utf-8")) if log_path.exists() else {"artifacts": {}}
-        indexed = sum(counts.get(key, 0) for key in SOURCE_KEYS.get(source["slug"], []))
+        schluessel = SOURCE_KEYS.get(source["slug"], []) + [f"portal:{source['slug']}"]
+        indexed = sum(counts.get(key, 0) for key in schluessel)
         levels: Dict[str, int] = {}
         unverified_count = 0
-        for key in SOURCE_KEYS.get(source["slug"], []):
+        for key in schluessel:
             for level, count in link_levels.get(key, {}).items():
                 levels[level] = levels.get(level, 0) + count
             unverified_count += unverified.get(key, 0)
@@ -539,7 +546,7 @@ def write_checklist(rows: List[Dict[str, Any]], stamp: str) -> None:
                  "change `OPEN_ITEMS` in that script and re-run.")
     lines.append("")
     lines.append(f"**{done} done, {partial} partial, {open_count} open** of {len(rows)} sources. "
-                 f"{total_indexed} indicator-level records built (plus one portal-level record per source).")
+                 f"{total_indexed} records built, including one portal card per source.")
     lines.append("")
     lines.append("`[x]` nothing outstanding | `[~]` indexed, a fuller catalogue is still reachable | "
                  "`[ ]` needs a human step")
@@ -567,8 +574,11 @@ def write_checklist(rows: List[Dict[str, Any]], stamp: str) -> None:
             lines.append(f"- **Downloaded:** {len(row['files'])} file(s), {human_bytes(row['bytes'])}: {shown}{more}")
         else:
             lines.append("- **Downloaded:** nothing yet")
-        lines.append(f"- **Indexed:** {row['indexed']} indicator-level record(s)"
-                     + (" + 1 portal-level record" if row["portal_record"] else ""))
+        # The count now includes the source's portal card, so it must not be spelled as
+        # "indicator-level" and the card must not be added a second time. The level breakdown is
+        # the next line's job.
+        lines.append(f"- **Indexed:** {row['indexed']} record(s) the finder can return"
+                     + (", one of them the portal card" if row["portal_record"] else ""))
         if row["link_levels"]:
             spelled = ", ".join(f"{count} x {LINK_LEVEL_WORD.get(level, level)}"
                                 for level, count in sorted(row["link_levels"].items(), key=lambda kv: -kv[1]))
