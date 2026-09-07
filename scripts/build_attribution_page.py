@@ -59,6 +59,9 @@ TERMS: Dict[str, str] = {
 
 HEADER = """---
 title: "Data sources and attribution"
+# The snippet a search engine shows. It belongs here rather than in the .qmd, because this page is
+# generated and a hand edit there is lost on the next run.
+description: "Every source the GeoLAB finders index, with attribution. The finders hold descriptions of data that other institutions publish; each hit links out to the portal that holds the data itself."
 ---
 
 The GeoLAB finders are **metadata search tools**. They index descriptions of data that other

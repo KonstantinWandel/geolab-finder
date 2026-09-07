@@ -1,0 +1,8 @@
+# Everything here is public metadata and meant to be found.
+User-agent: *
+Allow: /
+# Nothing is blocked on purpose. A first version disallowed /api/, which looked tidy and was wrong:
+# the app fetches /api/soep/filter-options to render, so a crawler denied that path renders an empty
+# form and indexes it. The API itself answers POST queries and has no crawlable pages.
+
+Sitemap: https://soep-faiss.geolab.soz.uni-bielefeld.de/sitemap.xml

@@ -7,12 +7,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SOEP Variable Finder</title>
     <meta name="description" content="Semantische Suche in den Variablenbeschreibungen des SOEP-Core v41. Nur Metadaten." />
-    <!-- The build passes VITE_PAGE_DESCRIPTION per deployment; without it the raw
-         placeholder was served to visitors and to link previews. -->
+    <!-- The build passes VITE_PAGE_TITLE, VITE_PAGE_DESCRIPTION, VITE_SITE_URL and VITE_DOI per
+         deployment; frontend/build.sh sets all four. Without them the raw placeholders were served
+         to visitors and to link previews. -->
+    <link rel="canonical" href="https://soep-faiss.geolab.soz.uni-bielefeld.de/" />
+    <meta name="robots" content="index, follow, max-snippet:-1" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="SOEP Variable Finder" />
+    <meta property="og:description" content="Semantische Suche in den Variablenbeschreibungen des SOEP-Core v41. Nur Metadaten." />
+    <meta property="og:url" content="https://soep-faiss.geolab.soz.uni-bielefeld.de/" />
+    <meta property="og:site_name" content="GeoLAB, SOEP-RegioHub" />
+    <meta name="twitter:card" content="summary" />
+
+    <!-- Structured data. A search interface gives a crawler almost no text of its own, so what it
+         is, who runs it and which archived release it corresponds to are stated here explicitly. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "SOEP Variable Finder",
+        "url": "https://soep-faiss.geolab.soz.uni-bielefeld.de/",
+        "description": "Semantische Suche in den Variablenbeschreibungen des SOEP-Core v41. Nur Metadaten.",
+        "applicationCategory": "ReferenceApplication",
+        "operatingSystem": "Any (web browser)",
+        "isAccessibleForFree": true,
+        "inLanguage": ["de", "en"],
+        "publisher": {
+          "@type": "Organization",
+          "name": "Leibniz ScienceCampus SOEP-RegioHub, Universität Bielefeld",
+          "url": "https://geolab.soz.uni-bielefeld.de"
+        },
+        "sameAs": "https://doi.org/10.5281/zenodo.21134306"
+      }
+    </script>
     <script type="module" crossorigin src="/assets/index-LGe51WbG.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-BtE_yhTz.css">
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>SOEP Variable Finder</h1>
+      <p>Semantische Suche in den Variablenbeschreibungen des SOEP-Core v41. Nur Metadaten.</p>
+      <p>
+        The search itself needs JavaScript. What the index holds, where every record comes from and
+        how the links are verified is described on the project site:
+        <a href="https://geolab.soz.uni-bielefeld.de/">GeoLAB</a>, with the full source list on its
+        <a href="https://geolab.soz.uni-bielefeld.de/data-sources.html">data sources</a> page.
+      </p>
+    </noscript>
   </body>
 </html>
