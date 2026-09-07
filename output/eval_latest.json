@@ -1,7 +1,7 @@
 {
   "summary": {
     "queries": 58,
-    "hit@1": 54,
+    "hit@1": 55,
     "hit@3": 58,
     "hit@10": 58,
     "misses": []
@@ -26,6 +26,7 @@
       "top_label": "Ärztedichte je 10 000 Einwohner",
       "sources_in_top": [
         "deutschlandatlas",
+        "gbe",
         "inkar",
         "regionalatlas",
         "regionalstatistik"
@@ -38,7 +39,7 @@
       "top_label": "Krankenhausbetten je 1000 Einwohner",
       "sources_in_top": [
         "bundes_klinik_atlas",
-        "gba_qualitaetsbericht",
+        "gbe",
         "inkar",
         "regionalatlas",
         "regionalstatistik"
@@ -52,6 +53,7 @@
       "sources_in_top": [
         "bundes_klinik_atlas",
         "gba_qualitaetsbericht",
+        "gbe",
         "inkar"
       ]
     },
@@ -63,9 +65,9 @@
       "sources_in_top": [
         "bundes_klinik_atlas",
         "gba_qualitaetsbericht",
+        "gbe",
         "regionalatlas",
-        "regionalstatistik",
-        "wegweiser_kommune"
+        "regionalstatistik"
       ]
     },
     {
@@ -321,6 +323,7 @@
         "breitband",
         "bundes_klinik_atlas",
         "gba_qualitaetsbericht",
+        "gbe",
         "inkar",
         "osm_poi",
         "regionalstatistik"
@@ -355,7 +358,7 @@
       "top_source": "regionalstatistik",
       "top_label": "Krankenhausbetten je 10 000 Einwohner",
       "sources_in_top": [
-        "gba_qualitaetsbericht",
+        "gbe",
         "inkar",
         "regionalatlas",
         "regionalstatistik"
@@ -478,11 +481,12 @@
     },
     {
       "query": "Krankenhäuser mit Geburtshilfe",
-      "rank": 2,
-      "top_source": "gba_qualitaetsbericht",
-      "top_label": "Apparative Ausstattung",
+      "rank": 1,
+      "top_source": "gbe",
+      "top_label": "Beschäftigte in der Geburtshilfe und Entbindungspflege in 1.000 in ambulanten und stationären/teilstationären Einrichtungen, Deutschland, ab 2012",
       "sources_in_top": [
         "gba_qualitaetsbericht",
+        "gbe",
         "inkar",
         "regionalstatistik"
       ]
@@ -506,6 +510,7 @@
       "top_label": "Wanderungssaldo - Wanderungen nach Ziel und Herkunft",
       "sources_in_top": [
         "deutschlandatlas",
+        "gbe",
         "inkar",
         "regionalatlas",
         "regionalstatistik",
@@ -540,8 +545,8 @@
     {
       "query": "Ärztliche Versorgung auf dem Land",
       "rank": 1,
-      "top_source": "deutschlandatlas",
-      "top_label": "Kinderärztliche Versorgung",
+      "top_source": "gbe",
+      "top_label": "Inanspruchnahme ambulanter ärztlicher Leistungen (Behandlungsfälle), Deutschland, ab 1993",
       "sources_in_top": [
         "deutschlandatlas",
         "gbe",
@@ -698,6 +703,7 @@
       "top_source": "wegweiser_kommune",
       "top_label": "Verhältnis der Schulabbrecher:innenquote von Ausländer:innen zur Schulabbrecher:innenquote gesamt - Ist-Daten",
       "sources_in_top": [
+        "gbe",
         "inkar",
         "regionalatlas",
         "regionalstatistik",

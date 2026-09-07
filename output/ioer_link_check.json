@@ -16,10 +16,10 @@
   "matches": true
  },
  {
-  "code": "B06MT",
-  "url": "https://monitor.ioer.de/?ind=B06MT&raumgl=krs",
-  "label": "Industrie- und Gewerbefläche pro Einwohner",
-  "header": "Industrie- und Gewerbefläche pro Einwohner (2022)\nKreise in Deutschland",
+  "code": "B00DG",
+  "url": "https://monitor.ioer.de/?ind=B00DG&raeumliche_gliederung=raster",
+  "label": "Einwohnerzahl",
+  "header": "Einwohnerzahl (2011)\nRaster 100 m",
   "rendered": true,
   "matches": true
  },
@@ -32,18 +32,10 @@
   "matches": true
  },
  {
-  "code": "B00DG",
-  "url": "https://monitor.ioer.de/?ind=B00DG&raeumliche_gliederung=raster",
-  "label": "Einwohnerzahl",
-  "header": "Einwohnerzahl (2011)\nRaster 100 m",
-  "rendered": true,
-  "matches": true
- },
- {
-  "code": "B21MT",
-  "url": "https://monitor.ioer.de/?ind=B21MT&raumgl=krs",
-  "label": "Baulich geprägte Siedlungs- und Verkehrsfläche pro Einwohner",
-  "header": "Baulich geprägte Siedlungs- und Verkehrsfläche pro Einwohner (2022)\nKreise in Deutschland",
+  "code": "B06MT",
+  "url": "https://monitor.ioer.de/?ind=B06MT&raumgl=krs",
+  "label": "Industrie- und Gewerbefläche pro Einwohner",
+  "header": "Industrie- und Gewerbefläche pro Einwohner (2022)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -80,18 +72,18 @@
   "matches": true
  },
  {
-  "code": "B22MT",
-  "url": "https://monitor.ioer.de/?ind=B22MT&raumgl=krs",
-  "label": "Versiegelte Bodenfläche pro Einwohner",
-  "header": "Versiegelte Bodenfläche pro Einwohner (2018)\nKreise in Deutschland",
+  "code": "B21MT",
+  "url": "https://monitor.ioer.de/?ind=B21MT&raumgl=krs",
+  "label": "Baulich geprägte Siedlungs- und Verkehrsfläche pro Einwohner",
+  "header": "Baulich geprägte Siedlungs- und Verkehrsfläche pro Einwohner (2022)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
  {
-  "code": "D02KG",
-  "url": "https://monitor.ioer.de/?ind=D02KG&raumgl=krs",
-  "label": "Dispersion der Siedlungsfläche",
-  "header": "Dispersion der Siedlungsfläche (2010)\nKreise in Deutschland",
+  "code": "B22MT",
+  "url": "https://monitor.ioer.de/?ind=B22MT&raumgl=krs",
+  "label": "Versiegelte Bodenfläche pro Einwohner",
+  "header": "Versiegelte Bodenfläche pro Einwohner (2018)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -104,10 +96,26 @@
   "matches": true
  },
  {
+  "code": "D02KG",
+  "url": "https://monitor.ioer.de/?ind=D02KG&raumgl=krs",
+  "label": "Dispersion der Siedlungsfläche",
+  "header": "Dispersion der Siedlungsfläche (2010)\nKreise in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
   "code": "D04KG",
   "url": "https://monitor.ioer.de/?ind=D04KG&raumgl=krs",
   "label": "Ausnutzungsdichte der Siedlungsfläche",
   "header": "Ausnutzungsdichte der Siedlungsfläche (2010)\nKreise in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
+  "code": "E01DE",
+  "url": "https://monitor.ioer.de/?ind=E01DE&raumgl=krs",
+  "label": "Anzahl Windkraftanlagen pro 10000 Einwohner",
+  "header": "Anzahl Windkraftanlagen pro 10000 Einwohner (2022)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -132,14 +140,6 @@
   "url": "https://monitor.ioer.de/?ind=E02RG&raumgl=krs",
   "label": "Anteil Windparkfläche an Gebietsfläche",
   "header": "Anteil Windparkfläche an Gebietsfläche (2025)\nKreise in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
-  "code": "E01DE",
-  "url": "https://monitor.ioer.de/?ind=E01DE&raumgl=krs",
-  "label": "Anzahl Windkraftanlagen pro 10000 Einwohner",
-  "header": "Anzahl Windkraftanlagen pro 10000 Einwohner (2022)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -176,18 +176,18 @@
   "matches": true
  },
  {
-  "code": "F04RG",
-  "url": "https://monitor.ioer.de/?ind=F04RG&raumgl=krs",
-  "label": "Anteil Grünlandfläche an Gebietsfläche",
-  "header": "Anteil Grünlandfläche an Gebietsfläche (2025)\nKreise in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
   "code": "F07RG",
   "url": "https://monitor.ioer.de/?ind=F07RG&raumgl=krs",
   "label": "Anteil Wald- und Gehölzfläche an Gebietsfläche",
   "header": "Anteil Wald- und Gehölzfläche an Gebietsfläche (2025)\nKreise in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
+  "code": "F04RG",
+  "url": "https://monitor.ioer.de/?ind=F04RG&raumgl=krs",
+  "label": "Anteil Grünlandfläche an Gebietsfläche",
+  "header": "Anteil Grünlandfläche an Gebietsfläche (2025)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -264,14 +264,6 @@
   "matches": true
  },
  {
-  "code": "N01ET",
-  "url": "https://monitor.ioer.de/?ind=N01ET&raumgl=krs",
-  "label": "Relative fünfjährliche Flächenneuinanspruchnahme SuV",
-  "header": "Relative fünfjährliche Flächenneuinanspruchnahme SuV (2025)\nKreise in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
   "code": "N01EG",
   "url": "https://monitor.ioer.de/?ind=N01EG&raumgl=krs",
   "label": "Flächenneuinanspruchnahme SuV im Fünfjahresmittel",
@@ -288,18 +280,10 @@
   "matches": true
  },
  {
-  "code": "O01RG",
-  "url": "https://monitor.ioer.de/?ind=O01RG&raumgl=g50",
-  "label": "Erreichbarkeit städtischer Grünflächen",
-  "header": "Erreichbarkeit städtischer Grünflächen (2015)\nStädte in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
-  "code": "O02MT",
-  "url": "https://monitor.ioer.de/?ind=O02MT&raumgl=g50",
-  "label": "Grünflächenausstattung pro Einwohner",
-  "header": "Grünflächenausstattung pro Einwohner (2015)\nStädte in Deutschland",
+  "code": "N01ET",
+  "url": "https://monitor.ioer.de/?ind=N01ET&raumgl=krs",
+  "label": "Relative fünfjährliche Flächenneuinanspruchnahme SuV",
+  "header": "Relative fünfjährliche Flächenneuinanspruchnahme SuV (2025)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -328,6 +312,38 @@
   "matches": true
  },
  {
+  "code": "O01RG",
+  "url": "https://monitor.ioer.de/?ind=O01RG&raumgl=g50",
+  "label": "Erreichbarkeit städtischer Grünflächen",
+  "header": "Erreichbarkeit städtischer Grünflächen (2015)\nStädte in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
+  "code": "O02MT",
+  "url": "https://monitor.ioer.de/?ind=O02MT&raumgl=g50",
+  "label": "Grünflächenausstattung pro Einwohner",
+  "header": "Grünflächenausstattung pro Einwohner (2015)\nStädte in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
+  "code": "O03RG",
+  "url": "https://monitor.ioer.de/?ind=O03RG&raumgl=g50",
+  "label": "Erreichbarkeit naher städtischer Grünflächen",
+  "header": "Erreichbarkeit naher städtischer Grünflächen (2015)\nStädte in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
+  "code": "O04RG",
+  "url": "https://monitor.ioer.de/?ind=O04RG&raumgl=g50",
+  "label": "Erreichbarkeit größerer städtischer Grünflächen",
+  "header": "Erreichbarkeit größerer städtischer Grünflächen (2015)\nStädte in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
   "code": "O05AG",
   "url": "https://monitor.ioer.de/?ind=O05AG&raumgl=bld",
   "label": "Jährlicher Holzzuwachs",
@@ -348,22 +364,6 @@
   "url": "https://monitor.ioer.de/?ind=O10AT&raumgl=krs",
   "label": "Fläche für Hochwasserretention",
   "header": "Fläche für Hochwasserretention (2013)\nKreise in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
-  "code": "O03RG",
-  "url": "https://monitor.ioer.de/?ind=O03RG&raumgl=g50",
-  "label": "Erreichbarkeit naher städtischer Grünflächen",
-  "header": "Erreichbarkeit naher städtischer Grünflächen (2015)\nStädte in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
-  "code": "O04RG",
-  "url": "https://monitor.ioer.de/?ind=O04RG&raumgl=g50",
-  "label": "Erreichbarkeit größerer städtischer Grünflächen",
-  "header": "Erreichbarkeit größerer städtischer Grünflächen (2015)\nStädte in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -400,18 +400,18 @@
   "matches": true
  },
  {
-  "code": "P02RT",
-  "url": "https://monitor.ioer.de/?ind=P02RT&raumgl=g50",
-  "label": "Grünanteil in Siedlungs- und Verkehrsfläche",
-  "header": "Grünanteil in Siedlungs- und Verkehrsfläche (2018)\nStädte in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
   "code": "P03RT",
   "url": "https://monitor.ioer.de/?ind=P03RT&raumgl=g50",
   "label": "Grünerreichbarkeit im näheren Wohnumfeld",
   "header": "Grünerreichbarkeit im näheren Wohnumfeld (2018)\nStädte in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
+  "code": "P02RT",
+  "url": "https://monitor.ioer.de/?ind=P02RT&raumgl=g50",
+  "label": "Grünanteil in Siedlungs- und Verkehrsfläche",
+  "header": "Grünanteil in Siedlungs- und Verkehrsfläche (2018)\nStädte in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -448,14 +448,6 @@
   "matches": true
  },
  {
-  "code": "S02RG",
-  "url": "https://monitor.ioer.de/?ind=S02RG&raumgl=krs",
-  "label": "Anteil Siedlungsfläche an Gebietsfläche",
-  "header": "Anteil Siedlungsfläche an Gebietsfläche (2025)\nKreise in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
   "code": "R05RT",
   "url": "https://monitor.ioer.de/?ind=R05RT&raumgl=krs",
   "label": "Siedlungflächenteil im Überschwemmungsgebiet",
@@ -464,10 +456,10 @@
   "matches": true
  },
  {
-  "code": "S05RT",
-  "url": "https://monitor.ioer.de/?ind=S05RT&raumgl=krs",
-  "label": "Anteil Industrie- und Gewerbefläche an Siedlungsfläche",
-  "header": "Anteil Industrie- und Gewerbefläche an Siedlungsfläche (2025)\nKreise in Deutschland",
+  "code": "S02RG",
+  "url": "https://monitor.ioer.de/?ind=S02RG&raumgl=krs",
+  "label": "Anteil Siedlungsfläche an Gebietsfläche",
+  "header": "Anteil Siedlungsfläche an Gebietsfläche (2025)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -488,6 +480,14 @@
   "matches": true
  },
  {
+  "code": "S05RT",
+  "url": "https://monitor.ioer.de/?ind=S05RT&raumgl=krs",
+  "label": "Anteil Industrie- und Gewerbefläche an Siedlungsfläche",
+  "header": "Anteil Industrie- und Gewerbefläche an Siedlungsfläche (2025)\nKreise in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
   "code": "S08RT",
   "url": "https://monitor.ioer.de/?ind=S08RT&raumgl=krs",
   "label": "Anteil Siedlungsfreifläche an Siedlungsfläche",
@@ -504,18 +504,18 @@
   "matches": true
  },
  {
-  "code": "S12RG",
-  "url": "https://monitor.ioer.de/?ind=S12RG&raumgl=krs",
-  "label": "Anteil baulich geprägter Siedlungs- und Verkehrsfläche an Gebietsfläche",
-  "header": "Anteil baulich geprägter Siedlungs- und Verkehrsfläche an Gebietsfläche (2025)\nKreise in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
   "code": "S11RG",
   "url": "https://monitor.ioer.de/?ind=S11RG&raumgl=krs",
   "label": "Anteil Siedlungs- und Verkehrsfläche an Gebietsfläche",
   "header": "Anteil Siedlungs- und Verkehrsfläche an Gebietsfläche (2025)\nKreise in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
+  "code": "S12RG",
+  "url": "https://monitor.ioer.de/?ind=S12RG&raumgl=krs",
+  "label": "Anteil baulich geprägter Siedlungs- und Verkehrsfläche an Gebietsfläche",
+  "header": "Anteil baulich geprägter Siedlungs- und Verkehrsfläche an Gebietsfläche (2025)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -536,18 +536,18 @@
   "matches": true
  },
  {
-  "code": "S40RG",
-  "url": "https://monitor.ioer.de/?ind=S40RG&raumgl=krs",
-  "label": "Bodenversiegelungsgrad",
-  "header": "Bodenversiegelungsgrad (2021)\nKreise in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
   "code": "S50KT",
   "url": "https://monitor.ioer.de/?ind=S50KT&raumgl=krs",
   "label": "Flächenproduktivität",
   "header": "Flächenproduktivität (2021)\nKreise in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
+  "code": "S40RG",
+  "url": "https://monitor.ioer.de/?ind=S40RG&raumgl=krs",
+  "label": "Bodenversiegelungsgrad",
+  "header": "Bodenversiegelungsgrad (2021)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -664,14 +664,6 @@
   "matches": true
  },
  {
-  "code": "V05DT",
-  "url": "https://monitor.ioer.de/?ind=V05DT&raumgl=krs",
-  "label": "Verkehrsflächennutzungsdichte",
-  "header": "Verkehrsflächennutzungsdichte (2020)\nKreise in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
   "code": "V03DT",
   "url": "https://monitor.ioer.de/?ind=V03DT&raumgl=krs",
   "label": "Straßennetzdichte im Siedlungsraum",
@@ -688,10 +680,10 @@
   "matches": true
  },
  {
-  "code": "V29DG",
-  "url": "https://monitor.ioer.de/?ind=V29DG&raeumliche_gliederung=raster",
-  "label": "Fahrwegenetzdichte in Gebietsfläche",
-  "header": "Fahrwegenetzdichte in Gebietsfläche (2025)\nRaster 100 m",
+  "code": "V05DT",
+  "url": "https://monitor.ioer.de/?ind=V05DT&raumgl=krs",
+  "label": "Verkehrsflächennutzungsdichte",
+  "header": "Verkehrsflächennutzungsdichte (2020)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  },
@@ -704,6 +696,14 @@
   "matches": true
  },
  {
+  "code": "V29DG",
+  "url": "https://monitor.ioer.de/?ind=V29DG&raeumliche_gliederung=raster",
+  "label": "Fahrwegenetzdichte in Gebietsfläche",
+  "header": "Fahrwegenetzdichte in Gebietsfläche (2025)\nRaster 100 m",
+  "rendered": true,
+  "matches": true
+ },
+ {
   "code": "V30DG",
   "url": "https://monitor.ioer.de/?ind=V30DG&raumgl=krs",
   "label": "Gesamtkraftverkehrsnetzdichte in Gebietsfläche",
@@ -712,18 +712,18 @@
   "matches": true
  },
  {
-  "code": "X02KG",
-  "url": "https://monitor.ioer.de/?ind=X02KG&raumgl=krs",
-  "label": "Reliefenergie",
-  "header": "Reliefenergie (2022)\nKreise in Deutschland",
-  "rendered": true,
-  "matches": true
- },
- {
   "code": "X01RG",
   "url": "https://monitor.ioer.de/?ind=X01RG&raumgl=krs",
   "label": "Reliefvielfalt",
   "header": "Reliefvielfalt (2022)\nKreise in Deutschland",
+  "rendered": true,
+  "matches": true
+ },
+ {
+  "code": "X02KG",
+  "url": "https://monitor.ioer.de/?ind=X02KG&raumgl=krs",
+  "label": "Reliefenergie",
+  "header": "Reliefenergie (2022)\nKreise in Deutschland",
   "rendered": true,
   "matches": true
  }

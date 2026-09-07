@@ -328,6 +328,11 @@ FETCH_PLAN: Dict[str, List[Dict[str, str]]] = {
          "note": "Entry to the federal health reporting system; the records name its theme fields."},
         {"name": "versorgungsatlas.html", "url": "https://www.versorgungsatlas.de/themen",
          "kind": "catalogue", "note": "The Zi's small-area analyses of ambulatory care, by topic."},
+        {"name": "gbe_indikatoren.json",
+         "url": "https://www.gbe-bund.de/gbe/isgbe.indikatoren?p_uid=gast&p_sprache=D&p_thema_id=30000",
+         "kind": "catalogue", "handler": "gbe_indikatoren",
+         "note": "The indicator sets, one page each, with every indicator's own address taken from "
+                 "the data-url attributes. Three requests, no session number in the stored links."},
     ],
     "rwi-geo-grid-rwi-geo-red-fdz-ruhr": [
         {"name": "portal.html", "url": "https://fdz.rwi-essen.de/", "kind": "portal", "note": ""},
@@ -888,6 +893,61 @@ def fetch_ioer_catalogue(url: str, target: Path) -> Dict[str, Any]:
             "indicators_gebiete": counts["gebiete"], "indicators_raster": counts["raster"]}
 
 
+def fetch_gbe_indikatoren(url: str, target: Path) -> Dict[str, Any]:
+    """The indicator sets of the federal health reporting system, read from its own pages.
+
+    GBE-Bund is an Oracle PL/SQL application with no open catalogue endpoint, which is why this
+    source held six hand-checked entry points until 2026-09-07. Its indicator lists are addressable
+    all the same: `isgbe.indikatoren?p_thema_id=<id>` returns one page per indicator SET, and every
+    indicator in it carries its own address in a `data-url` attribute, which the page's JavaScript
+    would otherwise post. Three GETs therefore yield the whole list, and the addresses work without
+    the `p_aid` session number, which is stripped here so the links do not rot.
+
+    Only the indicator set of the GBE der Länder is regionally resolved; ECHI and HSPA are European
+    and national and are fetched with it so the record builder can see and skip them explicitly.
+    """
+    started = time.time()
+    honest = "geolab-geodb-indexer/1.0 (+https://geodb.geolab.soz.uni-bielefeld.de)"
+    systeme = (("30000", "Indikatorensatz der GBE der Länder"),
+               ("80000", "Europäische Gesundheitsindikatoren (ECHI)"),
+               ("60000", "Health System Performance Assessment (HSPA)"))
+
+    def ohne_sitzung(address: str) -> str:
+        """p_aid is a session number and has no place in a stored link."""
+        parts = urllib.parse.urlsplit(html.unescape(address))
+        query = [(k, v) for k, v in urllib.parse.parse_qsl(parts.query) if k != "p_aid"]
+        return urllib.parse.urlunsplit((parts.scheme, parts.netloc.replace(":443", ""), parts.path,
+                                        urllib.parse.urlencode(query), ""))
+
+    def klartext(fragment: str) -> str:
+        return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", fragment))).strip()
+
+    document: Dict[str, Any] = {"fetched": datetime.now(timezone.utc).date().isoformat(), "systems": []}
+    for thema_id, name in systeme:
+        address = ("https://www.gbe-bund.de/gbe/isgbe.indikatoren"
+                   f"?p_uid=gast&p_sprache=D&p_thema_id={thema_id}")
+        request = urllib.request.Request(address, headers={"User-Agent": honest})
+        with urllib.request.urlopen(request, timeout=45) as response:
+            page = response.read().decode("utf-8", "replace")
+        felder, indikatoren = [], []
+        for link, text in re.findall(r'data-url="([^"]*)"[^>]*>(.*?)</', page, re.S):
+            label = klartext(text)
+            if not label or "###" in link:
+                continue
+            if "isgbe.fundstellen" in link:
+                indikatoren.append({"label": label, "url": ohne_sitzung(link)})
+            elif "isgbe.indikatoren" in link and label.lower().startswith("themenfeld"):
+                felder.append(label)
+        document["systems"].append({"theme_id": thema_id, "name": name,
+                                    "theme_fields": felder, "indicators": indikatoren})
+        time.sleep(0.8)
+    payload = json.dumps(document, ensure_ascii=False, indent=1).encode("utf-8")
+    target.write_bytes(payload)
+    return {"status": 200, "bytes": len(payload), "content_type": "application/json",
+            "sha256": sha256_of(target), "seconds": round(time.time() - started, 2),
+            "indicators": sum(len(s["indicators"]) for s in document["systems"])}
+
+
 def fetch_bkg_produkte(url: str, target: Path) -> Dict[str, Any]:
     """The BKG open data server, read as what it is: a directory of products.
 
@@ -1283,6 +1343,8 @@ def main() -> None:
                     result = fetch_ioer_catalogue(artifact["url"], target)
                 elif artifact.get("handler") == "bkg_produkte":
                     result = fetch_bkg_produkte(artifact["url"], target)
+                elif artifact.get("handler") == "gbe_indikatoren":
+                    result = fetch_gbe_indikatoren(artifact["url"], target)
                 elif artifact.get("handler") == "fdz_statistik":
                     result = fetch_fdz_statistik(artifact["url"], target)
                 elif artifact.get("handler") == "fdz_iab":

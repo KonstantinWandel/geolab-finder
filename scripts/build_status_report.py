@@ -56,7 +56,10 @@ SOURCE_KEYS: Dict[str, List[str]] = {
     "fdz-der-statistischen-aemter-des-bundes-und-der-": ["fdz_statistik"],
     "fdz-der-bundesagentur-fuer-arbeit-im-iab": ["fdz_iab"],
     "marktstammdatenregister-bundesnetzagentur": ["marktstammdaten"],
-    "luftqualitaetsdaten-des-umweltbundesamtes": ["uba_luft"],
+    "luftqualitaetsdaten-des-umweltbundesamtes": ["uba_luft", "uba_laerm"],
+    # Ohne diese Zeile zählte der Tracker die Gesundheitsberichterstattung mit 0 Datensätzen,
+    # obwohl sie im Index steht: die Zuordnung Slug -> Schlüssel fehlte einfach.
+    "gesundheitsberichterstattung-des-bundes-gbe-und-": ["gbe"],
     "polizeiliche-kriminalstatistik-bka": ["pks"],
     "mobilitaet-in-deutschland-mid": ["mid"],
     "regionalatlas-deutschland": ["regionalatlas"],
@@ -204,74 +207,16 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
         "next": "Two catalogues under this row: the Datenguide GENESIS Merkmalskatalog (2,757 Merkmale) and the live Regionaldatenbank table catalogue (129 statistics, 866 tables, each with a working table-level deep link). The API reports exactly 129 statistics, so that enumeration is complete. On 2026-08-29 the weakest links in the whole index were fixed: 1,596 Merkmale pointed at the portal home page because no statistic code appears in their definition text. catalogue/statistics2variable answers that directly, so scripts/resolve_merkmal_statistics.py asked once per Merkmal and resolved 1,429 of 1,596 (89.5%); portal-level records here fell to 167 and statistic-level rose from 843 to 2,272. Federal statistic links are marked unverified because that portal is a client-rendered SPA that answers a 2.5 KB shell for any code, real or invented.",
     },
     "gesundheitsberichterstattung-des-bundes-gbe-und-": {
-        "de": ("Vollständig eingebunden: die Themenfelder der Gesundheitsberichterstattung des "
-               "Bundes und der Versorgungsatlas des Zi. Gesundheit war vorher über "
-               "Krankenhausregister abgedeckt, also über die Einrichtungen, nicht über die "
-               "gesundheitliche Lage selbst."),
+        "de": ("Vollständig eingebunden, seit dem 7. September auf Indikatorebene: die 198 "
+               "Indikatoren des Indikatorensatzes der GBE der Länder, jeder mit eigener Adresse, "
+               "dazu die Themenfelder der Gesundheitsberichterstattung des Bundes und der "
+               "Versorgungsatlas des Zi. Gesundheit war vorher über Krankenhausregister "
+               "abgedeckt, also über die Einrichtungen und kaum über die gesundheitliche Lage."),
         "state": "done",
         "next": ("Six entry points: the GBE theme fields (health status, diseases, expenditure and "
                  "personnel), its topic search, and the Versorgungsatlas with its topic listing. "
                  "Neither system publishes an open catalogue endpoint, so these are hand-checked "
                  "entries; the GBE theme id is the stable part of its address (p_thema_id)."),
-    },
-    "geobasisdaten-des-bkg-open-data": {
-        "de": ("Vollständig eingebunden: 70 Produkte des offenen Datenservers, darunter die "
-               "Verwaltungsgrenzen (VG250/VG1000/VG5000, NUTS), das INSPIRE-Geogitter, die "
-               "geografischen Namen und die Landbedeckung CLC5. Damit hat der Finder erstmals die "
-               "Geometrien, auf die sich alle übrigen Indikatoren beziehen."),
-        "state": "done",
-        "next": ("70 products read from the open data server's own directory listing, one record "
-                 "each linking to the product folder with its files and documentation. The shop "
-                 "front end is left alone: it is client-rendered and its robots.txt asks GPTBot "
-                 "not to crawl it."),
-    },
-    "fdz-der-statistischen-aemter-des-bundes-und-der-": {
-        "de": ("Vollständig eingebunden: 75 Datensätze des Datenangebots, jeder mit eigener "
-               "Beschreibung, Berichtsjahren und Link auf seine Seite. Zugang läuft über Antrag."),
-        "state": "done",
-        "next": ("75 datasets harvested from the catalogue and their own pages. These are files "
-                 "researchers apply for, so the record describes the content before the "
-                 "application; the regional depth depends on the access route."),
-    },
-    "fdz-der-bundesagentur-fuer-arbeit-im-iab": {
-        "de": ("Vollständig eingebunden: 34 Datenprodukte (SIAB, BHP, LIAB, IEB, IAB-Betriebspanel "
-               "und weitere) mit Beschreibung und Zugangsweg."),
-        "state": "done",
-        "next": ("34 data products with their own pages. Administrative labour-market microdata "
-                 "with district and often municipality identifiers, on application; some campus "
-                 "files are free."),
-    },
-    "marktstammdatenregister-bundesnetzagentur": {
-        "de": ("Vollständig eingebunden: 31 Dateien des Gesamtdatenexports, aus den amtlichen "
-               "XSD-Schemata gelesen, darunter Solar-, Wind-, Biomasse- und Speichereinheiten mit "
-               "Adresse und Koordinaten."),
-        "state": "done",
-        "next": ("31 entity types read from the XSD schemas that ship with the export "
-                 "documentation, so the field lists are the register's own. Unit level with "
-                 "coordinates, free full export, updated daily."),
-    },
-    "luftqualitaetsdaten-des-umweltbundesamtes": {
-        "de": ("Vollständig eingebunden: 12 gemessene Komponenten und das Verzeichnis der rund 500 "
-               "Messstationen mit Koordinaten und Stationstyp. Die Lärmkartierung liegt bei den "
-               "Ländern und ist nicht enthalten."),
-        "state": "done",
-        "next": ("12 measured components plus the station register, from the documented JSON "
-                 "interface. Every record names its own API call; the viewer has no address per "
-                 "component, so the links all reach the air data portal."),
-    },
-    "polizeiliche-kriminalstatistik-bka": {
-        "de": ("Vollständig eingebunden: 13 veröffentlichte Bestandteile der Ausgabe 2025, "
-               "darunter der Straftatenkatalog und die Auswahl für Kreise und kreisfreie Städte."),
-        "state": "done",
-        "next": ("13 published documents and table sets of the 2025 edition, each with its own "
-                 "file. Finer breakdowns are published by the Landeskriminalämter."),
-    },
-    "mobilitaet-in-deutschland-mid": {
-        "de": ("Vollständig eingebunden: die vier Wellen, das Tabellenwerkzeug der BASt und die "
-               "beiden Zugangswege zu den Mikrodaten."),
-        "state": "done",
-        "next": ("Four waves plus the BASt table tool, the microdata access route and the survey "
-                 "instruments. Travel behaviour was the one mobility axis the index lacked."),
     },
     "inkar": {
         "de": ("Die Ursprungsquelle des Finders: 660 Indikatoren, in einem eigenen Index, deshalb "
@@ -395,7 +340,12 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
         "de": ("Vollständig eingebunden: die 12 gemessenen Komponenten (Feinstaub, Stickstoffdioxid, "
                "Ozon und weitere) mit Einheit, Messnetz und Stationszahl, dazu das Stationsnetz "
                "selbst mit Koordinaten und Stationstyp, sowie sechs Einträge zur Lärmkartierung "
-               "nach EU-Umgebungslärmrichtlinie. Damit sind beide Belastungsgrößen abgedeckt."),
+               "nach EU-Umgebungslärmrichtlinie. Damit sind beide Belastungsgrößen abgedeckt. Die "
+               "Lärmkarten der sechzehn Länder bleiben bewusst draußen, geprüft am 7. September "
+               "2026: es gibt keinen gemeinsamen Katalog, die UBA-Seite zu den Lärmkarten nennt "
+               "keine einzige Landesstelle, und das GeoPortal des Eisenbahn-Bundesamtes ist von "
+               "hier aus nicht einmal auflösbar. Sechzehn Portalkarten, die von Hand gepflegt "
+               "werden müssten und schnell veralten, wären der ganze Gewinn."),
         "state": "done",
         "next": ("Read from the documented JSON interface, no key: components, averaging periods, "
                  "networks and 525 stations with coordinates, station type and operating period. "
@@ -403,7 +353,11 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
                  "cover the strategic noise mapping under the EU directive (road, rail, air and "
                  "industrial noise, the exposure figures and the rail mapping of the "
                  "Eisenbahn-Bundesamt); that side has no open catalogue, so those entries are "
-                 "hand-checked entry points rather than a harvested list."),
+                 "hand-checked entry points rather than a harvested list. Going deeper into the "
+                 "sixteen Länder noise portals was examined on 2026-09-07 and dropped: no common "
+                 "catalogue exists, the UBA noise-map page links none of the Länder offices, and "
+                 "geoportal.eba.bund.de does not even resolve from this host, so the yield would "
+                 "be sixteen hand-maintained portal cards that go stale."),
     },
     "polizeiliche-kriminalstatistik-bka": {
         "de": ("Vollständig eingebunden: die veröffentlichten Teile der PKS, darunter der "
