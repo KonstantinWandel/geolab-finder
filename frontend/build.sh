@@ -67,9 +67,12 @@ echo "description=$BESCHREIBUNG"
 [[ "$NUR_ZEIGEN" == "--print" ]] && exit 0
 
 cd "$HIER"
+# Die Kennung des Baus landet im Bündelnamen, siehe die Begründung in vite.config.js.
+BAU_ID="${VITE_BUILD_ID:-$(date +%Y%m%d%H%M)}"
+echo "build id=$BAU_ID"
 PATH="$HOME/miniconda3/envs/nodejs/bin:$PATH" \
   VITE_APP_MODE="$MODUS" VITE_PAGE_TITLE="$TITEL" VITE_PAGE_DESCRIPTION="$BESCHREIBUNG" \
-  VITE_SITE_URL="$ADRESSE" VITE_DOI="$DOI" \
+  VITE_SITE_URL="$ADRESSE" VITE_DOI="$DOI" VITE_BUILD_ID="$BAU_ID" \
   node node_modules/.bin/vite build --outDir "$AUSGABE" --emptyOutDir
 
 # Crawler files. Caddy serves these as real files because the site block tries {path} before it

@@ -572,6 +572,20 @@ ssh vm 'sudo install -o geolab -g geolab -m 664 ~/geodb_stage/<file> /opt/geolab
         sudo systemctl restart geolab-inkar geolab-soep'
 ```
 
+**Every build gets fresh bundle addresses (since 2026-09-08).** `vite.config.js` puts a build id
+into every bundle name, passed by `build.sh` as `VITE_BUILD_ID` (a timestamp by default). The reason
+is the other half of the white-screen problem: the server side was fixed on 2026-09-05, but a browser
+that had already stored an HTML document under a bundle address keeps it for a year, because a
+content-hash address never changes. A build id changes the address on every deployment, so a poisoned
+entry is never asked for again. Long-lived caching is unaffected: each address stays immutable, only
+a new build creates new ones. Konstantin reported exactly that stale white screen on the SOEP finder
+on 2026-09-08, three days after the server fix.
+
+**There is an access log since 2026-09-08**, in the shared `(appsite)` snippet, at
+`/var/log/caddy/access.log`, JSON, rolled at 20 MiB and 5 files. Before that, a white-screen report
+could not be traced at all: nothing said whether the browser had even reached the server, what it
+asked for, or what it got. Read it with `sudo python3 ~/log_lesen.py` on the VM or with `jq`.
+
 **Never delete the old bundles.** They are a few hundred kilobytes each and they are what a browser
 still holding an older `index.html` asks for. Deleting them turned every such visitor into a white
 screen: `try_files` rewrote the missing bundle to `index.html`, the `@bundles` header applied to the
