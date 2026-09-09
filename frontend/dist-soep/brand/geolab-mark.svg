@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="GeoLAB">
+  <title>GeoLAB</title>
+  <!-- Two equal squares offset by half an edge length, drawn as one path: the outline of their
+       union, then their intersection as a second subpath. With evenodd that becomes the knockout,
+       without a mask and without abutting rectangles that would show seams. -->
+  <path fill="#2c3e50" fill-rule="evenodd" d="M1 1H20V12H31V31H12V20H1Z M12 12H20V20H12Z"/>
+  <rect x="13.5" y="13.5" width="5" height="5" fill="#be3c44"/>
+</svg>

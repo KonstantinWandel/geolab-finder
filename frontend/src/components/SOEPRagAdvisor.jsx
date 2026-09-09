@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '../i18n'
 
 // The project site carries the imprint, the privacy statement and the attribution list.
-const GEOLAB_SITE = 'https://lwc-soep-regiohub.pages.ub.uni-bielefeld.de/geolab'
+const GEOLAB_SITE = 'https://geolab.soz.uni-bielefeld.de'
 
 // One facet: a dropdown that opens onto checkboxes. A plain <select> holds exactly one value, so
 // comparing two sources or three spatial levels meant running the same search once per value.
@@ -887,14 +887,9 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
       <div className="cite-footer text-muted">
         {t('cite.prefix', { title: cite.title })}{' '}
         <a href={`https://doi.org/${cite.doi}`} target="_blank" rel="noreferrer">doi.org/{cite.doi}</a>
-        {/* The service is public, so the imprint, the privacy statement and the attribution
-            list of every indexed source have to be reachable from every page. */}
-        <div className="legal-links">
-          <a href={`${GEOLAB_SITE}/imprint.html`} target="_blank" rel="noreferrer">{t('legal.imprint')}</a>
-          <a href={`${GEOLAB_SITE}/privacy.html`} target="_blank" rel="noreferrer">{t('legal.privacy')}</a>
-          <a href={`${GEOLAB_SITE}/data-sources.html`} target="_blank" rel="noreferrer">{t('legal.sources')}</a>
-          <a href={GEOLAB_SITE} target="_blank" rel="noreferrer">GeoLAB</a>
-        </div>
+        {/* Imprint, privacy statement and the attribution list moved into the page footer on
+            2026-09-09, where the project site keeps them too; repeating them here would put the
+            same four links twice on one page. */}
       </div>
     </div>
   )
