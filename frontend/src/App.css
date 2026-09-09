@@ -855,16 +855,62 @@ button, input, select, textarea,
    project, so the marks sit at the foot of every view. Kept deliberately small: at the
    original size the strip plus the citation line took about 130px of a 1080p screen away
    from the results table, which is the part people actually work in. */
+/* The footer of the project site, rebuilt here so both finders and the site end on the same
+   block: a labelled row of partner marks, then three columns for what this is, how to reach us
+   and the legal pages. Colours come from this app's own tokens, so it follows its three themes. */
+.site-footer {
+  margin-top: 1.5rem;
+  padding: 1.6rem 1.25rem 1.9rem;
+  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.25));
+  color: var(--text-soft, inherit);
+  font-size: 0.9rem;
+}
+
+.footer-label,
+.site-footer strong {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.7rem;
+}
+
+.site-footer p { margin: 0; line-height: 1.5; }
+.site-footer a { color: var(--text-soft); text-decoration: none; }
+.site-footer a:hover { color: var(--accent); text-decoration: underline; }
+
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.5rem 2.5rem;
+  margin-top: 1.6rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.25));
+}
+
+.footer-mark { display: block; height: 22px; width: auto; margin-bottom: 0.55rem; }
+:root[data-theme="dark"] .footer-mark,
+:root[data-theme="default"] .footer-mark { content: url('/brand/geolab-mark-invert.svg'); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .footer-mark { content: url('/brand/geolab-mark-invert.svg'); }
+}
+
+.site-footer .footer-cols strong { color: var(--text); }
+/* Der Name der Plattform steht auf der Projektseite gemischt, nicht als Versallabel wie die
+   Spaltenüberschriften daneben. */
+.site-footer .footer-brand-name {
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-size: 1rem;
+}
+
 .brand-strip {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 1.4rem;
+  gap: 1.75rem 2.5rem;
   flex-wrap: wrap;
-  padding: 0.45rem 1rem 0.55rem;
-  margin-top: 0.35rem;
-  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.25));
-  opacity: 0.7;
+  margin: 0;
 }
 
 .brand-strip a {
@@ -874,9 +920,8 @@ button, input, select, textarea,
   text-decoration: none;
 }
 
-.brand-strip a:hover {
-  opacity: 1;
-}
+.brand-strip a { opacity: 0.85; }
+.brand-strip a:hover { opacity: 1; }
 
 .brand-logo {
   display: block;
@@ -902,12 +947,6 @@ button, input, select, textarea,
   mask-image: url('/brand/uni-bielefeld.svg');
 }
 
-.brand-diw {
-  height: 22px;
-  aspect-ratio: 209 / 90;
-  -webkit-mask-image: url('/brand/diw.svg');
-  mask-image: url('/brand/diw.svg');
-}
 
 .brand-leibniz {
   height: 26px;
@@ -916,22 +955,21 @@ button, input, select, textarea,
   mask-image: url('/brand/leibniz.svg');
 }
 
-/* Multi-colour raster mark: never recoloured, given a light plate on dark backgrounds. */
-.brand-soep {
-  height: 22px;
-  border-radius: 3px;
-}
+/* Multi-colour raster marks. The RegioHub mark carries dark lettering on a transparent ground, so
+   on a dark theme its lightness is inverted while the hue is kept, exactly as the project site does
+   it. The combined DIW-SOEP mark needs no such treatment: its lettering is already white inside a
+   coloured block, and inverting it would turn that white to black. */
+.brand-regiohub { height: 30px; }
+.brand-diwsoep { height: 21px; }
 
-:root[data-theme="dark"] .brand-soep,
-:root[data-theme="default"] .brand-soep {
-  background: #ffffff;
-  padding: 2px 5px;
+:root[data-theme="dark"] .brand-regiohub,
+:root[data-theme="default"] .brand-regiohub {
+  filter: invert(1) hue-rotate(180deg);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .brand-soep {
-    background: #ffffff;
-    padding: 2px 5px;
+  :root:not([data-theme="light"]) .brand-regiohub {
+    filter: invert(1) hue-rotate(180deg);
   }
 }
 
@@ -945,9 +983,9 @@ button, input, select, textarea,
 @media (max-width: 480px) {
   .brand-strip { gap: 1rem; padding: 0.35rem 0.5rem 0.45rem; }
   .brand-uni { height: 16px; }
-  .brand-diw { height: 18px; }
+  .brand-regiohub { height: 24px; }
   .brand-leibniz { height: 20px; }
-  .brand-soep { height: 18px; }
+  .brand-diwsoep { height: 17px; }
 }
 
 

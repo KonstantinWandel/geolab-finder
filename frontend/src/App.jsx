@@ -59,21 +59,26 @@ function App() {
   // SVG in its own document, where fill: currentColor resolves to black, so the marks
   // disappeared on the dark themes. The SOEP mark is a multi-colour raster, so it stays an
   // <img> and gets a light plate behind it on dark backgrounds instead.
+  // The same four marks in the same order as the project site's footer, including the combined
+  // DIW-SOEP mark that replaced the two single ones there on 2026-09-09.
+  const REGIOHUB = { file: 'regiohub.png', alt: 'Leibniz ScienceCampus SOEP RegioHub', kind: 'img',
+                     url: 'https://lsc-soep-regiohub.com/', shape: 'brand-regiohub' }
   const UNI = { file: 'uni-bielefeld.svg', alt: 'Universität Bielefeld', kind: 'mask',
                 url: 'https://www.uni-bielefeld.de/', shape: 'brand-uni' }
+  const DIWSOEP = { file: 'diw-soep.png', alt: 'DIW Berlin und das Sozio-oekonomische Panel (SOEP)',
+                    kind: 'img', url: 'https://www.diw.de/en/soep', shape: 'brand-diwsoep' }
   const LEIBNIZ = { file: 'leibniz.svg', alt: 'Leibniz-Gemeinschaft', kind: 'mask',
                     url: 'https://www.leibniz-gemeinschaft.de/', shape: 'brand-leibniz' }
-  const DIW = { file: 'diw.svg', alt: 'DIW Berlin', kind: 'mask',
-                url: 'https://www.diw.de/', shape: 'brand-diw' }
-  const SOEP = { file: 'soep.png', alt: 'Sozio-oekonomisches Panel (SOEP)', kind: 'img',
-                 url: 'https://www.diw.de/soep', shape: 'brand-soep' }
   // Both finders are the same project, so both carry the same four marks.
   const BRAND_SETS = {
-    soep: [UNI, DIW, SOEP, LEIBNIZ],
-    inkar: [UNI, DIW, SOEP, LEIBNIZ],
-    all: [UNI, DIW, SOEP, LEIBNIZ],
+    soep: [REGIOHUB, UNI, DIWSOEP, LEIBNIZ],
+    inkar: [REGIOHUB, UNI, DIWSOEP, LEIBNIZ],
+    all: [REGIOHUB, UNI, DIWSOEP, LEIBNIZ],
   }
   const BRANDS = BRAND_SETS[APP_MODE] || BRAND_SETS.all
+  // The project site. It used to be addressed by its old GitLab Pages URL, which only still works
+  // because a redirect was left behind there.
+  const GEOLAB_SITE = 'https://geolab.soz.uni-bielefeld.de'
 
   const TITLES = {
     soep: "SOEP Variable Finder",
@@ -123,23 +128,51 @@ function App() {
       <main className="main-content">
         <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} language={language} />
       </main>
-      <footer className="brand-strip">
-        {BRANDS.map((brand) => (
-          <a key={brand.file} href={brand.url} target="_blank" rel="noopener noreferrer" aria-label={brand.alt}>
-            {brand.kind === 'mask' ? (
-              <span role="img" aria-label={brand.alt} title={brand.alt}
-                    className={`brand-logo brand-mark ${brand.shape}`} />
-            ) : (
-              <img
-                src={`/brand/${brand.file}`}
-                alt={brand.alt}
-                className={`brand-logo ${brand.shape}`}
-                /* A logo file that is not present yet should leave no broken-image icon. */
-                onError={(e) => { e.currentTarget.parentElement.style.display = 'none' }}
-              />
-            )}
-          </a>
-        ))}
+      {/* The same footer as the project site: a row of partner marks under a label, then three
+          columns for what this is, how to reach us, and the legal pages. The finders add their
+          own citation line, which the site has no need for. */}
+      <footer className="site-footer">
+        <div className="footer-partners">
+          <p className="footer-label">{t('footer.partners')}</p>
+          <div className="brand-strip">
+            {BRANDS.map((brand) => (
+              <a key={brand.file} href={brand.url} target="_blank" rel="noopener noreferrer" aria-label={brand.alt}>
+                {brand.kind === 'mask' ? (
+                  <span role="img" aria-label={brand.alt} title={brand.alt}
+                        className={`brand-logo brand-mark ${brand.shape}`} />
+                ) : (
+                  <img
+                    src={`/brand/${brand.file}`}
+                    alt={brand.alt}
+                    className={`brand-logo ${brand.shape}`}
+                    /* A logo file that is not present yet should leave no broken-image icon. */
+                    onError={(e) => { e.currentTarget.parentElement.style.display = 'none' }}
+                  />
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+        <div className="footer-cols">
+          <div>
+            <img className="footer-mark" src="/brand/geolab-mark.svg" alt="" />
+            <strong className="footer-brand-name">GeoLAB</strong>
+            <p>{t('footer.blurb')}</p>
+          </div>
+          <div>
+            <strong>{t('footer.contact')}</strong>
+            <p><a href="mailto:geolab@uni-bielefeld.de">geolab@uni-bielefeld.de</a></p>
+          </div>
+          <div>
+            <strong>{t('footer.legal')}</strong>
+            <p>
+              <a href={`${GEOLAB_SITE}/imprint.html`} target="_blank" rel="noreferrer">{t('legal.imprint')}</a><br />
+              <a href={`${GEOLAB_SITE}/privacy.html`} target="_blank" rel="noreferrer">{t('legal.privacy')}</a><br />
+              <a href={`${GEOLAB_SITE}/data-sources.html`} target="_blank" rel="noreferrer">{t('legal.sources')}</a><br />
+              <a href={GEOLAB_SITE} target="_blank" rel="noreferrer">GeoLAB</a>
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   )
