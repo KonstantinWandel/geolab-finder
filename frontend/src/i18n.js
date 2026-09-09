@@ -14,7 +14,7 @@ export const LANGUAGES = [
 export const STRINGS = {
   en: {
     'theme.aria': 'Theme',
-    'theme.default': 'Default',
+    'theme.system': 'System',
     'theme.dark': 'Dark',
     'theme.light': 'Light',
     'lang.aria': 'Language',
@@ -159,7 +159,7 @@ export const STRINGS = {
 
   de: {
     'theme.aria': 'Darstellung',
-    'theme.default': 'Systemvorgabe',
+    'theme.system': 'Systemvorgabe',
     'theme.dark': 'Dunkel',
     'theme.light': 'Hell',
     'lang.aria': 'Sprache',

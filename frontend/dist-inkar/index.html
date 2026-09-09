@@ -19,6 +19,32 @@
     <meta property="og:site_name" content="GeoLAB, SOEP-RegioHub" />
     <meta name="twitter:card" content="summary" />
 
+    <!-- Darstellung vor dem ersten Zeichnen. Das :root des Stylesheets ist der dunkle
+         Marineblau-Look, eine Seite, die ihr data-theme erst nach dem Start von React bekommt,
+         blitzt also bei jedem Besucher im Hellmodus kurz dunkel auf. Es gilt dieselbe Regel wie
+         auf der Projektseite: die Systemeinstellung entscheidet, eine Wahl von Hand gilt 24
+         Stunden und läuft danach ab. -->
+    <script>
+      (function () {
+        var TAG = 24 * 60 * 60 * 1000, wert = null;
+        try {
+          var roh = localStorage.getItem('geolab_theme');
+          if (roh && roh.charAt(0) === '{') {
+            var o = JSON.parse(roh), zeit = o && o.zeit;
+            // Ein Zeitstempel in der Zukunft kommt von einer zurückgestellten Uhr und gilt
+            // als abgelaufen, sonst bliebe die Wahl beliebig lange stehen.
+            if ((o.wert === 'dark' || o.wert === 'light') && typeof zeit === 'number'
+                && zeit <= Date.now() && Date.now() - zeit < TAG) wert = o.wert;
+          }
+        } catch (e) { /* localStorage kann gesperrt sein */ }
+        if (!wert) {
+          wert = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', wert);
+      })();
+    </script>
+
     <!-- Structured data. A search interface gives a crawler almost no text of its own, so what it
          is, who runs it and which archived release it corresponds to are stated here explicitly. -->
     <script type="application/ld+json">
@@ -40,8 +66,8 @@
         "sameAs": "https://doi.org/10.5281/zenodo.21134145"
       }
     </script>
-    <script type="module" crossorigin src="/assets/index-202609092151-ClE4o30L.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-202609092151-BqB8fvzA.css">
+    <script type="module" crossorigin src="/assets/index-202609092215-0At9ke2o.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-202609092215-Da_ZKO7F.css">
   </head>
   <body>
     <div id="root"></div>

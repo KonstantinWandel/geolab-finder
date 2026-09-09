@@ -708,28 +708,10 @@ tr:hover { background: var(--surface-2); }
    Give it its own full-width row at the bottom of the filter grid. */
 .filter-note { grid-column: 1 / -1; margin-top: 0.15rem; }
 
-/* Default theme keeps the original gradient/glow/glass flourish.
-   (Dark & Light stay flat — these [data-theme="default"] rules don't match them.) */
-[data-theme="default"] .text-gradient {
-  background: linear-gradient(to right, #60a5fa, #34d399);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-[data-theme="default"] .glass-panel {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
-}
-[data-theme="default"] .btn-primary {
-  background: linear-gradient(135deg, #3b82f6, #10b981);
-  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
-}
-[data-theme="default"] .btn-primary:hover {
-  background: linear-gradient(135deg, #2563eb, #059669);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 15px -2px rgba(59, 130, 246, 0.4);
-}
+/* Der frühere dritte Look ("default", Marineblau mit Verlauf, Glow und Glasflächen) steht seit
+   dem 9. September nicht mehr zur Wahl: die Auswahl bietet jetzt System, Dunkel und Hell, wie auf
+   der GeoLAB-Seite. Die Regeln dazu sind entfallen, die Farbwerte in :root bleiben die Basis, die
+   [data-theme="dark"] und [data-theme="light"] überschreiben. */
 
 /* ============================================================
    Two-column working layout: controls + query box on the left,
@@ -890,8 +872,7 @@ button, input, select, textarea,
 }
 
 .footer-mark { display: block; height: 22px; width: auto; margin-bottom: 0.55rem; }
-:root[data-theme="dark"] .footer-mark,
-:root[data-theme="default"] .footer-mark { content: url('/brand/geolab-mark-invert.svg'); }
+:root[data-theme="dark"] .footer-mark { content: url('/brand/geolab-mark-invert.svg'); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .footer-mark { content: url('/brand/geolab-mark-invert.svg'); }
 }
@@ -962,8 +943,7 @@ button, input, select, textarea,
 .brand-regiohub { height: 30px; }
 .brand-diwsoep { height: 21px; }
 
-:root[data-theme="dark"] .brand-regiohub,
-:root[data-theme="default"] .brand-regiohub {
+:root[data-theme="dark"] .brand-regiohub {
   filter: invert(1) hue-rotate(180deg);
 }
 

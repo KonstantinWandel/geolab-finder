@@ -7,6 +7,8 @@ import SOEPRagAdvisor from './components/SOEPRagAdvisor'
 import { LANGUAGES, detectLanguage, makeTranslator } from './i18n'
 import './App.css'
 
+const TAG = 24 * 60 * 60 * 1000
+
 function App() {
   const [results, setResults] = useState([])
   const [selectedTable, setSelectedTable] = useState(null)
@@ -16,17 +18,44 @@ function App() {
   const API_URL = import.meta.env.VITE_API_URL || "/api"
   const APP_MODE = import.meta.env.VITE_APP_MODE || "all"
 
+  // Darstellung. Voreinstellung ist das System; wer von Hand umschaltet, bekommt seine Wahl
+  // 24 Stunden lang und danach wieder die Systemeinstellung. Dieselbe Regel gilt auf der
+  // GeoLAB-Seite, damit ein einmaliges Umschalten nicht zur Dauereinstellung wird.
+  // Die Auswertung vor dem ersten Zeichnen steht gleichlautend in index.html.
   const [theme, setTheme] = useState(() => {
-    const allowed = ['default', 'dark', 'light']
     try {
-      const t = localStorage.getItem('geolab_theme')
-      // Light is the default: the finders are read in bright seminar rooms and printed from,
-      // and the dark theme is an explicit opt-in that persists per browser.
-      return allowed.includes(t) ? t : 'light'
+      const roh = localStorage.getItem('geolab_theme')
+      if (!roh || roh[0] !== '{') return 'system'   // ältere Builds legten den nackten Namen ab
+      const { wert, zeit } = JSON.parse(roh)
+      if (wert !== 'dark' && wert !== 'light') return 'system'
+      // Ein Zeitstempel aus der Zukunft kommt von einer zurückgestellten Uhr und gilt als abgelaufen.
+      if (typeof zeit !== 'number' || zeit > Date.now() || Date.now() - zeit >= TAG) return 'system'
+      return wert
     } catch (e) {
-      return 'light'
+      return 'system'
     }
   })
+  const [systemDunkel, setSystemDunkel] = useState(() => {
+    try { return window.matchMedia('(prefers-color-scheme: dark)').matches } catch (e) { return false }
+  })
+  useEffect(() => {
+    let mq
+    try { mq = window.matchMedia('(prefers-color-scheme: dark)') } catch (e) { return undefined }
+    const beiWechsel = (e) => setSystemDunkel(e.matches)
+    mq.addEventListener('change', beiWechsel)
+    return () => mq.removeEventListener('change', beiWechsel)
+  }, [])
+  const wirksamesThema = theme === 'system' ? (systemDunkel ? 'dark' : 'light') : theme
+
+  // Der Zeitstempel wird nur bei einer Wahl geschrieben, nicht bei jedem Aufruf: sonst würde
+  // jeder Besuch die 24 Stunden neu starten und die Wahl liefe nie ab.
+  const chooseTheme = (value) => {
+    setTheme(value)
+    try {
+      if (value === 'system') localStorage.removeItem('geolab_theme')
+      else localStorage.setItem('geolab_theme', JSON.stringify({ wert: value, zeit: Date.now() }))
+    } catch (e) { /* ignore */ }
+  }
   useEffect(() => {
     // index.html carries %VITE_PAGE_TITLE%, substituted at build time per mode. This keeps
     // the tab correct even when a build forgets to pass it.
@@ -50,9 +79,8 @@ function App() {
   }
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    try { localStorage.setItem('geolab_theme', theme) } catch (e) { /* ignore */ }
-  }, [theme])
+    document.documentElement.setAttribute('data-theme', wirksamesThema)
+  }, [wirksamesThema])
   // Institutional marks per deployment. Files live in public/brand/ and are served from the
   // site itself; the SVGs use fill: currentColor so they work in the dark theme too.
   // Monochrome marks are drawn as CSS masks filled with currentColor: an <img> renders the
@@ -118,8 +146,8 @@ function App() {
               <option key={entry.value} value={entry.value}>{entry.label}</option>
             ))}
           </select>
-          <select className="theme-select" value={theme} onChange={(e) => setTheme(e.target.value)} aria-label={t('theme.aria')}>
-            <option value="default">{t('theme.default')}</option>
+          <select className="theme-select" value={theme} onChange={(e) => chooseTheme(e.target.value)} aria-label={t('theme.aria')}>
+            <option value="system">{t('theme.system')}</option>
             <option value="dark">{t('theme.dark')}</option>
             <option value="light">{t('theme.light')}</option>
           </select>
