@@ -3,6 +3,7 @@ import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '..
 
 // The project site carries the imprint, the privacy statement and the attribution list.
 const GEOLAB_SITE = 'https://geolab.soz.uni-bielefeld.de'
+const LINK_BUILDER = `${GEOLAB_SITE}/tools/link-builder/`
 
 // One facet: a dropdown that opens onto checkboxes. A plain <select> holds exactly one value, so
 // comparing two sources or three spatial levels meant running the same search once per value.
@@ -654,6 +655,18 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                     <p className="result-fallback">
                       {t('row.fallbackPrefix')}{' '}
                       <a href={row.portal_url} target="_blank" rel="noreferrer">{t('row.portal')}</a>
+                    </p>
+                  )}
+
+                  {/* Der Schritt nach dem Finden ist das Anspielen, und der geht auf der
+                      GeoLAB-Seite weiter. Die Bezeichnung wird mitgegeben, damit der Planer den
+                      Datensatz gleich vorausgewählt hat statt einer leeren Fläche. Nur im
+                      GeoDB-Modus: im SOEP-Finder sind die Treffer Umfragevariablen, und die
+                      Suche des Planers läuft über Regionaldaten. */}
+                  {mode !== 'soep' && row.label && (
+                    <p className="result-fallback">
+                      <a href={`${LINK_BUILDER}?q=${encodeURIComponent(row.label)}`}
+                         target="_blank" rel="noreferrer">{t('row.plan')}</a>
                     </p>
                   )}
                 </li>
