@@ -665,7 +665,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                       Suche des Planers läuft über Regionaldaten. */}
                   {mode !== 'soep' && row.label && (
                     <p className="result-fallback">
-                      <a href={`${LINK_BUILDER}?q=${encodeURIComponent(row.label)}`}
+                      <a href={`${LINK_BUILDER}?q=${encodeURIComponent(row.label)}&src=${encodeURIComponent(row.source_key || '')}`}
                          target="_blank" rel="noreferrer">{t('row.plan')}</a>
                     </p>
                   )}
