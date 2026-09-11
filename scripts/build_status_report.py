@@ -127,9 +127,9 @@ OPEN_ITEMS: Dict[str, Dict[str, str]] = {
         "next": "One booklet defines the series. Refresh with a newer heft when the BA publishes one.",
     },
     "arbeitsmarktreport-ba": {
-        "de": "Vollständig eingebunden: 288 Merkmale aus 17 Tabellenblättern. Gleichnamige Merkmale tragen ihr Blatt im Titel, weil etwa 'Bestand an Arbeitslosen' je nach Blatt etwas anderes meint.",
+        "de": "Vollständig eingebunden: 292 Merkmale aus 17 Tabellenblättern. Gleichnamige Merkmale tragen ihr Blatt im Titel, weil etwa 'Bestand an Arbeitslosen' je nach Blatt etwas anderes meint.",
         "state": "done",
-        "next": "288 indicators flattened from the 17 data sheets (Eckwerte, SGB II/III, Unterbeschäftigung, Alo_Bestand/Bewegungen, Arbeitsstellen, Berufe, Ausbildung, Beschäftigung, Grundsicherung). Labels that recur across sheets carry their sheet in brackets, since 'Bestand an Arbeitslosen: Insgesamt' means something different in Eckwerte and in Eckwerte SGB II.",
+        "next": "292 indicators flattened from the 17 data sheets (Eckwerte, SGB II/III, Unterbeschäftigung, Alo_Bestand/Bewegungen, Arbeitsstellen, Berufe, Ausbildung, Beschäftigung, Grundsicherung). Labels that recur across sheets carry their sheet in brackets, since 'Bestand an Arbeitslosen: Insgesamt' means something different in Eckwerte and in Eckwerte SGB II. Repaired 2026-09-11: in sheets where the label stands in column A and the first value already in column B, the flattener read column B as the name, so 89 records were called after a number ('Unterbeschäftigung nach Rechtskreisen: 96772') and the real name was dropped. Record ids are now derived from sheet and label instead of a running count, so adding a row no longer shifts every id after it.",
     },
     "arbeitsmarkt-kommunal-ba": {
         "de": "Vollständig eingebunden: 33 gemeindescharfe Merkmale. Weitere Kreis-Hefte würden nur zusätzliche Regionen liefern, keine neuen Merkmale.",

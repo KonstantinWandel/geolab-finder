@@ -19,6 +19,7 @@ Run:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import csv
 import html
 import io
@@ -2172,6 +2173,15 @@ def ba_sheet_label(sheet: str) -> str:
     return sheet.replace("_", " ")
 
 
+def kuerzen(text: str, grenze: int) -> str:
+    """Am Wortende kürzen. Mitten im Wort abgeschnitten sah eine Bezeichnung kaputt aus
+    ("... Sozialversicherungsleistungen zur Vermeidung  von Hilfebe")."""
+    if len(text) <= grenze:
+        return text
+    schnitt = text[:grenze].rsplit(" ", 1)[0].rstrip(" ,;:-")
+    return (schnitt or text[:grenze]) + "…"
+
+
 def flatten_ba_arbeitsmarktreport(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     """'Arbeitsmarktreport': a monthly booklet per region whose 22 sheets carry the BA's
     headline labour-market indicators. Labels sit in the first two columns (indented for
@@ -2195,9 +2205,24 @@ def flatten_ba_arbeitsmarktreport(source: Dict[str, Any]) -> List[Dict[str, Any]
             first = clean(str(values[0])).replace("\n", " ") if values else ""
             second = clean(str(values[1])).replace("\n", " ") if len(values) > 1 else ""
             # Column A doubles as a share column in some sheets, so a numeric "label" is data.
-            if re.match(r"^-?[\d.,]+$", first):
+            # Column B is worse: in "Unterbeschäftigung" and its siblings the label stands in A
+            # and the first value already in B, and since B was preferred as the label, 89 index
+            # entries ended up named after a number ("Unterbeschäftigung nach Rechtskreisen:
+            # 96772") while the real name, "Arbeitslosigkeit", was thrown away. A cell holding a
+            # number, a date or nothing is data, never a name, whichever column it sits in.
+            def ist_wert(text: str) -> bool:
+                t = clean(text)
+                return (not t or t.lower() in {"nan", "nat", "none"}
+                        or bool(re.match(r"^-?[\d.,]+%?$", t))
+                        or bool(re.match(r"^\d{4}-\d{2}-\d{2}", t)))
+
+            if ist_wert(first):
                 first = ""
-            numeric = [v for v in values[2:] if re.match(r"^-?[\d.,]+$", clean(str(v)))]
+            if ist_wert(second):
+                second = ""
+            # Werte stehen erst hinter der Bezeichnung: steht sie in Spalte A, fängt B schon an.
+            ab = 2 if second else 1
+            numeric = [v for v in values[ab:] if re.match(r"^-?[\d.,]+$", clean(str(v)))]
             label_part = second or first
             if not label_part or label_part in {"dar.", "nan", "Merkmale", "insgesamt"}:
                 continue
@@ -2212,14 +2237,18 @@ def flatten_ba_arbeitsmarktreport(source: Dict[str, Any]) -> List[Dict[str, Any]
             if key in seen:
                 continue
             seen.add(key)
+            # Die Kennung aus dem Inhalt, nicht aus der Position: durchnummeriert verschob eine
+            # einzige zusätzliche Zeile alle folgenden Kennungen, und Verweise auf sie zeigten
+            # danach lautlos auf eine andere Kennzahl.
+            kennung = hashlib.sha1(f"{sheet}|{label}".encode("utf-8")).hexdigest()[:6].upper()
             records.append(
                 make_record(
                     source_key="ba_arbeitsmarktreport",
                     source_label="Arbeitsmarktreport (Bundesagentur für Arbeit)",
                     item_type="regional_indicator",
-                    item_id=f"amr:{sheet}:{len(seen):04d}",
-                    variable_name=f"AMR-{len(seen):04d}",
-                    label=label[:130],
+                    item_id=f"amr:{sheet}:{kennung}",
+                    variable_name=f"AMR-{kennung}",
+                    label=kuerzen(label, 130),
                     dataset_label=ba_sheet_label(sheet),
                     theme="Arbeitsmarkt & Beschäftigung",
                     description=join_nonempty([
