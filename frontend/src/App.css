@@ -1226,6 +1226,29 @@ button, input, select, textarea,
   font-size: 0.9rem;
 }
 
+/* Was alle Treffer teilen, einmal über der Liste. Ruhig gesetzt: es ist der Rahmen, in dem
+   die Treffer stehen, nicht einer von ihnen. */
+.results-uniform {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.9rem;
+  margin: 0.75rem 0 0 0;
+  padding: 0.5rem 0.8rem;
+  border-left: 3px solid var(--border, #cbd5e1);
+  background: var(--surface-2, rgba(148, 163, 184, 0.08));
+  border-radius: 0 6px 6px 0;
+  font-size: 0.85rem;
+}
+.results-uniform-label { color: var(--muted, #64748b); }
+.results-uniform-item { white-space: nowrap; }
+.results-uniform-key {
+  color: var(--muted, #64748b);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .results-flat {
   margin: 0.75rem 0 0 0;
   padding: 0.6rem 0.8rem;

@@ -541,6 +541,29 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
         : 0
       const flatField = rerankScores.length > 2 && rerankScores[0] - median < 0.015
 
+      /* Die Felder, die eine Zeile von der nächsten unterscheiden sollen. Trägt eines bei
+         allen Treffern denselben Wert, steht es einmal über der Liste statt an jeder Zeile. */
+      const ZEILENFELDER = [
+        { k: 'source', label: t('col.source'), get: (r) => r.source_label || '' },
+        { k: 'dataset', label: isInkar ? t('filter.datasetGeo') : t('filter.datasetSoep'),
+          get: (r) => (r.dataset_label || r.dataset) ? datasetOptionLabel(r.dataset_label || r.dataset) : '' },
+        { k: 'coverage', label: t('col.coverage'), get: (r) => r.available_years_text || '' },
+        { k: 'levels', label: t('filter.spatialLevel'),
+          get: (r) => sortSpatialLevels(r.nuts_levels).join(', ') || sortSpatialLevels(r.spatial_levels).join(', ') },
+        { k: 'theme', label: t('filter.theme'), get: (r) => r.theme ? shortenPath(r.theme) : '' },
+        { k: 'sample', label: t('filter.sampleGroup'),
+          get: (r) => (r.source_key === 'soep' && sampleGroupLabel(r.sample_group)) || '' },
+      ]
+      /* Gleich heißt: mindestens zwei Treffer, überall gefüllt, überall derselbe Wert. Fehlt
+         der Wert bei einem, unterscheidet das Feld ja doch, und dann bleibt es an der Zeile. */
+      const gleichBeiAllen = rows.length > 1
+        ? ZEILENFELDER.map((f) => {
+            const werte = rows.map(f.get)
+            return werte.every((w) => w && w === werte[0]) ? { ...f, wert: werte[0] } : null
+          }).filter(Boolean)
+        : []
+      const einheitlich = new Set(gleichBeiAllen.map((f) => f.k))
+
       const selectedCount = rows.filter((row, idx) => selectedRows[`${i}:${row.item_id || row.variable_name || idx}`]).length
       return (
         <div key={i} className="execution-result glass-panel" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
@@ -570,6 +593,24 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             {t('results.pipeline', { embedding: result.embedding_model })}
           </p>
 
+          {/* Ein Feld, das bei jedem Treffer denselben Wert trägt, unterscheidet nichts und
+              gehört nicht an jede Zeile. Gedruckt wird es dort trotzdem gelesen, und zwar als
+              Aussage über den einzelnen Treffer: wer die Stichprobe "Migration & refugee"
+              wählt und danach unter jedem Treffer "SOEP-Core metadata" liest, hält den Filter
+              für wirkungslos. Das gilt für jedes dieser Felder und für beide Finder: sobald
+              man auf eine Quelle, einen Datensatz oder ein Thema filtert, steht dessen Name
+              sonst zwanzigmal untereinander. Einmal über der Liste gesagt, ist es eine
+              Auskunft; zwanzigmal daneben ist es Lärm. Gemeldet von Kerstin, 2026-09-11. */}
+          {gleichBeiAllen.length > 0 && (
+            <p className="results-uniform">
+              <span className="results-uniform-label">{t('results.sameForAll')}</span>
+              {gleichBeiAllen.map((f) => (
+                <span className="results-uniform-item" key={f.k}>
+                  <span className="results-uniform-key">{f.label}</span> {f.wert}
+                </span>
+              ))}
+            </p>
+          )}
           {flatField && rows.length > 0 && (
             <p className="results-flat">{t('results.flat')}</p>
           )}
@@ -605,14 +646,10 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                       <h4 className="result-label">{row.label || row.variable_name}</h4>
                       <div className="result-ident">
                         <code className="result-code">{row.variable_name}</code>
-                        {/* Im SOEP-Finder ist die Quelle bei allen 125.496 Variablen dieselbe:
-                            "SOEP-Core metadata". Neben jedem Treffer gedruckt sagt sie nichts und
-                            richtet Schaden an: wer die Stichprobe "Migration & refugee" wählt und
-                            danach bei jeder Zeile "SOEP-Core" liest, hält den Filter für kaputt.
-                            Unterschieden werden die Zeilen durch den Datensatz, und der steht
-                            gleich dahinter. Gemeldet von Kerstin, 2026-09-11. */}
-                        {!isSoep && <span className="result-source">{row.source_label}</span>}
-                        {(row.dataset_label || row.dataset) && (
+                        {!einheitlich.has('source') && row.source_label && (
+                          <span className="result-source">{row.source_label}</span>
+                        )}
+                        {!einheitlich.has('dataset') && (row.dataset_label || row.dataset) && (
                           <span className="result-dataset">{datasetOptionLabel(row.dataset_label || row.dataset)}</span>
                         )}
                       </div>
@@ -624,25 +661,28 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                   </div>
 
                   <dl className="result-facts">
-                    <div>
-                      <dt>{t('col.coverage')}</dt>
-                      <dd>{row.available_years_text || t('row.noYears')}</dd>
-                    </div>
+                    {!einheitlich.has('coverage') && (
+                      <div>
+                        <dt>{t('col.coverage')}</dt>
+                        <dd>{row.available_years_text || t('row.noYears')}</dd>
+                      </div>
+                    )}
                     {/* SOEP variables have no spatial level at all, so the field is left out
                         rather than filled with "no spatial level" on every single row. */}
-                    {levels && (
+                    {levels && !einheitlich.has('levels') && (
                       <div>
                         <dt>{t('filter.spatialLevel')}</dt>
                         <dd>{levels}</dd>
                       </div>
                     )}
-                    {row.theme && (
+                    {row.theme && !einheitlich.has('theme') && (
                       <div>
                         <dt>{t('filter.theme')}</dt>
                         <dd title={row.theme}>{shortenPath(row.theme)}</dd>
                       </div>
                     )}
-                    {row.source_key === 'soep' && sampleGroupLabel(row.sample_group) && (
+                    {row.source_key === 'soep' && sampleGroupLabel(row.sample_group)
+                      && !einheitlich.has('sample') && (
                       <div>
                         <dt>{t('filter.sampleGroup')}</dt>
                         <dd>{sampleGroupLabel(row.sample_group)}</dd>
