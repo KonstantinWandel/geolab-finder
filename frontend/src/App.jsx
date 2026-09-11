@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { Component, useState, useEffect } from 'react'
 import SearchBar from './components/SearchBar'
 import ResultsList from './components/ResultsList'
 import AnalysisView from './components/AnalysisView'
@@ -8,6 +8,49 @@ import { LANGUAGES, detectLanguage, makeTranslator } from './i18n'
 import './App.css'
 
 const TAG = 24 * 60 * 60 * 1000
+
+/* Eine weiße Seite ist die schlechteste Fehlermeldung, die es gibt: der Besucher sieht nichts,
+   der Betreiber erfährt nichts, und der Rat "Cache leeren" hilft nicht, weil der Verlauf im
+   localStorage liegt und nicht im Cache. Stirbt der Aufbau, steht hier ab jetzt, was los ist,
+   mit einem Knopf, der den gespeicherten Verlauf wegräumt und neu lädt. */
+class Absturzfang extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { fehler: null }
+  }
+  static getDerivedStateFromError(fehler) {
+    return { fehler }
+  }
+  componentDidCatch(fehler, info) {
+    console.error('Aufbau abgebrochen:', fehler, info)
+  }
+  render() {
+    if (!this.state.fehler) return this.props.children
+    return (
+      <div className="glass-panel" style={{ padding: '1.5rem', margin: '2rem auto', maxWidth: '46rem' }}>
+        <h2 style={{ marginTop: 0 }}>{this.props.t('crash.title')}</h2>
+        <p>{this.props.t('crash.body')}</p>
+        <p style={{ fontFamily: 'var(--mono, monospace)', fontSize: '0.85rem', opacity: 0.75 }}>
+          {String(this.state.fehler && this.state.fehler.message || this.state.fehler).slice(0, 200)}
+        </p>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => {
+            try {
+              Object.keys(localStorage)
+                .filter((k) => k.startsWith('geolab_history_'))
+                .forEach((k) => localStorage.removeItem(k))
+            } catch (e) { /* gesperrter Speicher: dann eben nur neu laden */ }
+            window.location.reload()
+          }}
+        >
+          {this.props.t('crash.reset')}
+        </button>
+      </div>
+    )
+  }
+}
 
 function App() {
   const [results, setResults] = useState([])
@@ -154,7 +197,9 @@ function App() {
         </div>
       </header>
       <main className="main-content">
-        <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} language={language} />
+        <Absturzfang t={t}>
+          <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} language={language} />
+        </Absturzfang>
       </main>
       {/* The same footer as the project site: a row of partner marks under a label, then three
           columns for what this is, how to reach us, and the legal pages. The finders add their

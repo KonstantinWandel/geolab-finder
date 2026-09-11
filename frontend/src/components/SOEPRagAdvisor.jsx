@@ -181,9 +181,27 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
     const hist = localStorage.getItem(STORAGE_KEY)
     if (hist) {
       try {
-        setChatHistory(JSON.parse(hist))
+        /* Ein einziger unbrauchbarer Eintrag im gespeicherten Verlauf hat die ganze Seite
+           geleert: die Liste wird beim Aufbau durchlaufen, und an `null.role` stirbt der
+           Aufbau. Der Browser-Cache zu leeren half nicht, denn der Verlauf liegt im
+           localStorage; im Inkognitofenster war er leer, und dort ging alles. Was nicht wie
+           ein Eintrag aussieht, wird beim Laden verworfen. */
+        const roh = JSON.parse(hist)
+        const sauber = Array.isArray(roh)
+          ? roh.filter((m) => m && typeof m === 'object' && typeof m.role === 'string')
+          : []
+        /* Auch beim Laden gekürzt, sonst bleibt ein längst zu groß gewordener Verlauf für
+           immer zu groß: gespeichert wurde er ja vor dieser Begrenzung. */
+        const gekuerzt = sauber.slice(-12)
+        if (gekuerzt.length !== (Array.isArray(roh) ? roh.length : 0)) {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(gekuerzt))
+          } catch (e) { localStorage.removeItem(STORAGE_KEY) }
+        }
+        setChatHistory(gekuerzt)
       } catch (e) {
         console.error(e)
+        localStorage.removeItem(STORAGE_KEY)
       }
     }
   }, [])
@@ -326,7 +344,19 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
 
       const updatedHist = [...newHist, { role: 'assistant', data }]
       setChatHistory(updatedHist)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHist))
+      /* Jede Antwort bringt Dutzende Treffer mit langen Beschreibungen mit. Ungekürzt
+         gespeichert ist der Platz nach einigen Dutzend Suchen voll, das Schreiben scheitert,
+         und beim nächsten Besuch baut die Seite minutenlang an einer Liste, die niemand mehr
+         lesen will. Die letzten zwölf Wortmeldungen reichen. */
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHist.slice(-12)))
+      } catch (e) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHist.slice(-2)))
+        } catch (e2) {
+          localStorage.removeItem(STORAGE_KEY)
+        }
+      }
     } catch (err) {
       setError(err.message || 'Unknown error')
       const updatedHist = [...newHist, { role: 'error', content: err.message || 'Error occurred' }]
@@ -575,7 +605,13 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                       <h4 className="result-label">{row.label || row.variable_name}</h4>
                       <div className="result-ident">
                         <code className="result-code">{row.variable_name}</code>
-                        <span className="result-source">{row.source_label}</span>
+                        {/* Im SOEP-Finder ist die Quelle bei allen 125.496 Variablen dieselbe:
+                            "SOEP-Core metadata". Neben jedem Treffer gedruckt sagt sie nichts und
+                            richtet Schaden an: wer die Stichprobe "Migration & refugee" wählt und
+                            danach bei jeder Zeile "SOEP-Core" liest, hält den Filter für kaputt.
+                            Unterschieden werden die Zeilen durch den Datensatz, und der steht
+                            gleich dahinter. Gemeldet von Kerstin, 2026-09-11. */}
+                        {!isSoep && <span className="result-source">{row.source_label}</span>}
                         {(row.dataset_label || row.dataset) && (
                           <span className="result-dataset">{datasetOptionLabel(row.dataset_label || row.dataset)}</span>
                         )}
