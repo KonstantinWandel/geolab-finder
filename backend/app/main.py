@@ -1,7 +1,7 @@
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Union, Any
 import os
 import time
@@ -147,8 +147,13 @@ class SOEPRequest(BaseModel):
 
 
 class SOEPAdviceRequest(BaseModel):
-    question: str
-    top_k: int = 12
+    # Beide Grenzen sind Verfügbarkeitsschutz, nicht Geschmack. Ohne sie holte eine einzige
+    # Anfrage mit top_k=9999 den Dienst vom Netz: der Kandidatenpool wächst mit top_k, der
+    # Reranker bekam ihn nicht mehr in den Speicher, und der OOM-Killer beendete den Prozess.
+    # systemd startete neu, aber für anderthalb Minuten war der Finder für alle weg, und dazu
+    # genügt eine Zeile curl. Was zu groß ist, gehört mit 422 abgewiesen, nicht ausgeführt.
+    question: str = Field(..., max_length=2000)
+    top_k: int = Field(12, ge=1, le=100)
     # Every facet is multi-select in the UI, so these accept a list of values meaning "any of
     # these". A bare string still works: the API is called directly too, and older clients send
     # scalars.

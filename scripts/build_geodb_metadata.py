@@ -61,7 +61,10 @@ SPATIAL_MAP: Dict[str, Dict[str, List[str]]] = {
 def clean(value: Any) -> str:
     if value is None or (isinstance(value, float) and pd.isna(value)):
         return ""
-    text = str(value).replace("\xa0", " ").strip()
+    # Das weiche Trennzeichen (U+00AD) ist unsichtbar und steht bei manchen Quellen mitten im
+    # Wort ("Mobilitäts<AD>verhalten"). Im Index sucht danach niemand mehr erfolgreich, und in
+    # der Anzeige sieht man nicht, warum. Es hat in Daten nichts verloren.
+    text = str(value).replace("\xa0", " ").replace("\u00ad", "").strip()
     if text.lower() in {"nan", "none", "nat"}:
         return ""
     return re.sub(r"[ \t]+", " ", text)
@@ -96,6 +99,20 @@ def map_spatial(levels: Iterable[str]) -> Dict[str, List[str]]:
 
 def join_nonempty(parts: Iterable[str]) -> str:
     return "\n".join(part for part in parts if clean(part))
+
+
+def ohne_markup(text: str) -> str:
+    """Beschreibungstext ohne Auszeichnung. Die Erläuterungen der Regionalstatistik kommen als
+    rohes Wiki-HTML aus dem Portal, und die Oberfläche setzt sie als Text ein, also stand bei
+    150 Sätzen "<div class='wikiH2 schemaColorLevel4'>" im Ergebnis. Tags werden durch ein
+    Leerzeichen ersetzt, nie ersatzlos gestrichen, sonst kleben die Wörter aneinander."""
+    if not text or "<" not in text:
+        return text or ""
+    t = re.sub(r"</?[A-Za-zÄÖÜäöüß][^<>]{0,200}>", " ", text)
+    for roh, klar in (("&amp;", "&"), ("&lt;", "<"), ("&gt;", ">"), ("&nbsp;", " "),
+                      ("&quot;", '"'), ("&#39;", "'")):
+        t = t.replace(roh, klar)
+    return re.sub(r"[ \t]{2,}", " ", t).strip()
 
 
 def make_record(
@@ -142,7 +159,7 @@ def make_record(
         "unit": unit,
         "stats_summary": stats_summary,
         "value_labels": "",
-        "rich_description": description or label,
+        "rich_description": ohne_markup(description) or label,
         "aliases": aliases,
         "spatial_levels": spatial_levels,
         "nuts_levels": nuts_levels,
@@ -796,8 +813,8 @@ def flatten_ba_strukturdaten(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     try:
         sheet = pd.read_excel(path, sheet_name="Glossar Strukturdaten", header=None)
         for _, row in sheet.iterrows():
-            term = clean(row.get(0)).replace("-\n", "").replace("\n", " ")
-            definition = clean(row.get(2)).replace("\n", " ")
+            term = clean(str(row.get(0)).replace("-\n", "").replace("\n", " "))
+            definition = clean(str(row.get(2)).replace("\n", " "))
             if term and definition and len(definition) > 40:
                 glossary[term.lower()] = definition
     except ValueError:
@@ -819,7 +836,7 @@ def flatten_ba_strukturdaten(source: Dict[str, Any]) -> List[Dict[str, Any]]:
             continue
         section = ""
         for _, row in frame.iterrows():
-            label = clean(row.get(0)).replace("\n", " ")
+            label = clean(str(row.get(0)).replace("\n", " "))
             values = [clean(v) for v in row.tolist()[1:]]
             has_value = any(re.match(r"^-?[\d.,]+$", v) for v in values if v)
             if not label or len(label) < 4:
@@ -1017,7 +1034,7 @@ def flatten_deutschlandatlas(source: Dict[str, Any]) -> List[Dict[str, Any]]:
             prefix, _, year = match.groups()
             frame = pd.read_excel(xlsx_path, sheet_name=sheet, header=None, nrows=4)
             for cell in frame.iloc[3].tolist():
-                header = clean(str(cell)).replace("\n", " ")
+                header = clean(str(cell).replace("\n", " "))
                 code_match = re.search(r"Indikatorkürzel:\s*([A-Za-z0-9_]+)", header)
                 if not code_match:
                     continue
@@ -2023,8 +2040,8 @@ def flatten_ba_arbeitsmarkt_kommunal(source: Dict[str, Any]) -> List[Dict[str, A
     section = ""
     seen: set = set()
     for _, row in frame.iterrows():
-        first = clean(str(row.get(0))).replace("\n", " ")
-        second = clean(str(row.get(1))).replace("\n", " ")
+        first = clean(str(row.get(0)).replace("\n", " "))
+        second = clean(str(row.get(1)).replace("\n", " "))
         if ist_wert(first):
             first = ""
         if ist_wert(second):
@@ -2214,8 +2231,8 @@ def flatten_ba_arbeitsmarktreport(source: Dict[str, Any]) -> List[Dict[str, Any]
         section = ""
         for _, row in frame.iterrows():
             values = row.tolist()
-            first = clean(str(values[0])).replace("\n", " ") if values else ""
-            second = clean(str(values[1])).replace("\n", " ") if len(values) > 1 else ""
+            first = clean(str(values[0]).replace("\n", " ")) if values else ""
+            second = clean(str(values[1]).replace("\n", " ")) if len(values) > 1 else ""
             # Column A doubles as a share column in some sheets, so a numeric "label" is data.
             # Column B is worse: in "Unterbeschäftigung" and its siblings the label stands in A
             # and the first value already in B, and since B was preferred as the label, 89 index
@@ -3041,7 +3058,7 @@ def flatten_destatis_mobility(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 item_type="regional_indicator",
                 item_id=f"destatis_mobilitaet:{heading.lower()[:50]}",
                 variable_name=heading,
-                label=f"{heading} (Mobilfunkdaten)",
+                label=clean(f"{heading} (Mobilfunkdaten)"),
                 dataset_label="Mobilitätsindikatoren aus Mobilfunkdaten",
                 theme="Verkehr / Mobilität",
                 description=join_nonempty([
@@ -4933,8 +4950,12 @@ def flatten_gbe(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                 if not thema_id:
                     continue
                 feld = felder.get(nummer.split(".")[0], "")
+                # "…, Deutschland, 2003-2008 und ab 2010" nennt zwei Zeiträume. Anfang aus der
+                # einen und Ende aus der anderen Angabe zu nehmen ergab die Spanne 2010 bis 2008.
+                # Steht ein "ab" im Titel, läuft die Reihe weiter und hat kein Ende.
                 jahr = re.search(r"\bab\s+(\d{4})", titel)
                 spanne = re.search(r"(\d{4})\s*(?:bis|-)\s*(\d{4})", titel)
+                alle_jahre = [int(j) for j in re.findall(r"\b((?:19|20)\d{2})\b", titel)]
                 records.append(
                     make_record(
                         source_key="gbe",
@@ -4956,8 +4977,8 @@ def flatten_gbe(source: Dict[str, Any]) -> List[Dict[str, Any]]:
                         ]),
                         spatial_levels=mapped["spatial_levels"],
                         nuts_levels=mapped["nuts_levels"],
-                        year_start=int(jahr.group(1)) if jahr else (int(spanne.group(1)) if spanne else None),
-                        year_end=int(spanne.group(2)) if spanne else None,
+                        year_start=min(alle_jahre) if alle_jahre else None,
+                        year_end=(None if jahr else (max(alle_jahre) if len(alle_jahre) > 1 else None)),
                         years_text=("ab " + jahr.group(1)) if jahr else (
                             f"{spanne.group(1)} bis {spanne.group(2)}" if spanne else ""),
                         source_url="https://www.gbe-bund.de/",
