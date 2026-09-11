@@ -1375,6 +1375,14 @@ button, input, select, textarea,
 }
 
 /* Was mit der bisherigen Auswahl nichts mehr übrig ließe: sichtbar, aber nicht wählbar. */
+.facet-hint {
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--muted, #64748b);
+}
 .facet-item.is-empty { opacity: 0.45; cursor: not-allowed; }
 .facet-item.is-empty input { cursor: not-allowed; }
 .facet-count {

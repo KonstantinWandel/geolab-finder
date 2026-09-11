@@ -11,7 +11,7 @@ const LINK_BUILDER = `${GEOLAB_SITE}/tools/link-builder/`
 // reading of an empty list. The list expands in flow rather than as an overlay, because the filter
 // column scrolls and an absolutely positioned panel would be clipped by it.
 function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, emptyHint,
-                      closeLabel, counts, leerHinweis }) {
+                      closeLabel, counts, leerHinweis, hinweis }) {
   const [open, setOpen] = useState(false)
   // Which way the menu opens and how tall it may be, measured rather than assumed: a fixed
   // height ran off the bottom of the window for three of the four facets on a 900px screen.
@@ -71,6 +71,9 @@ function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, em
       </button>
       {open && (
         <div className="facet-list" style={{ maxHeight: `${place.maxHeight}px` }}>
+          {/* Wo eine Auswahl etwas anderes bedeutet, als ihr Name vermuten lässt, steht es
+              hier, beim Aufklappen, und nicht in einer Hilfe, die niemand öffnet. */}
+          {hinweis && <p className="facet-hint">{hinweis}</p>}
           {options.length === 0 && <p className="facet-empty">{emptyHint}</p>}
           {options.map((option) => {
             /* Wie viele Sätze diese Wahl noch übrig ließe, gerechnet gegen die ANDEREN
@@ -896,20 +899,6 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             closeLabel={t('filter.close')}
           />
         )}
-        <FacetChecks
-          label={isInkar ? t('filter.datasetGeo') : t('filter.datasetSoep')}
-          options={(filterOptions?.datasets || []).map((dataset) => ({
-            value: dataset, label: datasetOptionLabel(dataset), title: dataset,
-          }))}
-          selected={filters.dataset_label}
-          onToggle={(value) => toggleFilter('dataset_label', value)}
-          onClear={() => clearFilter('dataset_label')}
-          counts={facetCounts?.dataset_label}
-          leerHinweis={t('filter.noneLeft')}
-          allLabel={t('filter.allSelected')}
-          emptyHint={t('filter.noneAvailable')}
-          closeLabel={t('filter.close')}
-        />
         {showSoepFilters && (filterOptions?.sample_groups || []).length > 0 && (
           <FacetChecks
             label={t('filter.sampleGroup')}
@@ -924,8 +913,23 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             allLabel={t('filter.allSelected')}
             emptyHint={t('filter.noneAvailable')}
             closeLabel={t('filter.close')}
+            hinweis={t('filter.sampleGroupHint')}
           />
         )}
+        <FacetChecks
+          label={isInkar ? t('filter.datasetGeo') : t('filter.datasetSoep')}
+          options={(filterOptions?.datasets || []).map((dataset) => ({
+            value: dataset, label: datasetOptionLabel(dataset), title: dataset,
+          }))}
+          selected={filters.dataset_label}
+          onToggle={(value) => toggleFilter('dataset_label', value)}
+          onClear={() => clearFilter('dataset_label')}
+          counts={facetCounts?.dataset_label}
+          leerHinweis={t('filter.noneLeft')}
+          allLabel={t('filter.allSelected')}
+          emptyHint={t('filter.noneAvailable')}
+          closeLabel={t('filter.close')}
+        />
         {showRegionalFilters && (
           <FacetChecks
             label={t('filter.spatialLevel')}
