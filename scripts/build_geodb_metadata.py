@@ -2025,7 +2025,11 @@ def flatten_ba_arbeitsmarkt_kommunal(source: Dict[str, Any]) -> List[Dict[str, A
     for _, row in frame.iterrows():
         first = clean(str(row.get(0))).replace("\n", " ")
         second = clean(str(row.get(1))).replace("\n", " ")
-        values = [clean(v) for v in row.tolist()[2:]]
+        if ist_wert(first):
+            first = ""
+        if ist_wert(second):
+            second = ""
+        values = [clean(v) for v in row.tolist()[2 if second else 1:]]
         has_value = any(re.match(r"^-?[\d.,]+$", v) for v in values if v)
         if first and not has_value and not second:
             is_place_header = bool(re.match(r"^\d{5,}", first)) or "Gebietsstand" in first
@@ -2173,6 +2177,14 @@ def ba_sheet_label(sheet: str) -> str:
     return sheet.replace("_", " ")
 
 
+def ist_wert(text: str) -> bool:
+    """Ist in dieser Zelle ein Wert statt eines Namens? Eine Zahl, ein Datum oder nichts."""
+    t = clean(text)
+    return (not t or t.lower() in {"nan", "nat", "none"}
+            or bool(re.match(r"^-?[\d.,]+%?$", t))
+            or bool(re.match(r"^\d{4}-\d{2}-\d{2}", t)))
+
+
 def kuerzen(text: str, grenze: int) -> str:
     """Am Wortende kürzen. Mitten im Wort abgeschnitten sah eine Bezeichnung kaputt aus
     ("... Sozialversicherungsleistungen zur Vermeidung  von Hilfebe")."""
@@ -2210,12 +2222,6 @@ def flatten_ba_arbeitsmarktreport(source: Dict[str, Any]) -> List[Dict[str, Any]
             # entries ended up named after a number ("Unterbeschäftigung nach Rechtskreisen:
             # 96772") while the real name, "Arbeitslosigkeit", was thrown away. A cell holding a
             # number, a date or nothing is data, never a name, whichever column it sits in.
-            def ist_wert(text: str) -> bool:
-                t = clean(text)
-                return (not t or t.lower() in {"nan", "nat", "none"}
-                        or bool(re.match(r"^-?[\d.,]+%?$", t))
-                        or bool(re.match(r"^\d{4}-\d{2}-\d{2}", t)))
-
             if ist_wert(first):
                 first = ""
             if ist_wert(second):
