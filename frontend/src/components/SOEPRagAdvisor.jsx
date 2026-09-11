@@ -126,6 +126,13 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
   const [droppedFilters, setDroppedFilters] = useState([])
   // Every facet holds a LIST of chosen values; an empty list means no restriction. The SOEP
   // deployment is the exception that pre-selects its own source, because it serves only that one.
+  /* Womit die letzte Suche lief. Die Filter wirken erst beim nächsten Fragen, und ohne diesen
+     Vergleich sah man das der Liste nicht an: Kerstin wählte die Stichprobe "Migration & refugee"
+     und bekam weiter die alten Core-Treffer angezeigt, ohne Hinweis, dass nichts neu geladen
+     worden war. Gemeldet am 2026-09-11. */
+  const [letzteFilter, setLetzteFilter] = useState(null)
+  const [letzteFrage, setLetzteFrage] = useState('')
+
   const [filters, setFilters] = useState({
     dataset_scope: isSoep ? ['soep'] : [],
     dataset_label: [],
@@ -263,15 +270,28 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
 
   const clearFilter = (key) => setFilters((current) => ({ ...current, [key]: [] }))
 
-  const handleAsk = async (e) => {
-    if (e) e.preventDefault()
-    if (!question.trim()) return
+  /* Nur die Felder, die auch mitgeschickt werden: eine Änderung an ihnen ändert das Ergebnis,
+     alles andere nicht. */
+  const FILTERFELDER = ['dataset_scope', 'dataset_label', 'nuts_level', 'spatial_level', 'theme',
+                        'sample_group', 'year_start', 'year_end', 'regional_only', 'include_raw',
+                        'top_k']
+  const filterVeraendert = () => {
+    if (!letzteFilter) return false
+    return FILTERFELDER.some((f) => JSON.stringify(letzteFilter[f] ?? null) !== JSON.stringify(filters[f] ?? null))
+  }
 
-    const userQ = question.trim()
+  const handleAsk = async (e, frageErneut) => {
+    if (e) e.preventDefault()
+    const gestellt = (frageErneut || question).trim()
+    if (!gestellt) return
+
+    const userQ = gestellt
     const filterSnapshot = { ...filters }
+    setLetzteFrage(userQ)
+    setLetzteFilter(filterSnapshot)
     const newHist = [...chatHistory, { role: 'user', content: userQ, filters: filterSnapshot }]
     setChatHistory(newHist)
-    setQuestion('')
+    if (!frageErneut) setQuestion('')
     setLoading(true)
     setError(null)
 
@@ -502,6 +522,17 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
               <button type="button" className="btn-secondary" onClick={() => exportRows(rows, 'json', i)}>JSON</button>
             </div>
           </div>
+          {/* Die Filter wirken erst beim nächsten Fragen. Ohne diesen Hinweis liest sich die
+              unveränderte Liste wie ein kaputter Filter. */}
+          {i === chatHistory.length - 1 && filterVeraendert() && (
+            <p className="results-stale">
+              {t('results.filtersChanged')}{' '}
+              <button type="button" className="btn-secondary"
+                      onClick={() => handleAsk(null, letzteFrage)}>
+                {t('results.reask')}
+              </button>
+            </p>
+          )}
           <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginTop: '0.6rem' }}>
             {/* The models stay named, that is honest transparency for a research tool. What
                 went is the pipe-delimited debug line around them ("Generator: disabled | Mode:

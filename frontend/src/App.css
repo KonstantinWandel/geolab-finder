@@ -1209,6 +1209,23 @@ button, input, select, textarea,
 
 /* "Nothing stands out" note above the result list. A note, not a warning: the results are
    still shown, in the same order. */
+/* Die Liste stammt noch aus der Suche vor der Filteränderung. Auffälliger als der ruhige
+   Hinweis darüber, weil er sonst genau von den Lesern übersehen wird, die ihn brauchen. */
+.results-stale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.75rem 0 0 0;
+  padding: 0.6rem 0.8rem;
+  /* Ein Farbton, nicht zwei: der blaue Rand auf rosa Grund las sich wie zwei Hinweise
+     übereinander. Der Akzent der Anwendung ist blau, also ist es auch dieser hier. */
+  border-left: 3px solid var(--accent, #60a5fa);
+  background: var(--accent-soft, rgba(59, 130, 246, 0.14));
+  border-radius: 0 6px 6px 0;
+  font-size: 0.9rem;
+}
+
 .results-flat {
   margin: 0.75rem 0 0 0;
   padding: 0.6rem 0.8rem;
