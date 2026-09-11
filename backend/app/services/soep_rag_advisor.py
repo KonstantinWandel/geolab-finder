@@ -1072,6 +1072,64 @@ class SOEPRagAdvisorService:
                 out.add(text)
         return out
 
+    # Die Facetten, über die gezählt wird, und woran eine Zeile für jede davon hängt.
+    _FACETTEN = ("dataset_scope", "dataset_label", "sample_group", "theme", "spatial_level")
+
+    def facet_counts(self, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Dict[str, int]]:
+        """Wie viele Sätze jede Auswahl noch übrig ließe, jede Facette gegen die ANDEREN gerechnet.
+
+        Damit kann die Oberfläche zeigen, was zusammenpasst: wer den Datensatz "migspell" wählt,
+        soll keine Stichprobe und kein Thema mehr anklicken können, die darin gar nicht
+        vorkommen. Eine Facette schränkt sich dabei nie selbst ein, sonst könnte man eine
+        getroffene Wahl nicht mehr erweitern.
+
+        Gezählt wird in einem Durchgang: fällt eine Zeile an mehr als einer Facette durch, zählt
+        sie nirgends; fällt sie an genau einer durch, zählt sie für eben diese; fällt sie an
+        keiner durch, zählt sie überall. Über 125.496 Sätze ist das der Unterschied zwischen
+        einer Zehntelsekunde und mehreren Sekunden.
+        """
+        self.load()
+        f = filters or {}
+        gewaehlt = {
+            "dataset_scope": self._wanted(f.get("dataset_scope") or f.get("source")),
+            "dataset_label": self._wanted(f.get("dataset_label")),
+            "sample_group": self._wanted(f.get("sample_groups") or f.get("sample_group")),
+            "theme": self._wanted(f.get("theme")),
+            "spatial_level": self._wanted(f.get("spatial_level")) | self._wanted(f.get("nuts_level")),
+        }
+        # Alles, was keine Facette ist, gilt immer: Rohdaten, Regionalbezug, Jahre.
+        grund = {k: f.get(k) for k in ("include_raw", "regional_only", "year_start", "year_end")}
+        zaehler: Dict[str, Dict[str, int]] = {k: {} for k in self._FACETTEN}
+
+        # Die Facettenwerte je Zeile hängen nicht von der Auswahl ab, also werden sie einmal
+        # gebildet und behalten. Ohne das kostet jeder Tastendruck in der Oberfläche das
+        # Zerlegen von 125.496 Sätzen noch einmal.
+        if getattr(self, "_facettenwerte", None) is None:
+            self._facettenwerte = [{
+                "dataset_scope": {self._as_text(row.get("source_key"))},
+                "dataset_label": {self._as_text(row.get("dataset_label"))},
+                "sample_group": ({self._as_text(row.get("sample_group"))}
+                                 if row.get("source_key") == "soep" else set()),
+                "theme": {self._as_text(row.get("theme"))},
+                "spatial_level": {self._as_text(l) for l in (row.get("spatial_levels") or [])}
+                                 | {self._as_text(l) for l in (row.get("nuts_levels") or [])},
+            } for row in self._rows]
+
+        for row, werte in zip(self._rows, self._facettenwerte):
+            if not self._passes_filters(row, grund):
+                continue
+            durchgefallen = [k for k in self._FACETTEN
+                             if gewaehlt[k] and not (gewaehlt[k] & werte[k])]
+            if len(durchgefallen) > 1:
+                continue
+            for facette in self._FACETTEN:
+                if durchgefallen and durchgefallen[0] != facette:
+                    continue
+                for wert in werte[facette]:
+                    if wert:
+                        zaehler[facette][wert] = zaehler[facette].get(wert, 0) + 1
+        return zaehler
+
     def _passes_filters(self, row: Dict[str, Any], filters: Optional[Dict[str, Any]]) -> bool:
         filters = filters or {}
         sources = {s.lower() for s in self._wanted(filters.get("dataset_scope") or filters.get("source"))}

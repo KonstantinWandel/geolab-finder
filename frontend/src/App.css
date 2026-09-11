@@ -1374,6 +1374,17 @@ button, input, select, textarea,
   display: block;
 }
 
+/* Was mit der bisherigen Auswahl nichts mehr übrig ließe: sichtbar, aber nicht wählbar. */
+.facet-item.is-empty { opacity: 0.45; cursor: not-allowed; }
+.facet-item.is-empty input { cursor: not-allowed; }
+.facet-count {
+  margin-left: auto;
+  padding-left: 0.6rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted, #64748b);
+}
+
 .facet-trigger {
   display: flex;
   align-items: center;

@@ -10,7 +10,8 @@ const LINK_BUILDER = `${GEOLAB_SITE}/tools/link-builder/`
 // Collapsed it shows what is chosen; nothing checked means no restriction, which is the honest
 // reading of an empty list. The list expands in flow rather than as an overlay, because the filter
 // column scrolls and an absolutely positioned panel would be clipped by it.
-function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, emptyHint, closeLabel }) {
+function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, emptyHint,
+                      closeLabel, counts, leerHinweis }) {
   const [open, setOpen] = useState(false)
   // Which way the menu opens and how tall it may be, measured rather than assumed: a fixed
   // height ran off the bottom of the window for three of the four facets on a 900px screen.
@@ -71,16 +72,31 @@ function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, em
       {open && (
         <div className="facet-list" style={{ maxHeight: `${place.maxHeight}px` }}>
           {options.length === 0 && <p className="facet-empty">{emptyHint}</p>}
-          {options.map((option) => (
-            <label className="facet-item" key={option.value} title={option.title || option.label}>
-              <input
-                type="checkbox"
-                checked={selected.includes(option.value)}
-                onChange={() => onToggle(option.value)}
-              />
-              <span>{option.label}</span>
-            </label>
-          ))}
+          {options.map((option) => {
+            /* Wie viele Sätze diese Wahl noch übrig ließe, gerechnet gegen die ANDEREN
+               Facetten. Null heißt: zusammen mit dem, was schon gewählt ist, gibt es nichts,
+               und dann ist der Haken gesperrt. Was schon gewählt ist, bleibt anklickbar,
+               sonst käme man aus einer Sackgasse nicht mehr heraus. */
+            const zahl = counts ? (counts[option.value] || 0) : null
+            const gewaehlt = selected.includes(option.value)
+            const gesperrt = counts != null && zahl === 0 && !gewaehlt
+            return (
+              <label
+                className={`facet-item${gesperrt ? ' is-empty' : ''}`}
+                key={option.value}
+                title={gesperrt ? leerHinweis : (option.title || option.label)}
+              >
+                <input
+                  type="checkbox"
+                  checked={gewaehlt}
+                  disabled={gesperrt}
+                  onChange={() => onToggle(option.value)}
+                />
+                <span>{option.label}</span>
+                {zahl != null && <span className="facet-count">{zahl.toLocaleString('de-DE')}</span>}
+              </label>
+            )
+          })}
           <div className="facet-actions">
             {chosen > 0 && (
               <button type="button" className="facet-clear" onClick={onClear}>{allLabel}</button>
@@ -130,6 +146,12 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
      Vergleich sah man das der Liste nicht an: Kerstin wählte die Stichprobe "Migration & refugee"
      und bekam weiter die alten Core-Treffer angezeigt, ohne Hinweis, dass nichts neu geladen
      worden war. Gemeldet am 2026-09-11. */
+  /* Welche Auswahl noch wie viel übrig ließe. Wird bei jeder Änderung neu geholt, damit die
+     Auswahllisten nur anbieten, was zusammenpasst: ein Datensatz und eine Stichprobe, die
+     darin nicht vorkommt, ergeben zusammen nichts, und das gehört vor die Suche und nicht
+     danach in eine leere Trefferliste. */
+  const [facetCounts, setFacetCounts] = useState(null)
+
   const [letzteFilter, setLetzteFilter] = useState(null)
   const [letzteFrage, setLetzteFrage] = useState('')
 
@@ -256,6 +278,37 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
       cancelled = true
     }
   }, [apiUrl, filters.dataset_scope, filters.include_raw])
+
+  /* Die Anzahlen je Auswahl, gegen die jeweils anderen Facetten gerechnet. Kurz verzögert,
+     damit ein schnelles Durchklicken nicht ein halbes Dutzend Anfragen auslöst, und mit einem
+     Abbruch, damit eine überholte Antwort nicht die neuere überschreibt. */
+  useEffect(() => {
+    const abbruch = new AbortController()
+    const uhr = setTimeout(() => {
+      fetch(`${apiUrl}/soep/facet-counts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: abbruch.signal,
+        body: JSON.stringify({
+          dataset_scope: filters.dataset_scope?.length ? filters.dataset_scope : null,
+          dataset_label: filters.dataset_label?.length ? filters.dataset_label : null,
+          sample_group: filters.sample_group?.length ? filters.sample_group : null,
+          spatial_level: filters.spatial_level?.length ? filters.spatial_level : null,
+          theme: filters.theme?.length ? filters.theme : null,
+          year_start: filters.year_start ? Number(filters.year_start) : null,
+          year_end: filters.year_end ? Number(filters.year_end) : null,
+          regional_only: Boolean(filters.regional_only),
+          include_raw: Boolean(filters.include_raw),
+        }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => { if (d) setFacetCounts(d) })
+        .catch(() => { /* abgebrochen oder kurz nicht erreichbar: dann eben ohne Anzahlen */ })
+    }, 250)
+    return () => { clearTimeout(uhr); abbruch.abort() }
+  }, [apiUrl, filters.dataset_scope, filters.dataset_label, filters.sample_group,
+      filters.spatial_level, filters.theme, filters.year_start, filters.year_end,
+      filters.regional_only, filters.include_raw])
 
   useEffect(() => {
     // Keep the TOP of the newest answer (the most relevant results) in view,
@@ -836,6 +889,8 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             selected={filters.dataset_scope}
             onToggle={(value) => toggleFilter('dataset_scope', value)}
             onClear={() => clearFilter('dataset_scope')}
+          counts={facetCounts?.dataset_scope}
+          leerHinweis={t('filter.noneLeft')}
             allLabel={t('filter.allSelected')}
             emptyHint={t('filter.noneAvailable')}
             closeLabel={t('filter.close')}
@@ -849,6 +904,8 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
           selected={filters.dataset_label}
           onToggle={(value) => toggleFilter('dataset_label', value)}
           onClear={() => clearFilter('dataset_label')}
+          counts={facetCounts?.dataset_label}
+          leerHinweis={t('filter.noneLeft')}
           allLabel={t('filter.allSelected')}
           emptyHint={t('filter.noneAvailable')}
           closeLabel={t('filter.close')}
@@ -862,6 +919,8 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             selected={filters.sample_group}
             onToggle={(value) => toggleFilter('sample_group', value)}
             onClear={() => clearFilter('sample_group')}
+          counts={facetCounts?.sample_group}
+          leerHinweis={t('filter.noneLeft')}
             allLabel={t('filter.allSelected')}
             emptyHint={t('filter.noneAvailable')}
             closeLabel={t('filter.close')}
@@ -876,6 +935,8 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             selected={filters.spatial_level}
             onToggle={(value) => toggleFilter('spatial_level', value)}
             onClear={() => clearFilter('spatial_level')}
+          counts={facetCounts?.spatial_level}
+          leerHinweis={t('filter.noneLeft')}
             allLabel={t('filter.allSelected')}
             emptyHint={t('filter.noneAvailable')}
             closeLabel={t('filter.close')}
@@ -894,6 +955,8 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             selected={filters.theme}
             onToggle={(value) => toggleFilter('theme', value)}
             onClear={() => clearFilter('theme')}
+          counts={facetCounts?.theme}
+          leerHinweis={t('filter.noneLeft')}
             allLabel={t('filter.allSelected')}
             emptyHint={t('filter.noneAvailable')}
             closeLabel={t('filter.close')}

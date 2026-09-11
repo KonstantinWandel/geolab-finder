@@ -213,6 +213,32 @@ async def soep_filter_options(source: Optional[str] = None, include_raw: bool = 
     # dataset dropdown must not offer the datasets only they live in.
     return soep_rag_advisor.get_filter_options(source, include_raw=include_raw)
 
+
+class FacetCountRequest(BaseModel):
+    """Die aktuelle Auswahl, so wie sie die Suche auch bekäme."""
+    dataset_scope: Union[str, List[str], None] = None
+    dataset_label: Union[str, List[str], None] = None
+    sample_group: Union[str, List[str], None] = None
+    spatial_level: Union[str, List[str], None] = None
+    nuts_level: Union[str, List[str], None] = None
+    theme: Union[str, List[str], None] = None
+    year_start: Optional[int] = None
+    year_end: Optional[int] = None
+    regional_only: bool = False
+    include_raw: bool = False
+
+
+@app.post("/api/soep/facet-counts")
+def soep_facet_counts(req: FacetCountRequest):
+    """Wie viele Sätze jede noch wählbare Auswahl übrig ließe.
+
+    Damit kann die Oberfläche ausgrauen, was nicht zusammenpasst: ein Datensatz und eine
+    Stichprobe, die darin nicht vorkommt, sind zusammen nichts, und das soll man sehen, bevor
+    man sucht und eine leere Liste bekommt. Jede Facette wird gegen die anderen gerechnet,
+    nie gegen sich selbst.
+    """
+    return soep_rag_advisor.facet_counts(req.model_dump())
+
 # INKAR has no address for a single indicator, so a link into it has to be a query stored on the
 # BBSR server. This endpoint creates that query the first time somebody opens an indicator and
 # reuses it afterwards, which keeps what we leave in their system to the indicators people
