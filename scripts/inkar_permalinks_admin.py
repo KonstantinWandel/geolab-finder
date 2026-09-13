@@ -9,6 +9,7 @@ to be a way to see them, check them and take them back, and it has to be one com
   --list      what we have created, oldest first
   --check     do a sample of them still resolve? (they are the only thing our links depend on)
   --delete-all  remove every query we created and empty the local cache
+  --delete-since YYYY-MM-DD  remove only those created on or after that day
 
 The cache lives next to the served metadata; on the VM that is
 /opt/geolab/app/destatis-rag/soep_metadata_output/inkar_permalinks.json, so this normally runs
@@ -20,6 +21,7 @@ import argparse
 import json
 import random
 import ssl
+import time
 import urllib.request
 from pathlib import Path
 from typing import Any, Dict
@@ -45,6 +47,10 @@ def main() -> int:
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--check", type=int, default=0, metavar="N", help="N Stichproben prüfen")
     parser.add_argument("--delete-all", action="store_true")
+    parser.add_argument("--delete-since", default="", metavar="YYYY-MM-DD",
+                        help="nur die ab diesem Tag angelegten löschen")
+    parser.add_argument("--pause", type=float, default=0.5,
+                        help="Sekunden zwischen zwei Löschungen (Höflichkeit)")
     args = parser.parse_args()
 
     path = Path(args.cache)
@@ -76,21 +82,33 @@ def main() -> int:
               + ("" if gut == len(sample) else "; der Dienst legt fehlende beim nächsten Klick neu an"))
         return 0 if gut == len(sample) else 1
 
-    if args.delete_all:
+    if args.delete_all or args.delete_since:
         user = cache.get("user")
         if not user:
             print("keine Nutzerkennung, nichts zu löschen")
             return 0
-        weg = 0
-        for m_id, entry in list(links.items()):
+        if args.delete_since:
+            dran = {m: e for m, e in links.items()
+                    if (e.get("created") or "")[:10] >= args.delete_since}
+            print(f"{len(dran)} von {len(links)} Abfragen sind ab {args.delete_since} angelegt")
+        else:
+            dran = dict(links)
+        weg, schief = 0, []
+        for m_id, entry in list(dran.items()):
             try:
                 call("Main/DeleteQuery/", {"user": user, "id": entry["id"]})
+                links.pop(m_id, None)
                 weg += 1
             except Exception as fehler:  # noqa: BLE001
-                print(f"  M_ID {m_id}: {fehler}")
-        cache["links"] = {}
+                schief.append(f"  M_ID {m_id}: {fehler}")
+            if weg % 50 == 0 and weg:
+                print(f"  {weg} gelöscht", flush=True)
+            time.sleep(args.pause)
+        cache["links"] = links
         path.write_text(json.dumps(cache, ensure_ascii=False, indent=1), encoding="utf-8")
-        print(f"{weg} Abfragen beim BBSR gelöscht, Ablage geleert")
+        for z in schief[:10]:
+            print(z)
+        print(f"{weg} Abfragen beim BBSR gelöscht, {len(links)} bleiben stehen")
     return 0
 
 
