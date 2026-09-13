@@ -4755,12 +4755,19 @@ def flatten_mid(source: Dict[str, Any]) -> List[Dict[str, Any]]:
 # way the air quality data does: it is a map application plus the reporting obligations of the
 # Länder, so these entries name what exists rather than pretending to a machine-readable list.
 LAERM_ENTRIES: List[Tuple[str, str, str, List[str]]] = [
+    # Die Kartenanwendung unter gis.uba.de/maps war am 06.09.2026 noch da und ist am 13.09.2026
+    # weg: die ganze Anwendung antwortet mit 404, auch auf die Adresse, die das UBA auf seiner
+    # eigenen Seite "Lärmkarten" noch verlinkt. Der Verweis zeigt deshalb auf ebendiese Seite,
+    # die lebt, vom UBA gepflegt wird und weiterführt, sobald die Anwendung zurück ist. Genau
+    # dafür gibt es hier die Regel, immer auch die Einstiegsseite der Quelle zu führen.
     ("Lärmkartierung nach EU-Umgebungslärmrichtlinie (Kartenanwendung)",
-     "https://gis.uba.de/maps/?lang=de#/apps/laermkartierung",
+     "https://www.umweltbundesamt.de/themen/laerm/umgebungslaermrichtlinie/laermkarten",
      "Bundesweite Zusammenführung der strategischen Lärmkarten: Belastung durch Straßen-, "
      "Schienen-, Flug- und Industrielärm als Lden (Tag-Abend-Nacht) und Lnight, alle fünf Jahre "
      "nach einheitlichem Verfahren erhoben. Die Karten zeigen die Pegelklassen flächenhaft und "
-     "sind die Grundlage der Lärmaktionspläne.",
+     "sind die Grundlage der Lärmaktionspläne. Hinweis: die interaktive Kartenanwendung des UBA "
+     "(gis.uba.de) war im September 2026 nicht erreichbar; diese Seite führt zu ihr, sobald sie "
+     "wieder läuft, und nennt die Karten und Berichte der Länder.",
      ["Gemeinden und Verbandsgemeinden", "Adressen / Koordinaten",
       "weitere räumliche Gliederungen"]),
     ("Umgebungslärmrichtlinie: Verfahren und Betroffenenzahlen",

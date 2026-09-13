@@ -30,7 +30,7 @@ kein Feinschliff, sondern die Bedingung, unter der so ein Lauf überhaupt zuläs
 """
 from __future__ import annotations
 
-import argparse, collections, json, pathlib, re, threading, time, urllib.parse
+import argparse, collections, html, json, pathlib, re, threading, time, urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 
 import sys
@@ -50,6 +50,21 @@ SITE = REPO.parent / "geolab_regiohub"
 # also in fremde Systeme: 353 Abfragen sind so entstanden und mussten wieder gelöscht werden.
 # Eine Sperrliste nach Hostnamen reicht hier nicht, gesperrt gehört jeder Weg, der dort endet.
 NICHT_ANFASSEN = ("inkar.de", "bbsr.bund.de", "bbsr-geodienste.de", "/api/inkar/open/")
+
+# Hosts, die auf JEDE Adresse dieselbe Hülle zurückgeben, weil die Seite erst im Browser
+# entsteht. Gemessen am 13.09.2026, nicht vermutet: 543 Zensus-Adressen ergaben genau EINE
+# Antwortgröße (1728 B), 519 Adressen der Bundes-GENESIS genau eine (2506 B), 233 des
+# Regionalatlas genau eine (23902 B), und jede davon ist die Antwort auf einen absichtlich
+# falschen Code. Zum Vergleich: die Regionalstatistik lieferte auf 542 Adressen 511
+# verschiedene Größen, dort ist jede Anfrage eine echte Auskunft.
+#
+# Für diese Hosts prüft der Lauf deshalb nur noch eine Stichprobe. Alles weitere wäre keine
+# Prüfung, sondern Last auf fremden Servern für eine Antwort, die vorher feststeht. Wer diese
+# Verweise wirklich nachweisen will, braucht einen Browser, wie es check_ioer_links.py für den
+# IÖR-Monitor tut.
+NUR_STICHPROBE = {"ergebnisse.zensus2022.de": 500,
+                  "www-genesis.destatis.de": 500,
+                  "regionalatlas.statistikportal.de": 250}
 
 ABSTAND = 0.35          # Sekunden zwischen zwei Anfragen an denselben Host
 JE_HOST = 2             # gleichzeitige Anfragen an denselben Host
@@ -103,10 +118,16 @@ HREF = re.compile(r'href="(https?://[^"]+)"')
 
 
 def aus_seiten(wurzel):
+    """Aus fertigem HTML, und deshalb mit Entitäten zurückübersetzt.
+
+    In einer Seite steht `&amp;` da, wo die Adresse ein `&` hat: so gehört sich das, und genau
+    so muss man es wieder auflösen. Ohne das schickt der Prüfer eine Adresse los, die es nie
+    gab, bekommt vom gbe-bund eine 500 zurück und meldet einen kaputten Verweis, der in
+    Wahrheit tadellos funktioniert."""
     gefunden = set()
     for f in wurzel.rglob("*.html"):
         for u in HREF.findall(f.read_text(encoding="utf-8", errors="ignore")):
-            gefunden.add(u.split("#")[0].rstrip(")").strip())
+            gefunden.add(html.unescape(u.split("#")[0].rstrip(")").strip()))
     return gefunden
 
 
@@ -156,6 +177,22 @@ def main():
     adressen = verschraenkt(quellen)
     uebersprungen = [u for u in adressen if any(h in u for h in NICHT_ANFASSEN)]
     zu_pruefen = [u for u in adressen if u not in set(uebersprungen)]
+    gedeckelt = collections.Counter()
+    behalten, gedeckelt_weg = [], collections.Counter()
+    for u in zu_pruefen:
+        h = urllib.parse.urlsplit(u).netloc
+        grenze = NUR_STICHPROBE.get(h)
+        if grenze is None:
+            behalten.append(u); continue
+        gedeckelt[h] += 1
+        if gedeckelt[h] <= grenze:
+            behalten.append(u)
+        else:
+            gedeckelt_weg[h] += 1
+    zu_pruefen = behalten
+    for h, n in gedeckelt_weg.most_common():
+        print(f"  {h}: nur Stichprobe, {n} weitere Adressen nicht angefasst (immer dieselbe Hülle)")
+
     hosts = collections.Counter(urllib.parse.urlsplit(u).netloc for u in zu_pruefen)
     print(f"{len(adressen)} verschiedene Adressen, {len(zu_pruefen)} werden geholt, "
           f"{len(uebersprungen)} übersprungen (Absprache), {len(hosts)} Hosts")
