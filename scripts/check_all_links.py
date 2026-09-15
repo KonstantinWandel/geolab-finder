@@ -202,7 +202,11 @@ def main():
     if roh.exists() and not a.neu:
         for zeile in roh.read_text(encoding="utf-8").splitlines():
             try:
-                e = json.loads(zeile); schon[e["url"]] = e
+                e = json.loads(zeile)
+                # Nur, was zur jetzigen Auswahl gehört: bei --host steht im Zwischenstand noch
+                # alles von früheren Läufen, und der Bericht schlug sonst beim Zusammenbauen fehl.
+                if e["url"] in quellen:
+                    schon[e["url"]] = e
             except Exception:
                 pass
         zu_pruefen = [u for u in zu_pruefen if u not in schon]

@@ -33,7 +33,13 @@ monatlich ohne Lücke. Der Ausfall hat also nach dem Abend des 12.09. begonnen.
 (`Glossar-Nav.html?lv2=<id>`) lieferte beim letzten Archivbesuch zwischen Dezember 2025 und
 September 2026 Status 200. Die Form der Adresse ist also haltbar, es gibt nichts zu reparieren.
 
-**Was daraus folgt:** nichts ändern. Die Verweise sind richtig, die Quelle ist vorübergehend weg.
+**Nachtrag vom 15.09.2026: der Ausfall ist vorbei.** Die Seite antwortet wieder, und alle 29
+BA-Adressen des Index liefern Inhalt. Der Ausfall lief damit vom Abend des 12.09. bis zum 14. oder
+15.09.; der wöchentliche Prüflauf der VM hat ihn am 14.09. noch gesehen und die vier BA-Quellen
+deswegen als tot gemeldet. **Linkrot war hier zu keinem Zeitpunkt im Spiel**, es gab nichts zu
+reparieren, und der Bericht steht hier als Beleg dafür, dass das geprüft wurde.
+
+**Was daraus folgte:** nichts ändern. Die Verweise waren richtig, die Quelle war vorübergehend weg.
 Erneut prüfen mit
 
 ```bash
