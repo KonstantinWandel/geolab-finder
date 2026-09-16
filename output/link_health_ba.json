@@ -1,0 +1,285 @@
+{
+ "geprueft_am": "2026-09-15 19:24",
+ "shells": {
+  "regionalstatistik.de/genesis/online?operation=variable": "8845",
+  "regionalstatistik.de/genesis/online?operation=table": "8551",
+  "www-genesis.destatis.de/genesis/online?operation=table": "2506",
+  "ergebnisse.zensus2022.de/datenbank/online/table": "1728",
+  "regionalatlas.statistikportal.de/?BL=DE": "23902",
+  "regionalstatistik.de/genesis/online/statistic": "8927",
+  "monitor.ioer.de/?ind=": "4699"
+ },
+ "results": [
+  {
+   "url": "https://statistik.arbeitsagentur.de/",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 49362,
+   "verdict": "ok",
+   "woher": [
+    "seite"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 33496,
+   "verdict": "ok",
+   "woher": [
+    "geodb",
+    "seite"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018238",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 143199,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018242",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 53305,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018246",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 40354,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018250",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 48871,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018254",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 35627,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018258",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 77875,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018262",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 54815,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018266",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 59540,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018270",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 52342,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018274",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 39188,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018278",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 56911,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018282",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 34515,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018286",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 44701,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018290",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 115662,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018294",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 35557,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018298",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 80692,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018302",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 69454,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018306",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 37231,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018310",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 50273,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018314",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 65339,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018326",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 86996,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018330",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 59498,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Grundlagen/Definitionen/Glossar/Glossar-Nav.html?lv2=2018334",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 43720,
+   "verdict": "ok",
+   "woher": [
+    "geodb"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/DE/Navigation/Statistiken/Statistiken-nach-Regionen/Politische-Gebietsstruktur-Nav.html",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 47413,
+   "verdict": "ok",
+   "woher": [
+    "geodb",
+    "seite"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=15024&topic_f=zdf-sdi&dateOfRevision=201006-202106",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 111117,
+   "verdict": "ok",
+   "woher": [
+    "geodb",
+    "planer",
+    "register",
+    "seite"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amk",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 155702,
+   "verdict": "ok",
+   "woher": [
+    "geodb",
+    "planer",
+    "seite"
+   ]
+  },
+  {
+   "url": "https://statistik.arbeitsagentur.de/SiteGlobals/Forms/Suche/Einzelheftsuche_Formular.html?nn=24280&topic_f=amr-amr",
+   "host": "statistik.arbeitsagentur.de",
+   "bytes": 183181,
+   "verdict": "ok",
+   "woher": [
+    "geodb",
+    "planer",
+    "register",
+    "seite"
+   ]
+  }
+ ]
+}

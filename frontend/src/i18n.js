@@ -90,6 +90,11 @@ export const STRINGS = {
     'row.portal': 'entry page of the source',
     'row.fallbackPrefix': 'If that link ever stops working:',
     'row.plan': 'Plan a linkage with this indicator →',
+    // Dieselbe Größe gibt es bei mehreren Quellen mit verschiedenen Nennern. Der Satz warnt,
+    // ohne zu behaupten, dieser Treffer sei der falsche: welcher der richtige ist, entscheidet
+    // die Frage, und das kann die Seite nicht wissen.
+    'row.versions': '{n} versions of {measure} exist across {sources} sources, with {denominators} different denominators. They do not all measure the same thing.',
+    'row.compare': 'Compare them →',
     'results.sameForAll': 'Same for every result:',
     'filter.noneLeft': 'Nothing left with what is already selected',
     'filter.sampleGroupHint': 'This groups the questionnaires a variable comes from, not what it is about. Migration, health or education questions are also asked in the core questionnaires, and those variables sit in their own family here.',
@@ -244,6 +249,8 @@ export const STRINGS = {
     'row.portal': 'Einstiegsseite der Quelle',
     'row.fallbackPrefix': 'Falls dieser Link einmal nicht mehr funktioniert:',
     'row.plan': 'Verknüpfung mit diesem Indikator planen →',
+    'row.versions': 'Von {measure} gibt es {n} Fassungen aus {sources} Quellen, mit {denominators} verschiedenen Nennern. Sie messen nicht alle dasselbe.',
+    'row.compare': 'Nebeneinander stellen →',
     'results.sameForAll': 'Bei allen Treffern gleich:',
     'filter.noneLeft': 'Mit der bisherigen Auswahl bleibt hier nichts übrig',
     'filter.sampleGroupHint': 'Gruppiert die Fragebögen, aus denen eine Variable stammt, nicht ihr Thema. Nach Migration, Gesundheit oder Bildung wird auch in den Kernfragebögen gefragt; jene Variablen stehen hier in ihrer eigenen Familie.',

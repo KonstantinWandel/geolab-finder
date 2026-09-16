@@ -1569,3 +1569,14 @@ button, input, select, textarea,
   position: sticky;
   bottom: 0;
 }
+
+/* Der Hinweis auf die anderen Fassungen desselben Maßes. Er warnt, also darf er nicht wie die
+   übrigen Fußnoten der Trefferzeile aussehen, und er darf die Zeile auch nicht dominieren: die
+   meisten Treffer sind in Ordnung, und die Warnung ist eine Frage, keine Fehlermeldung. */
+.result-register {
+  margin: .35rem 0 0;
+  padding-left: .6rem;
+  border-left: 2px solid var(--accent, #b3121b);
+  font-size: .88em;
+  color: var(--muted, #555);
+}

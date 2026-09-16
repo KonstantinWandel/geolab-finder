@@ -4,6 +4,38 @@ import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '..
 // The project site carries the imprint, the privacy statement and the attribution list.
 const GEOLAB_SITE = 'https://geolab.soz.uni-bielefeld.de'
 const LINK_BUILDER = `${GEOLAB_SITE}/tools/link-builder/`
+const MEASURE_REGISTER = `${GEOLAB_SITE}/tools/measure-register/`
+
+// Dieselbe Größe erscheint bei mehreren Quellen mit verschiedenen Nennern, und zwei so gebaute
+// Zahlen sind nicht vergleichbar. Das steht im Merkmalsregister, und bis jetzt musste man wissen,
+// dass es das gibt. Die fünfzehn Begriffe kommen aus `measure_concepts.json`, erzeugt aus dem
+// Register selbst (scripts/build_measure_concepts.py), mitsamt der geschriebenen Regel, die dort
+// über die Zugehörigkeit entscheidet. Eine zweite, ähnlich gemeinte Regel wäre der Weg, auf dem
+// die beiden Seiten irgendwann verschiedene Antworten geben.
+function useMeasureConcepts() {
+  const [concepts, setConcepts] = useState([])
+  useEffect(() => {
+    let lebt = true
+    fetch(`${import.meta.env.BASE_URL || '/'}measure_concepts.json`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (lebt && d && Array.isArray(d.concepts)) setConcepts(d.concepts) })
+      .catch(() => {})
+    return () => { lebt = false }
+  }, [])
+  return concepts
+}
+
+function matchConcept(concepts, label) {
+  const t = String(label || '').toLowerCase()
+  if (!t) return null
+  for (const c of concepts) {
+    try {
+      if (c.not && new RegExp(c.not, 'i').test(t)) continue
+      if (c.rule && new RegExp(c.rule, 'i').test(t)) return c
+    } catch { /* eine kaputte Regel darf die Trefferliste nicht mitnehmen */ }
+  }
+  return null
+}
 
 // One facet: a dropdown that opens onto checkboxes. A plain <select> holds exactly one value, so
 // comparing two sources or three spatial levels meant running the same search once per value.
@@ -114,6 +146,7 @@ function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, em
 
 function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
   const t = makeTranslator(language)
+  const measureConcepts = useMeasureConcepts()
   const isInkar = mode === 'inkar'
   const isSoep = mode === 'soep'
   const isAll = mode === 'all'
@@ -832,6 +865,23 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                          target="_blank" rel="noreferrer">{t('row.plan')}</a>
                     </p>
                   )}
+
+                  {/* Der Schritt, der zwischen Finden und Rechnen fehlt. Ein Treffer sieht aus
+                      wie DIE Arbeitslosenquote, und es sind 64 Fassungen aus 9 Quellen mit 43
+                      verschiedenen Nennern. Wer das nicht weiß, vergleicht später zwei Zahlen,
+                      die nie vergleichbar waren, und nichts in der Auswertung sagt es ihm. */}
+                  {mode !== 'soep' && (() => {
+                    const c = matchConcept(measureConcepts, row.label)
+                    if (!c) return null
+                    return (
+                      <p className="result-register">
+                        {t('row.versions', { n: c.n, sources: c.sources, denominators: c.denominators,
+                                             measure: c.de || c.title })}{' '}
+                        <a href={`${MEASURE_REGISTER}?m=${encodeURIComponent(c.id)}`}
+                           target="_blank" rel="noreferrer">{t('row.compare')}</a>
+                      </p>
+                    )
+                  })()}
                 </li>
               )
             })}
