@@ -3,9 +3,8 @@
 Für die Person, die das übernimmt. Kein Vorwissen über das Projekt nötig, aber ein Terminal, ein
 SSH-Zugang zur geolab-VM und die Bereitschaft, einmal im Monat zehn Minuten hineinzusehen.
 
-Die technische Innenansicht steht in `CLAUDE.md` und richtet sich an KI-Agenten. Dieses Dokument
-hier ist die Bedienungsanleitung: was von selbst läuft, was du tun musst, und was zu tun ist, wenn
-etwas kaputt ist.
+Dieses Dokument ist die Bedienungsanleitung: was von selbst läuft, was du tun musst, und was zu
+tun ist, wenn etwas kaputt ist.
 
 ## Was es gibt
 
@@ -250,26 +249,15 @@ Portal aus dem Finder verschwinden soll oder als historischer Bestand bleibt, un
 Adresse dieselben Daten zeigt wie die alte. Diese Urteile bleiben bei einem Menschen. Was
 automatisiert ist, ist die Beobachtung und die Verkürzung der Reparatur auf wenige Schritte.
 
-## Die monatliche Runde mit Claude
+## Die Erinnerung an die monatliche Runde
 
-Wer Claude Code benutzt, muss Routine 1 und 2 nicht von Hand machen. In einer Sitzung im
-Arbeitsbereich `~/kwandel` genügt
+Die Runde selbst stößt niemand automatisch an. Automatisch geschieht nur die Erinnerung:
+`~/kwandel/bin/geolab_alarm.sh` vergleicht das Datum in `output/last_maintenance.txt` mit dem
+heutigen und meldet beim Einloggen, wenn die Runde länger als 35 Tage her ist. Wer die Runde
+erledigt hat, schreibt das Datum in dieser Datei neu.
 
-> monatliche Wartung der Finder
 
-und der Skill `geolab-wartung` übernimmt: Bericht lesen, das mechanisch Eindeutige beheben
-(umgezogene Adresse nach `SOURCE_FIXES`, unprüfbare Adresse mit Wiedervorlagedatum nach
-`known_url_issues.json`), festschreiben, und die Urteilsfragen vorlegen. Er liefert nicht aus und
-baut den Index nicht neu, weil beides eine bewusste Entscheidung ist.
+## Eine Regel, die immer gilt
 
-**Das startet niemand von selbst.** Auf lovelace gibt es kein Claude-Programm auf der
-Kommandozeile, also kann kein Zeitplan diese Runde anstoßen. Was automatisch geschieht, ist die
-Erinnerung: `~/kwandel/bin/geolab_alarm.sh` vergleicht das Datum in
-`output/last_maintenance.txt` mit heute und meldet beim Einloggen, wenn die Runde über 35 Tage
-her ist. Der Skill schreibt das Datum am Ende neu.
-
-## Für KI-Agenten
-
-`CLAUDE.md` ist die technische Innenansicht dieses Repos, dieses Dokument die Bedienungsanleitung.
 Wenn ein Prüflauf rot ist, gilt Routine 2: die Korrektur gehört nach `SOURCE_FIXES`, nicht in ein
 neu erfundenes Verfahren und nicht von Hand in die erzeugte Registry.

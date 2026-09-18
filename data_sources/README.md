@@ -123,4 +123,4 @@ Dropping a new file into a `raw/` folder means: re-run the builder, re-embed, re
 source has no flattener yet, add one to `FLATTENERS` in that script (and a `FETCH_PLAN` entry in
 `fetch_sources.py` if it is downloadable).
 
-See `../CLAUDE.md` for the full pipeline, the record schema, and the rules that go with it.
+See the repository's top-level documentation for the full pipeline and the record schema.

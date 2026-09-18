@@ -202,8 +202,7 @@ echo backup=$B"""
                f"so the five 'Personen: Religion' rows are told apart. Rebuilt, re-embedded and\n"
                f"deployed automatically after the resolver finished.\n\n"
                f"Retrieval gate: hit@1 {before} -> {after} on {58} queries.\n"
-               f"Records: {previous_records} -> {records}.\n\n"
-               f"Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>")
+               f"Records: {previous_records} -> {records}.")
     token_file = Path.home() / ".config" / "gh" / "hosts.yml"
     token = re.search(r"oauth_token:\s*(\S+)", token_file.read_text(encoding="utf-8")).group(1)
     for repo_path, remote_name in [(REPO, "KonstantinWandel/geolab-finder"),

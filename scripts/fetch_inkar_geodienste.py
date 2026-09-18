@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fetch what the BBSR publishes about INKAR indicators as geo services.
 
-INKAR itself has no address for a single indicator (see CLAUDE.md), so the records link to the
+INKAR itself has no address for a single indicator, so the records link to the
 portal. The BBSR does publish a subset of the indicators as WMS layers and as metadata records in
 its catalogue service, and those records are harvested into the national Geodatenkatalog, where
 each one has a page of its own. That is the closest thing to a per-indicator address that exists,

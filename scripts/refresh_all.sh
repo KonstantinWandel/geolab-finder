@@ -5,7 +5,7 @@
 # Scheduling note: this box is a Kubernetes pod, so /etc/cron.d is wiped on restart and there is
 # no user systemd, which means a cron entry here does NOT survive. Options, in order of how much
 # they actually hold: (a) run this by hand after a source publishes an update, which is the
-# current practice; (b) a scheduled Claude Code session that runs it; (c) a systemd timer on the
+# current practice; (b) a scheduled session that runs it; (c) a systemd timer on the
 # geolab VM, which is a real VM and persists, at the price of embedding on 4 CPU cores instead of
 # the H200 (about 30 to 60 minutes for 10k records instead of 2).
 #

@@ -6,7 +6,7 @@ Reads the registry, each source's `raw/` folder and `FETCH_LOG.json`, and the bu
 
   data_sources/CHECKLIST.md          one line per source: state, artifacts, records, next step
   Geospatial_Data_Sources.xlsx       adds a machine-generated "Status_GeoDB" sheet
-                                     (all AI-written cells in blue, per the workspace rule);
+                                     (all generated cells in blue, so they stay distinguishable);
                                      the untouched original is kept as *_orig.xlsx
 
 Run:
