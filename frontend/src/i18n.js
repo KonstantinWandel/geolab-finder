@@ -2,7 +2,7 @@
 //
 // The audience is German researchers working with German data, so German is the default
 // whenever the browser asks for it; the choice is persisted per browser like the theme.
-// Product names (SOEP Variable Finder, GeoDB Geodata Index) and the source labels inside the
+// Product names (SOEP Variable Finder, GeoDB) and the source labels inside the
 // data are NOT translated: the record labels come from the portals themselves, and renaming
 // them here would break the link between what the finder shows and what the source calls it.
 

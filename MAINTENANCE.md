@@ -10,7 +10,7 @@ tun ist, wenn etwas kaputt ist.
 
 | Was | Adresse |
 |---|---|
-| GeoDB Geodata Index (36 Datenquellen, 11.377 Datensätze) | <https://geodb.geolab.soz.uni-bielefeld.de> |
+| GeoDB (36 Datenquellen, 11.377 Datensätze) | <https://geodb.geolab.soz.uni-bielefeld.de> |
 | SOEP Variable Finder (125.496 Variablen aus SOEP-Core v41) | <https://soep-faiss.geolab.soz.uni-bielefeld.de> |
 | Projektseite | <https://geolab.soz.uni-bielefeld.de> |
 

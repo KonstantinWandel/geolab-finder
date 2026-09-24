@@ -42,7 +42,7 @@ SCHLUESSEL_SOEP="aa34e73bd5704a4081b983d0f2ca2534"
 case "$MODUS" in
   inkar)
     IFS="|" read -r DATENSAETZE QUELLEN <<<"$(zahlen)"
-    TITEL="GeoDB Geodata Index"
+    TITEL="GeoDB"
     BESCHREIBUNG="Semantische Suche in Beschreibungen deutscher Geodaten: ${DATENSAETZE} Indikatoren, Tabellen und Datensätze aus ${QUELLEN} Datenquellen. Nur Metadaten."
     AUSGABE="dist-inkar"
     ADRESSE="https://geodb.geolab.soz.uni-bielefeld.de/"

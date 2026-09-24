@@ -153,7 +153,7 @@ function App() {
 
   const TITLES = {
     soep: "SOEP Variable Finder",
-    inkar: "GeoDB Geodata Index",
+    inkar: "GeoDB",
     all: "Data Platform",
   }
 
