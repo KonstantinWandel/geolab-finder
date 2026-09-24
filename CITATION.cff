@@ -11,7 +11,7 @@ authors:
 repository-code: "https://github.com/KonstantinWandel/geolab-finder"
 doi: "10.5281/zenodo.21134145"
 license: MIT
-version: "0.3.0"
+version: "0.3.1"
 date-released: "2026-09-24"
 keywords:
   - semantic search

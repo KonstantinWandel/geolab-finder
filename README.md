@@ -1,58 +1,100 @@
-# GeoLAB Regional Indicator Finder (INKAR)
+# GeoDB
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21134145.svg)](https://doi.org/10.5281/zenodo.21134145)
 
-Semantic search over research-data **metadata**: a [SOEP](https://www.diw.de/soep) survey-variable finder and an [INKAR](https://www.inkar.de/) regional-indicator finder, served from one codebase.
+GeoDB, short for GeoDataBase, is a semantic search over the metadata of German georeferenced data
+sources. You describe what you are looking for in plain language, in German or English
+("Arztdichte", "childcare coverage in rural districts"), and get back the indicators, tables and
+datasets that measure it, from the Bundesland down to grid cells. Each result carries its spatial
+levels, its years, a short description and a link to the portal that holds the data.
 
-You ask in plain language ("net individual income from labour", "rural childcare coverage by district") and get the most relevant variables/indicators back, ranked — across German labels and English descriptions.
+It runs at <https://geodb.geolab.soz.uni-bielefeld.de/> and is part of the
+[GeoLAB](https://geolab.soz.uni-bielefeld.de/) of the Leibniz ScienceCampus SOEP-RegioHub at
+Bielefeld University and DIW Berlin.
 
-> Status: research prototype. Retrieval is semantic and imperfect; verify hits against the official documentation before use.
+> Status: research prototype. Retrieval is semantic and imperfect; check a hit against the
+> source's own documentation before you use it.
+
+## What is indexed
+
+41 sources and about 12,500 records (index of 11 September 2026), among them the
+Regionaldatenbank and GENESIS-Online of the statistical offices, Zensus 2022, INKAR (BBSR), the
+Regionalatlas, the Deutschlandatlas, the IÖR-Monitor, the Bundesagentur für Arbeit and
+OpenStreetMap point layers. The full list, with each source's licence and attribution, is on the
+[data sources page](https://geolab.soz.uni-bielefeld.de/data-sources.html).
+
+The index holds descriptions and links. The data stays with the institutions that publish it.
 
 ## How it works
 
-- **Bi-encoder retrieval** with [`BAAI/bge-m3`](https://huggingface.co/BAAI/bge-m3) (multilingual, 1024-d) over the metadata corpus.
-- **Cross-encoder rerank** with a multilingual reranker — default [`BAAI/bge-reranker-base`](https://huggingface.co/BAAI/bge-reranker-base) (fast on CPU), configurable to [`BAAI/bge-reranker-v2-m3`](https://huggingface.co/BAAI/bge-reranker-v2-m3) via `SOEP_RAG_RERANKER_MODEL`. A multilingual reranker matters: an English-only one buries terse German-labelled canonical variables (e.g. `pgen/pglabnet`) under chattier subsample items.
-- **Score fusion:** the final rank fuses the bi-encoder, the reranker, a lexical-overlap signal, and a small **dataset-authority prior** (boosts canonical generated/survey datasets like `pgen/pequiv/pl`, down-weights age/group subsample instruments) plus a decisive exact-code bonus.
-- **Document hygiene:** the standard SOEP missing-value boilerplate (`-1`…`-9`), identical across ~all variables, is stripped before embedding so it doesn't dominate the signal.
-- **FAISS** inner-product index over normalized embeddings; optional filters (dataset, year, spatial/NUTS level, theme).
-- One backend, two modes via `GEOLAB_APP_MODE=soep|inkar|all`; a small React UI per mode.
+- **Bi-encoder retrieval** with
+  [`intfloat/multilingual-e5-large-instruct`](https://huggingface.co/intfloat/multilingual-e5-large-instruct)
+  over the metadata records. It was chosen over `BAAI/bge-m3` by a comparison on this corpus.
+- **Cross-encoder rerank** of the top candidates. Production uses
+  [`BAAI/bge-reranker-base`](https://huggingface.co/BAAI/bge-reranker-base), exported to ONNX and
+  quantised to int8, which is fast enough on four CPU cores; the code default is
+  [`BAAI/bge-reranker-v2-m3`](https://huggingface.co/BAAI/bge-reranker-v2-m3), set with
+  `SOEP_RAG_RERANKER_MODEL`. The reranker has to be multilingual: an English-only one buries terse
+  German labels under longer English descriptions.
+- **Score fusion** of the bi-encoder, the reranker and a lexical-overlap signal, with a bonus for
+  an exact match on a record's code.
+- **Filters** by source, spatial level, year range and theme. Each filter shows how many records
+  a value would leave, given the other filters.
+- One backend also serves the [SOEP Variable Finder](https://github.com/KonstantinWandel/soep-variable-finder),
+  selected by `GEOLAB_APP_MODE`: `inkar` is GeoDB (the name dates from when INKAR was its only
+  source), `soep` is the SOEP finder.
 
 ## Models
 
-The retrieval models are downloaded from Hugging Face at runtime (cached locally):
+Downloaded from Hugging Face at runtime and cached locally:
 
-- [`BAAI/bge-m3`](https://huggingface.co/BAAI/bge-m3) — bi-encoder — **MIT**.
-- [`BAAI/bge-reranker-base`](https://huggingface.co/BAAI/bge-reranker-base) / [`BAAI/bge-reranker-v2-m3`](https://huggingface.co/BAAI/bge-reranker-v2-m3) — cross-encoder reranker — **Apache-2.0**.
+- `intfloat/multilingual-e5-large-instruct`, bi-encoder, MIT.
+- `BAAI/bge-reranker-base`, cross-encoder, MIT; `BAAI/bge-reranker-v2-m3`, cross-encoder, Apache-2.0.
 
-An optional local answer-generation LLM (`meta-llama/Llama-3.1-8B-Instruct`, Meta Llama 3.1 Community License) is **disabled by default** (`SOEP_RAG_LOAD_LLM=0`); the finders are retrieval-only.
+The code can load a local answer-generating language model (`SOEP_RAG_LOAD_LLM`). It is off by
+default and off in production; the finders only retrieve.
 
-## Quickstart (Docker)
+## Building the index
+
+The pipeline lives in `scripts/`, one step per script:
 
 ```bash
-# 1. Provide the metadata + build embeddings (see scripts/ and the data note below)
-# 2. Bring up a stack:
-cd deploy/secure-soep   # or deploy/secure-inkar
-./run.sh
+python scripts/build_source_registry.py   # source workbook -> data_sources/registry/
+python scripts/fetch_sources.py           # portals -> data_sources/<NN>-<slug>/raw/
+python scripts/build_geodb_metadata.py    # raw/ -> soep_metadata_output/geodb_metadata.json
+bash scripts/refresh_all.sh --no-deploy   # all of the above, then embedding and the retrieval gate
 ```
 
-Each stack is a FastAPI backend + a Caddy frontend (basic auth) + an optional Cloudflare tunnel. On hosts without a working container runtime the same processes run natively (uvicorn + the `caddy`/`cloudflared` binaries).
+The source workbook is not part of the repository; the registry built from it is
+(`data_sources/registry/geo_sources.json`). `build_geodb_metadata.py` holds one flattener per
+source. Two retrieval tests guard changes to the models or the records:
+`scripts/eval_geodb_search.py` (58 queries) and `scripts/eval_geodb_hard.py` (concept-only and
+cross-language questions, plus questions the index cannot answer).
 
-## Data and licenses — **not included in this repository**
+The interface is built with `bash frontend/build.sh inkar`, which writes `frontend/dist-inkar/`.
 
-This repo is **code only**. You must supply the metadata yourself; it is governed by its own terms:
+## Running it
 
-- **SOEP variable metadata** (labels, categories, descriptions) — from [paneldata.org](https://paneldata.org/) / SOEP-Core. Public *metadata*; using it is covered by your SOEP data-use agreement. No microdata is used or distributed here. The enriched English descriptions are model-generated derivatives of that metadata.
-- **INKAR 2025 indicators** and the **BBSR Raumgliederungssystem 2023** reference — © [BBSR](https://www.inkar.de/), used under their terms.
+The production service runs natively: uvicorn under systemd, behind Caddy. `deploy/` holds
+container stacks for hosts with a container runtime (`cd deploy/secure-inkar && ./run.sh`), each a
+FastAPI backend with a Caddy frontend.
 
-Generated embeddings, FAISS indexes, raw data files, and any `.env`/auth secrets are git-ignored and must never be committed.
+## Data and licences
+
+This repository holds code only. The metadata it indexes belongs to the publishing institutions
+and is used under their terms, listed per source on the data sources page. INKAR and the BBSR
+Raumgliederung are © [BBSR](https://www.inkar.de/). Embeddings, indexes, downloaded catalogue
+files and any credentials are git-ignored.
 
 ## Repository layout
 
 ```
-backend/        FastAPI app + services (retrieval, rerank, advisor)
-frontend/       React/Vite UI (mode-aware: SOEP / INKAR)
-scripts/        Metadata flattening + index building (e.g. build_inkar_metadata_index.py)
-deploy/         Container stacks (secure-soep, secure-inkar) + Caddyfiles
+backend/        FastAPI app; app/services/soep_rag_advisor.py is the retrieval service
+frontend/       React/Vite interface, one build per finder (build.sh)
+scripts/        source registry, fetchers, flatteners, retrieval tests, link checks
+data_sources/   per-source briefs and the generated source registry
+deploy/         container stacks and Caddyfiles
+MAINTENANCE.md  operating notes, in German
 ```
 
 ## Author
@@ -62,8 +104,9 @@ Konstantin Wandel, research fellow at Universität Bielefeld (SOEP-RegioHub):
 
 ## Citing
 
-If you use this software, please cite it via the archived release (see `CITATION.cff`). A Zenodo DOI is minted per GitHub release.
+Please cite the archived release; see `CITATION.cff`. Zenodo archives every GitHub release, and
+the DOI above always resolves to the newest one.
 
 ## License
 
-[MIT](LICENSE) © 2026 Konstantin Wandel. Built as part of the GeoLAB project, Universität Bielefeld.
+[MIT](LICENSE) © 2026 Konstantin Wandel. Part of the GeoLAB project, Universität Bielefeld.
