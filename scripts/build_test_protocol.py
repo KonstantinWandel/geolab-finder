@@ -50,7 +50,7 @@ VOCAB = [
 ]
 
 INTRO = [
-    ("Rückmeldung zum GeoDB Geodata Index und zum SOEP Variable Finder", "title"),
+    ("Rückmeldung zu GeoDB und zum SOEP Variable Finder", "title"),
     ("", ""),
     (f"Vorbereitet am {date.today().strftime('%d.%m.%Y')} für die gemeinsame Durchsicht.", "italic"),
     ("", ""),
@@ -69,7 +69,7 @@ INTRO = [
     ("   wir sie beheben können, ohne eine einzige neue Quelle zu erschließen.", ""),
     ("", ""),
     ("Zum Ausprobieren", "head"),
-    ("GeoDB Geodata Index (Geodaten): https://geodb.geolab.soz.uni-bielefeld.de/", ""),
+    ("GeoDB (Geodaten): https://geodb.geolab.soz.uni-bielefeld.de/", ""),
     ("SOEP Variable Finder:            https://soep-faiss.geolab.soz.uni-bielefeld.de/", ""),
     ("", ""),
     ("Beschreiben Sie ruhig in ganzen Sätzen, was Sie suchen; dafür ist die Suche gebaut. Wenn kein", ""),

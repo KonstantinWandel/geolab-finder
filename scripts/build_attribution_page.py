@@ -68,7 +68,7 @@ The GeoLAB finders are **metadata search tools**. They index descriptions of dat
 institutions publish, and every hit links out to the portal that holds the data. No measurement
 values and no microdata are stored in or served by the finders.
 
-- [GeoDB Geodata Index](https://geodb.geolab.soz.uni-bielefeld.de/): {geodb_rows} indicator,
+- [GeoDB](https://geodb.geolab.soz.uni-bielefeld.de/): {geodb_rows} indicator,
   table and dataset descriptions from {geodb_sources} German georeferenced data sources.
 - [SOEP Variable Finder](https://soep-faiss.geolab.soz.uni-bielefeld.de/): survey-variable
   metadata of the Socio-Economic Panel.

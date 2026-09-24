@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "GeoDB Geodata Index: semantic search over German georeferenced data sources"
+title: "GeoDB: semantic search over German georeferenced data sources"
 message: "If you use this software, please cite it using these metadata."
 type: software
 authors:
@@ -11,8 +11,8 @@ authors:
 repository-code: "https://github.com/KonstantinWandel/geolab-finder"
 doi: "10.5281/zenodo.21134145"
 license: MIT
-version: 0.2.0
-date-released: "2026-08-25"
+version: "0.3.0"
+date-released: "2026-09-24"
 keywords:
   - semantic search
   - cross-encoder reranking

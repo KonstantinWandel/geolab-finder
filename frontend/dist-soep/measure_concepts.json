@@ -1,0 +1,156 @@
+{
+ "built": "2026-09-11",
+ "url": "https://geolab.soz.uni-bielefeld.de/tools/measure-register/",
+ "concepts": [
+  {
+   "id": "arbeitslosenquote",
+   "title": "Unemployment rate",
+   "de": "Arbeitslosenquote",
+   "rule": "(arbeitslosen|erwerbslosen|langzeitarbeitslosen|jugenderwerbslosen)quote|arbeitslose.{0,30}(an den|je 100|in %).{0,25}erwerbsperson|arbeitslosigkeit",
+   "not": "veränderung|entwicklung|anforderungsniveau|ohne ausbildung|an (allen )?(arbeitslosen|arbeitslose)|arbeitslosen insgesamt",
+   "n": 64,
+   "sources": 9,
+   "denominators": 43
+  },
+  {
+   "id": "bevoelkerungsdichte",
+   "title": "Population density",
+   "de": "Bevölkerungsdichte",
+   "rule": "bevölkerungsdichte|einwohner\\w* je (qkm|km²|km2|quadratkilometer)|einwohnerdichte",
+   "not": "veränderung|ländlichkeit",
+   "n": 13,
+   "sources": 7,
+   "denominators": 6
+  },
+  {
+   "id": "bip",
+   "title": "Gross domestic product per head",
+   "de": "Bruttoinlandsprodukt je Kopf",
+   "rule": "bruttoinlandsprodukt|\\bbip\\b|bruttowertschöpfung|\\bbws\\b",
+   "not": "veränderung|zum vorjahr|anteil|sektor|baugewerbe|dienstleist|handel|land- und forst|produzierendes|verarbeitendes|finanz",
+   "n": 27,
+   "sources": 7,
+   "denominators": 13
+  },
+  {
+   "id": "auslaenderanteil",
+   "title": "Share of foreign residents",
+   "de": "Ausländeranteil",
+   "rule": "ausländeranteil|(anteil|quote)\\s[^.]{0,40}(ausländer|ausländisch)|ausländische bevölkerung|migrationshintergrund|personen mit mhg|schutzsuchende",
+   "not": "arbeitslos|beschäftig|sgb|grundsicherung|mindestsicherung|durchschnittsalter|aufenthaltsdauer|schüler|studierende|tageseinrichtung|schulab|tuberkulose|erkrankung|einbürgerung|veränderung|an (allen|den) ausländer|an allen schutzsuchenden|herkunftsland|schutzstatus",
+   "n": 40,
+   "sources": 7,
+   "denominators": 17
+  },
+  {
+   "id": "beschaeftigtenquote",
+   "title": "Employment rate",
+   "de": "Beschäftigtenquote",
+   "rule": "beschäftigtenquote|beschäftigungsquote|erwerbstätigenquote|erwerbsquote|sozialversicherungspflichtig beschäftigte.{0,30}(quote|anteil|je )",
+   "not": "unterbeschäftigung|^index |index beschäftigt|veränderung",
+   "n": 43,
+   "sources": 8,
+   "denominators": 32
+  },
+  {
+   "id": "kinderbetreuung",
+   "title": "Childcare coverage",
+   "de": "Kinderbetreuungsquote",
+   "rule": "betreuungsquote|versorgungsquote|kindertages|kinderbetreuung|betreute kinder|kinder in tages",
+   "not": "personal|integrativ|veränderung",
+   "n": 24,
+   "sources": 6,
+   "denominators": 8
+  },
+  {
+   "id": "aerztedichte",
+   "title": "Physician density",
+   "de": "Ärztedichte",
+   "rule": "ärzte|arztdichte|ärztin|hausärzt|medizinische versorgung|apotheke",
+   "not": "entfernung|erreichbarkeit|nahversorgung|grundversorgung|struktur der|leistungsbereich|vergütung",
+   "n": 19,
+   "sources": 5,
+   "denominators": 7
+  },
+  {
+   "id": "einkommen",
+   "title": "Household income per head",
+   "de": "Einkommen je Einwohner",
+   "rule": "verfüg\\w*\\.? einkommen|primäreinkommen|einkommen der privaten haushalte|einkommen je einwohner|haushaltseinkommen|nettoeinkommen",
+   "not": "verkaufsfläche|bruttonationaleinkommen|nach haushaltstyp|von familien",
+   "n": 12,
+   "sources": 6,
+   "denominators": 8
+  },
+  {
+   "id": "wohnflaeche",
+   "title": "Living space and rents",
+   "de": "Wohnfläche und Mieten",
+   "rule": "wohnfläche|nettokaltmiete|mietpreis|mieten|wohnungen je",
+   "not": "baugenehmigung|fertiggestellte|neubau|pachten|je wohngebäude",
+   "n": 18,
+   "sources": 6,
+   "denominators": 9
+  },
+  {
+   "id": "grundsicherung",
+   "title": "Benefit receipt",
+   "de": "Leistungsbezug",
+   "rule": "sgb ii|grundsicherung|hilfe zum lebensunterhalt|leistungsberechtigt|regelleistungsberechtigt|wohngeld|sozialhilfe",
+   "not": "arbeitslosenquote|unterbeschäftigung|^index |veränderung",
+   "n": 55,
+   "sources": 7,
+   "denominators": 31
+  },
+  {
+   "id": "flaechennutzung",
+   "title": "Settlement and transport area",
+   "de": "Siedlungs- und Verkehrsfläche",
+   "rule": "siedlungs- und verkehrsfläche|siedlungsfläche|freiraumfläche|anteil der fläche für|bodenfläche",
+   "not": "veränderung|\\d-jährige|landwirtschaft|für wald|verlust von",
+   "n": 42,
+   "sources": 6,
+   "denominators": 11
+  },
+  {
+   "id": "schulabschluss",
+   "title": "School leavers without a certificate",
+   "de": "Schulabgänger ohne Abschluss",
+   "rule": "schulabgänger|schulabschluss|ohne hauptschulabschluss|abiturient",
+   "not": "höchster|anteil männlich an|anteil weiblich an|veränderung",
+   "n": 32,
+   "sources": 7,
+   "denominators": 9
+  },
+  {
+   "id": "pflege",
+   "title": "Long-term care",
+   "de": "Pflegebedürftigkeit",
+   "rule": "pflegebedürftig|pflegeheim|pflegequote|pflegedienst",
+   "not": "personal|plätze|vergütung|einrichtungen|träger|dienste",
+   "n": 11,
+   "sources": 5,
+   "denominators": 7
+  },
+  {
+   "id": "wanderung",
+   "title": "Migration balance",
+   "de": "Wanderungssaldo",
+   "rule": "wanderungssaldo|wanderung|zuzüge|zuzug|fortzüge|fortzug",
+   "not": "dichte|geboren|gestorben|geburten|ausländisch|veränderung",
+   "n": 50,
+   "sources": 8,
+   "denominators": 27
+  },
+  {
+   "id": "erreichbarkeit",
+   "title": "Accessibility",
+   "de": "Erreichbarkeit",
+   "rule": "erreichbarkeit|fahrzeit|entfernung zur|zum nächsten",
+   "not": "",
+   "n": 46,
+   "sources": 3,
+   "denominators": 3
+  }
+ ]
+}
