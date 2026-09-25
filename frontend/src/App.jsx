@@ -212,7 +212,14 @@ function App() {
             <a href={`${GEOLAB_SITE}/Accessing.html`}>Accessing</a>
             <a href={`${GEOLAB_SITE}/about.html`}>About</a>
             <a href={`${GEOLAB_SITE}/why.html`}>Why Geodata?</a>
-            <span className="gl-current" aria-current="page"><h1>{TITLES[APP_MODE]}</h1></span>
+            {/* GeoDB is the tool most visitors come for, so it is one click away from either
+                finder; on GeoDB itself it is the page you are on. */}
+            {APP_MODE === 'inkar'
+              ? <span className="gl-current" aria-current="page"><h1>{TITLES.inkar}</h1></span>
+              : <a href="https://geodb.geolab.soz.uni-bielefeld.de/">{TITLES.inkar}</a>}
+            {APP_MODE === 'soep' && (
+              <span className="gl-current" aria-current="page"><h1>{TITLES.soep}</h1></span>
+            )}
           </nav>
           {controls}
         </header>
