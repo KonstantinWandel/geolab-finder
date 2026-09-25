@@ -1580,3 +1580,87 @@ button, input, select, textarea,
   font-size: .88em;
   color: var(--muted, #555);
 }
+
+/* ------------------------------------------------------- the finders: the GeoLAB header */
+/* Both finders wear the GeoLAB site's header (geolab_regiohub/brand/redesign.css, section "navbar"):
+   paper with a hairline, the mark with the wordmark in Lato Black, the menu in muted bold, the
+   page you are on underlined in the accent. The colour values are the site's own, so the two
+   read as one project rather than as a finder that borrowed a logo. */
+.app-header.gl-header {
+  --gl-paper: #ffffff;
+  --gl-rule: #dfe4e8;
+  --gl-ink: #1c242c;
+  --gl-muted: #566878;
+  --gl-accent: #be3c44;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .25rem 1.1rem;
+  padding: .5rem 1.25rem;
+  background: var(--gl-paper);
+  border-bottom: 1px solid var(--gl-rule);
+  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+:root[data-theme="dark"] .app-header.gl-header {
+  --gl-paper: #12181e;
+  --gl-rule: #2a343e;
+  --gl-ink: #e8eef3;
+  --gl-muted: #9aabba;
+  --gl-accent: #e2686f;
+}
+.gl-brand,
+.gl-brand:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--gl-ink);
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 1.2rem;
+  letter-spacing: -.025em;
+  line-height: 1;
+}
+.gl-mark { height: 24px; width: auto; display: block; }
+.gl-mark-dark { display: none; }
+:root[data-theme="dark"] .gl-mark-light { display: none; }
+:root[data-theme="dark"] .gl-mark-dark { display: block; }
+.gl-nav {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.gl-nav a,
+.gl-nav .gl-current {
+  color: var(--gl-muted);
+  font-weight: 700;
+  font-size: .92rem;
+  padding: .5rem .75rem;
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.gl-nav a:hover { color: var(--gl-ink); border-bottom-color: var(--gl-rule); }
+.gl-nav .gl-current { color: var(--gl-ink); border-bottom-color: var(--gl-accent); }
+/* The page title stays an h1 for screen readers and search engines, set as a menu item. */
+.app-header.gl-header .gl-current h1 {
+  all: unset;
+  font: inherit;
+  color: inherit;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+.gl-brand:focus-visible,
+.gl-nav a:focus-visible { outline: 2px solid var(--gl-accent); outline-offset: 2px; }
+.app-header.gl-header .header-controls { margin-left: auto; }
+/* On a phone the menu scrolled sideways and the finder's own name ended up past the right edge,
+   so nothing on screen said which page this is. Below 700px the controls move up beside the mark
+   and the menu wraps onto its own line instead. */
+@media (max-width: 700px) {
+  .app-header.gl-header { padding: .5rem 1rem; }
+  .app-header.gl-header .header-controls { order: 2; }
+  .gl-nav { order: 3; flex-basis: 100%; flex-wrap: wrap; overflow: visible; margin-left: -.55rem; }
+  .gl-nav a, .gl-nav .gl-current { padding: .4rem .55rem; }
+}

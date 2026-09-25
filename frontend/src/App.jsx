@@ -6,6 +6,7 @@ import SOEPView from './components/SOEPView'
 import SOEPRagAdvisor from './components/SOEPRagAdvisor'
 import { LANGUAGES, detectLanguage, makeTranslator } from './i18n'
 import './App.css'
+import './geolab-fonts.css'
 
 const TAG = 24 * 60 * 60 * 1000
 
@@ -179,23 +180,48 @@ function App() {
     setSelectedTable(table)
   }
 
+  const controls = (
+    <div className="header-controls">
+      <select className="theme-select" value={language} onChange={(e) => chooseLanguage(e.target.value)} aria-label={t('lang.aria')}>
+        {LANGUAGES.map((entry) => (
+          <option key={entry.value} value={entry.value}>{entry.label}</option>
+        ))}
+      </select>
+      <select className="theme-select" value={theme} onChange={(e) => chooseTheme(e.target.value)} aria-label={t('theme.aria')}>
+        <option value="system">{t('theme.system')}</option>
+        <option value="dark">{t('theme.dark')}</option>
+        <option value="light">{t('theme.light')}</option>
+      </select>
+    </div>
+  )
+
   return (
     <div className="app-container">
-      <header className="app-header">
-        <h1>GeoLAB <span className="text-gradient">{TITLES[APP_MODE] || TITLES.all}</span></h1>
-        <div className="header-controls">
-          <select className="theme-select" value={language} onChange={(e) => chooseLanguage(e.target.value)} aria-label={t('lang.aria')}>
-            {LANGUAGES.map((entry) => (
-              <option key={entry.value} value={entry.value}>{entry.label}</option>
-            ))}
-          </select>
-          <select className="theme-select" value={theme} onChange={(e) => chooseTheme(e.target.value)} aria-label={t('theme.aria')}>
-            <option value="system">{t('theme.system')}</option>
-            <option value="dark">{t('theme.dark')}</option>
-            <option value="light">{t('theme.light')}</option>
-          </select>
-        </div>
-      </header>
+      {APP_MODE === 'inkar' || APP_MODE === 'soep' ? (
+        /* Both finders wear the GeoLAB site's header: the mark and wordmark lead back to the site,
+           its menu follows, and the finder stands at the end as the page you are on. Benchmarking is left
+           out on purpose: that page is unfinished and gets no new links until it is ready. */
+        <header className="app-header gl-header">
+          <a className="gl-brand" href={`${GEOLAB_SITE}/`}>
+            <img className="gl-mark gl-mark-light" src="/brand/geolab-mark.svg" alt="" />
+            <img className="gl-mark gl-mark-dark" src="/brand/geolab-mark-invert.svg" alt="" />
+            <span>GeoLAB</span>
+          </a>
+          <nav className="gl-nav" aria-label="GeoLAB">
+            <a href={`${GEOLAB_SITE}/Linking.html`}>Linking</a>
+            <a href={`${GEOLAB_SITE}/Accessing.html`}>Accessing</a>
+            <a href={`${GEOLAB_SITE}/about.html`}>About</a>
+            <a href={`${GEOLAB_SITE}/why.html`}>Why Geodata?</a>
+            <span className="gl-current" aria-current="page"><h1>{TITLES[APP_MODE]}</h1></span>
+          </nav>
+          {controls}
+        </header>
+      ) : (
+        <header className="app-header">
+          <h1>GeoLAB <span className="text-gradient">{TITLES[APP_MODE] || TITLES.all}</span></h1>
+          {controls}
+        </header>
+      )}
       <main className="main-content">
         <Absturzfang t={t}>
           <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} language={language} />

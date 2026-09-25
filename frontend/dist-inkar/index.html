@@ -2,13 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-uni-bielefeld.png" />
+    <!-- GeoDB shows the GeoLAB mark, the same file as the GeoLAB site, so the finder and the site
+         read as one project in a tab strip; the SOEP finder keeps the university mark. -->
+    <link rel="icon" type="image/svg+xml" href="/brand/favicon-geolab.svg" />
     <link rel="apple-touch-icon" href="/brand/apple-touch-uni-bielefeld.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GeoDB</title>
     <meta name="description" content="Semantische Suche in Beschreibungen deutscher Geodaten: 12 501 Indikatoren, Tabellen und Datensätze aus 41 Datenquellen. Nur Metadaten." />
-    <!-- The build passes VITE_PAGE_TITLE, VITE_PAGE_DESCRIPTION, VITE_SITE_URL and VITE_DOI per
-         deployment; frontend/build.sh sets all four. Without them the raw placeholders were served
+    <!-- The build passes VITE_PAGE_TITLE, VITE_PAGE_DESCRIPTION, VITE_SITE_URL, VITE_DOI and the
+         favicon per deployment; frontend/build.sh sets all of them. Without them the raw placeholders were served
          to visitors and to link previews. -->
     <link rel="canonical" href="https://geodb.geolab.soz.uni-bielefeld.de/" />
     <meta name="robots" content="index, follow, max-snippet:-1" />
@@ -66,8 +68,8 @@
         "sameAs": "https://doi.org/10.5281/zenodo.21134145"
       }
     </script>
-    <script type="module" crossorigin src="/assets/index-202609241411-navh9S07.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-202609241411-CO7O0GUv.css">
+    <script type="module" crossorigin src="/assets/index-202609260102-BKAoPR3K.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-202609260102-BfaDgvoi.css">
   </head>
   <body>
     <div id="root"></div>

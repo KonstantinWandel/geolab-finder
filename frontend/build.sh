@@ -48,6 +48,7 @@ case "$MODUS" in
     ADRESSE="https://geodb.geolab.soz.uni-bielefeld.de/"
     DOI="https://doi.org/10.5281/zenodo.21134145"
     SCHLUESSEL="$SCHLUESSEL_INKAR"
+    ICON="/brand/favicon-geolab.svg"; ICON_TYP="image/svg+xml"
     ;;
   soep)
     TITEL="SOEP Variable Finder"
@@ -56,6 +57,7 @@ case "$MODUS" in
     ADRESSE="https://soep-faiss.geolab.soz.uni-bielefeld.de/"
     DOI="https://doi.org/10.5281/zenodo.21134306"
     SCHLUESSEL="$SCHLUESSEL_SOEP"
+    ICON="/brand/favicon-uni-bielefeld.png"; ICON_TYP="image/png"
     ;;
   *) echo "unknown mode: $MODUS (inkar|soep)"; exit 2 ;;
 esac
@@ -63,6 +65,7 @@ esac
 echo "mode=$MODUS  out=$AUSGABE"
 echo "title=$TITEL"
 echo "url=$ADRESSE"
+echo "icon=$ICON"
 echo "description=$BESCHREIBUNG"
 [[ "$NUR_ZEIGEN" == "--print" ]] && exit 0
 
@@ -73,6 +76,7 @@ echo "build id=$BAU_ID"
 PATH="$HOME/miniconda3/envs/nodejs/bin:$PATH" \
   VITE_APP_MODE="$MODUS" VITE_PAGE_TITLE="$TITEL" VITE_PAGE_DESCRIPTION="$BESCHREIBUNG" \
   VITE_SITE_URL="$ADRESSE" VITE_DOI="$DOI" VITE_BUILD_ID="$BAU_ID" \
+  VITE_FAVICON="$ICON" VITE_FAVICON_TYPE="$ICON_TYP" \
   node node_modules/.bin/vite build --outDir "$AUSGABE" --emptyOutDir
 
 # Crawler files. Caddy serves these as real files because the site block tries {path} before it

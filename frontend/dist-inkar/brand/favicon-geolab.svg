@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="GeoLAB">
+  <title>GeoLAB</title>
+  <!-- One favicon, two appearances: media queries apply inside an SVG loaded as an image, so the
+       mark follows the viewer's system setting and does not disappear on a dark tab strip. The
+       knockout stays transparent so the browser's own ground shows through. -->
+  <style>
+    .k { fill: #2c3e50 }
+    .a { fill: #be3c44 }
+    @media (prefers-color-scheme: dark) {
+      .k { fill: #e6edf4 }
+      .a { fill: #e2686f }
+    }
+  </style>
+  <path class="k" fill-rule="evenodd" d="M1 1H20V12H31V31H12V20H1Z M12 12H20V20H12Z"/>
+  <rect class="a" x="13" y="13" width="6" height="6"/>
+</svg>
