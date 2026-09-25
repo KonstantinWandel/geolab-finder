@@ -394,12 +394,16 @@ class SOEPRagAdvisorService:
     def _clean_embedding_context(cls, text: str) -> str:
         if not text:
             return ""
+        # The v40 corpus wrote "Categories:", the v41 builder writes "Answer categories:". Matching
+        # only the first let the whole missing-code block through into every v41 document from
+        # 2026-08-25 until 2026-09-26, with nothing to show for it but slightly worse rankings.
         out = []
         for line in str(text).splitlines():
-            if line.startswith("Categories:"):
-                cleaned = cls._strip_missing_value_labels(line[len("Categories:"):])
+            prefix = next((p for p in ("Categories:", "Answer categories:") if line.startswith(p)), None)
+            if prefix:
+                cleaned = cls._strip_missing_value_labels(line[len(prefix):])
                 if cleaned.strip():
-                    out.append("Categories: " + cleaned)
+                    out.append(prefix + " " + cleaned)
                 continue
             out.append(line)
         return "\n".join(out)

@@ -16,13 +16,18 @@ Official beats generated: the labels are the ones SOEP itself uses, and a questi
 wording respondents actually saw. LLM enrichment is a later pass for what remains bare, not the
 foundation.
 
-Inputs (downloaded from the paneldata repo):
+Inputs:
   <finder>/new_data/paneldata_metadata/{variables,concepts,topics,datasets,questions,answers}.csv
+      downloaded from the paneldata repo (identical to its master on 2026-09-26)
+  soep_metadata_output/soep_v41_rds_labels.tsv
+      value labels and distributions read from the v41 .rds files, because the repo has none;
+      written by scripts/extract_soep_v41_value_labels.R, which has to run first
 Output:
   soep_metadata_output/soep_v41_metadata.json  (schema of _normalise_soep_row, plus the new
   bilingual/concept/topic fields it now reads)
 
 Run:
+  OPENBLAS_NUM_THREADS=1 Rscript scripts/extract_soep_v41_value_labels.R   # about two minutes
   python scripts/build_soep_v41_metadata.py
   python scripts/build_soep_v41_metadata.py --limit 2000   # quick shape check
 """
@@ -43,6 +48,12 @@ OUT_PATH = REPO_ROOT / "soep_metadata_output" / "soep_v41_metadata.json"
 PANELDATA = "https://paneldata.org/soep-core/datasets"
 MAX_QUESTIONS = 2
 MAX_ANSWERS = 14
+# Value labels read from the v41 .rds files (scripts/extract_soep_v41_value_labels.R). Occupation
+# and region codes carry hundreds of categories; written out in full they fill the model's
+# 512-token window before the question wording is reached, so the list is cut after this many.
+RDS_LABELS = REPO_ROOT / "soep_metadata_output" / "soep_v41_rds_labels.tsv"
+MAX_CATEGORIES = 20
+MISSING_CODE = re.compile(r"^-\d+(?:\.\d+)?\s*:")
 
 
 def clean(value: Any) -> str:
@@ -56,6 +67,18 @@ def clean(value: Any) -> str:
 
 def join_nonempty(parts: Iterable[str]) -> str:
     return "\n".join(part for part in parts if clean(part))
+
+
+def substantive_categories(scale: str) -> str:
+    """The answer categories without SOEP's standard missing codes (-1 to -9: no answer, does not
+    apply, not asked this year, ...). Those nine are the same on nearly every variable, about 400
+    characters, so leaving them in makes tens of thousands of documents alike in exactly the part
+    that should tell them apart. The service strips them too, but only from lines it recognises,
+    and the "Answer categories:" line this script writes was not one of them until 2026-09-26."""
+    parts = [p.strip() for p in (scale or "").split(";") if p.strip() and not MISSING_CODE.match(p.strip())]
+    if len(parts) > MAX_CATEGORIES:
+        parts = parts[:MAX_CATEGORIES] + [f"… (+{len(parts) - MAX_CATEGORIES} weitere)"]
+    return "; ".join(parts)
 
 
 def topic_paths(topics: pd.DataFrame) -> Dict[str, Dict[str, str]]:
@@ -122,8 +145,17 @@ def main() -> None:
         })
 
     # The official metadata has no value labels and no distribution statistics (categories in
-    # variables.csv are empty), while the previous corpus extracted both from the .rds files.
-    # 98% of the old rows exist in v41, so those two fields are carried over rather than lost.
+    # variables.csv are empty, at the v40.0 tag as well). Both come from the v41 .rds files now,
+    # for every labelled variable. The previous corpus (v40, 22,097 variables) is only the
+    # fallback for the seven restricted datasets that have no file here.
+    rds: Dict[tuple, Dict[str, str]] = {}
+    if RDS_LABELS.exists():
+        table = pd.read_csv(RDS_LABELS, sep="\t", dtype=str, keep_default_na=False, quoting=3)
+        for r in table.itertuples(index=False):
+            rds[(r.dataset, r.variable)] = {"value_labels": r.value_labels, "stats_summary": r.stats}
+        print(f"[rds] {len(rds)} variables with labels and statistics from the v41 data files")
+    else:
+        print(f"[rds] {RDS_LABELS} missing: run scripts/extract_soep_v41_value_labels.R first")
     legacy: Dict[tuple, Dict[str, str]] = {}
     legacy_path = Path(args.legacy)
     if legacy_path.exists():
@@ -172,9 +204,17 @@ def main() -> None:
         asked = questions_by_concept.get(concept, [])
 
         carried = legacy.get((dataset, name), {})
+        own = rds.get((dataset.lower(), name.lower()), {})
         description_de = clean(getattr(row, "description_de", ""))
         description_en = clean(getattr(row, "description", ""))
-        scale = next((q["scale"] for q in asked if q["scale"]), "") or carried.get("value_labels", "")
+        # The variable's own labels first: a question reached through the concept may come from
+        # another questionnaire with another scale. v40 only where no v41 file exists.
+        question_scale = next((q["scale"] for q in asked if q["scale"]), "")
+        candidates = [("rds", own.get("value_labels", "")), ("question", question_scale),
+                      ("v40", carried.get("value_labels", ""))]
+        scale_source, scale = next(((src, substantive_categories(s)) for src, s in candidates
+                                    if substantive_categories(s)), ("", ""))
+        stats_summary = own.get("stats_summary") or ("" if own else carried.get("stats_summary", ""))
 
         translated = translations.get(f"{dataset}/{name}", {})
         label_de_mt = clean(translated.get("label_de_mt"))
@@ -192,7 +232,7 @@ def main() -> None:
             ("Fragetext: " + " | ".join(q["de"] for q in asked if q["de"])) if any(q["de"] for q in asked) else "",
             ("Question wording: " + " | ".join(q["en"] for q in asked if q["en"])) if any(q["en"] for q in asked) else "",
             f"Antwortkategorien: {scale}" if scale else "",
-            f"Verteilung: {carried['stats_summary']}" if carried.get("stats_summary") else "",
+            f"Verteilung: {stats_summary}" if stats_summary else "",
             f"Erhebungseinheit: {analysis_unit}. Datensatzart: {conceptual}." if analysis_unit or conceptual else "",
         ])
         embedding_context = join_nonempty([
@@ -221,8 +261,9 @@ def main() -> None:
             "label_de_mt": label_de_mt,
             "label_en_mt": label_en_mt,
             "value_labels": scale,
+            "value_labels_source": scale_source,
             "data_type": clean(getattr(row, "type", "")),
-            "stats_summary": carried.get("stats_summary", ""),
+            "stats_summary": stats_summary,
             "sample_values": carried.get("sample_values", ""),
             "concept": concept,
             "concept_label": concept_de or concept_en,
@@ -248,6 +289,7 @@ def main() -> None:
     with_question = sum(1 for r in records if "Fragetext:" in r["rich_description"])
     with_scale = sum(1 for r in records if r["value_labels"])
     with_stats = sum(1 for r in records if r["stats_summary"])
+    scale_sources = {src: sum(1 for r in records if r["value_labels_source"] == src) for src in ("rds", "question", "v40")}
     print(json.dumps({
         "records": len(records),
         "datasets": len({r["dataset"] for r in records}),
@@ -256,6 +298,7 @@ def main() -> None:
         "with_question_text": with_question,
         "with_answer_scale": with_scale,
         "with_distribution_stats": with_stats,
+        "answer_scale_from": scale_sources,
         "raw_datasets": sum(1 for r in records if r["is_raw"]),
         "path": str(out),
         "size_mb": round(out.stat().st_size / 1e6, 1),
