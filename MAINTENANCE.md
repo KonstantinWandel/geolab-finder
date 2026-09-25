@@ -167,6 +167,19 @@ ssh vm "sudo journalctl -u geolab-soep --since '-1h' --no-pager | tail -40"
 Nach einem Neustart braucht ein Dienst ein bis zwei Minuten, bis Einbettungen und Modell geladen
 sind. Vorher antwortet er mit „Connection refused", und das ist normal.
 
+**Startet ein Dienst immer wieder neu, fehlt meist Arbeitsspeicher.** Im Journal steht dann
+`status=9/KILL`, und der Browser zeigt „Request failed (502)". Nachsehen:
+
+```bash
+ssh vm "grep MemTotal /proc/meminfo; sudo dmesg -T | grep -iE 'oom|balloon' | tail -5"
+```
+
+Die VM hat 16 GB, aber der Host kann sich davon Speicher zurückholen, ohne dass sie neu startet
+(am 25.09.2026 blieben 3,9 GB, „Out of puff" im Kernel-Log heißt: er will noch mehr). Beide Dienste
+brauchen zusammen etwa 6 GB. Eine Auslagerungsdatei von 4 GB (`/swapfile`) überbrückt das; ist sie
+voll, hilft nur das Uni-IT, das der VM einen festen Mindestspeicher geben kann. Ein Neustart des
+Dienstes hilft in diesem Fall nicht.
+
 ## Routine 5: das Zertifikat
 
 Beide Seiten benutzen ein Wildcard-Zertifikat für `*.geolab.soz.uni-bielefeld.de`, das von außen
@@ -190,6 +203,7 @@ ssh vm "sudo systemctl reload caddy"    # wenn das ausgelieferte älter ist als 
 | Symptom | Was zu tun ist |
 |---|---|
 | Seite lädt nicht | Routine 4 |
+| „Request failed (502)", Dienst startet ständig neu | Routine 4, Absatz zum Arbeitsspeicher |
 | Seite lädt, Suche liefert nichts | `ssh vm "sudo systemctl restart geolab-inkar geolab-soep"`, dann zwei Minuten warten |
 | Browser warnt vor dem Zertifikat | Routine 5 |
 | Ein Link im Finder führt ins Leere | Routine 2 |
