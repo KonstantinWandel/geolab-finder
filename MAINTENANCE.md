@@ -174,11 +174,12 @@ sind. Vorher antwortet er mit „Connection refused", und das ist normal.
 ssh vm "grep MemTotal /proc/meminfo; sudo dmesg -T | grep -iE 'oom|balloon' | tail -5"
 ```
 
-Die VM hat 16 GB, aber der Host kann sich davon Speicher zurückholen, ohne dass sie neu startet
-(am 25.09.2026 blieben 3,9 GB, „Out of puff" im Kernel-Log heißt: er will noch mehr). Beide Dienste
-brauchen zusammen etwa 6 GB. Eine Auslagerungsdatei von 4 GB (`/swapfile`) überbrückt das; ist sie
-voll, hilft nur das Uni-IT, das der VM einen festen Mindestspeicher geben kann. Ein Neustart des
-Dienstes hilft in diesem Fall nicht.
+Die VM hat 16 GB, 8 Kerne und 80 GB Platte. Am 25.09.2026 hat sich der Host über den Balloon-Treiber
+Speicher zurückgeholt, bis 3,9 GB übrig waren, und der SOEP-Finder fiel aus. Seit dem 26.09. ist das
+Ballooning für die VM abgeschaltet (David Cordes, Systemadministration der Fakultät). Zeigt `MemTotal`
+trotzdem wieder weniger als 16 GB, hat sich am Host etwas geändert, und dann ist er der Ansprechpartner.
+Beide Dienste brauchen zusammen etwa 6 GB; zwei Auslagerungsdateien (`/swapfile`, `/swapfile2`, 6 GB)
+bleiben als Puffer. Ein Neustart des Dienstes hilft in diesem Fall nicht.
 
 ## Routine 5: das Zertifikat
 
