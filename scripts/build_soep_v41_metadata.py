@@ -225,9 +225,11 @@ def main() -> None:
     doku = load_public_doku(variables["dataset"].dropna().astype(str).str.lower(), wave_year)
 
     # Question wording per concept, the fallback where the documentation links no question
-    # directly. variables.csv and logical_variables.csv of the paneldata export use disjoint
-    # dataset name spaces, so there the only bridge from a variable to a question is the concept,
-    # which may lead to the same concept asked in another questionnaire.
+    # directly. In the export's metadata/ folder, variables.csv and logical_variables.csv use
+    # disjoint dataset name spaces, so there the only bridge from a variable to a question is the
+    # concept, which may lead to the same concept asked in another questionnaire. (The export's
+    # ddionrails/questions_variables.csv does link 45,099 of our variables directly, checked
+    # 2026-09-30; SOEPhelp.csv covers those and 17,500 more, with the wording and the waves.)
     answer_lists: Dict[tuple, List[str]] = defaultdict(list)
     for _, row in answers.iterrows():
         key = (clean(row["instrument"]), clean(row["answer_list"]))
