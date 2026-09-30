@@ -11,7 +11,13 @@
 # every labelled column, so they are read here directly.
 #
 # Output: soep_metadata_output/soep_v41_rds_labels.tsv (git-ignored, like every metadata file)
-#   dataset, variable, var_label, value_labels ("code: label; ..."), stats ("Range: a to b, Mean: m")
+#   dataset, variable, var_label, value_labels ("code: label; ..."), stats ("Range: a to b, Mean: m"),
+#   years (survey years with at least one valid value, for files that carry syear)
+#
+# Why the years come from here (2026-09-30): the DIW documentation links a variable to the waves
+# its question was asked in, and for harmonised variables that misses the waves a different item
+# fed it. hlc0005_h has values in all 41 years 1984-2024; its question links say 1984-1990 and
+# 2010-2024. The data cannot be wrong about which years it holds.
 # The statistics are computed over valid codes only (>= 0), in the format the index already uses.
 # No microdata leaves this script: one summary line per variable, nothing per person.
 
@@ -31,6 +37,8 @@ flat <- function(s) gsub("[\t\r\n]+", " ", s)
 one_file <- function(path) {
   x <- readRDS(path)
   ds <- tolower(sub("\\.rds$", "", basename(path)))
+  # SOEP's missing codes are -1 to -9 (no answer, does not apply, not asked this year, ...).
+  sy <- if ("syear" %in% names(x)) as.integer(unclass(x[["syear"]])) else NULL
   rows <- lapply(names(x), function(var) {
     col <- x[[var]]
     lab <- attr(col, "label", exact = TRUE)
@@ -47,8 +55,14 @@ one_file <- function(path) {
       v <- v[!is.na(v) & v >= 0]
       if (length(v)) stats <- sprintf("Range: %s to %s, Mean: %.2f", num(min(v)), num(max(v)), mean(v))
     }
+    years <- ""
+    if (!is.null(sy) && var != "syear") {
+      raw <- unclass(col)
+      ok <- if (is.numeric(raw)) !is.na(raw) & !(raw %in% -9:-1) else !is.na(raw) & nzchar(trimws(as.character(raw)))
+      if (any(ok)) years <- paste(sort(unique(sy[ok])), collapse = ",")
+    }
     data.frame(dataset = ds, variable = tolower(var), var_label = flat(if (is.null(lab)) "" else lab),
-               value_labels = flat(labels), stats = stats, stringsAsFactors = FALSE)
+               value_labels = flat(labels), stats = stats, years = years, stringsAsFactors = FALSE)
   })
   rm(x); gc(FALSE)
   do.call(rbind, rows)
@@ -65,5 +79,5 @@ if (failed > 0) stop(sprintf("%d files could not be read; nothing written", fail
 if (nrow(res) < 120000) stop(sprintf("expected about 125,000 variables, got %d", nrow(res)))
 res <- res[order(res$dataset, res$variable), ]
 write.table(res, out, sep = "\t", quote = FALSE, row.names = FALSE, fileEncoding = "UTF-8")
-cat(sprintf("%d variables from %d files -> %s\n  with value labels: %d\n  with statistics: %d\n",
-            nrow(res), length(files), out, sum(res$value_labels != ""), sum(res$stats != "")))
+cat(sprintf("%d variables from %d files -> %s\n  with value labels: %d\n  with statistics: %d\n  with survey years: %d\n",
+            nrow(res), length(files), out, sum(res$value_labels != ""), sum(res$stats != ""), sum(res$years != "")))

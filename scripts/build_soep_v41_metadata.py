@@ -22,6 +22,9 @@ Inputs:
   soep_metadata_output/soep_v41_rds_labels.tsv
       value labels and distributions read from the v41 .rds files, because the repo has none;
       written by scripts/extract_soep_v41_value_labels.R, which has to run first
+  <finder>/new_data/publicecoredoku/datasets/<dataset>/v41/{SOEPhelp,generations,variable_categories}.csv
+      the DIW's public SOEP-Core documentation (git clone https://git.soep.de/kwenzig/publicecoredoku.git,
+      4.8 GB): the question each variable was asked with, the years, the English value labels
 Output:
   soep_metadata_output/soep_v41_metadata.json  (schema of _normalise_soep_row, plus the new
   bilingual/concept/topic fields it now reads)
@@ -52,6 +55,14 @@ MAX_ANSWERS = 14
 # and region codes carry hundreds of categories; written out in full they fill the model's
 # 512-token window before the question wording is reached, so the list is cut after this many.
 RDS_LABELS = REPO_ROOT / "soep_metadata_output" / "soep_v41_rds_labels.tsv"
+# The DIW's public SOEP-Core documentation in the soep-meta format (git.soep.de/kwenzig/publicecoredoku,
+# pointed out by Knut Wenzig on 2026-09-30; the schema is described at git.soep.de/mds/soep-meta).
+# The paneldata export above is generated from the same repository and agrees with it on labels
+# and concepts, but it leaves out three things this builder now takes from here: the direct link
+# from a variable to the question it was asked with (SOEPhelp.csv), the years it was asked in, and
+# the English value labels (variable_categories.csv).
+PUBLIC_DOKU = Path("/home/researcher/kwandel/soep-variable-finder/new_data/publicecoredoku")
+DOKU_VERSION = "v41"
 MAX_CATEGORIES = 20
 MISSING_CODE = re.compile(r"^-\d+(?:\.\d+)?\s*:")
 
@@ -67,6 +78,88 @@ def clean(value: Any) -> str:
 
 def join_nonempty(parts: Iterable[str]) -> str:
     return "\n".join(part for part in parts if clean(part))
+
+
+def year_text(years: List[int]) -> str:
+    """1984, 1985, ..., 2023 becomes "1984–2023"; gaps stay visible ("2016, 2018, 2020, 2022, 2023")."""
+    if not years:
+        return ""
+    runs: List[List[int]] = [[years[0], years[0]]]
+    for y in years[1:]:
+        if y == runs[-1][1] + 1:
+            runs[-1][1] = y
+        else:
+            runs.append([y, y])
+    parts = [f"{a}–{b}" if b > a + 1 else (f"{a}, {b}" if b == a + 1 else str(a)) for a, b in runs]
+    text = ", ".join(parts)
+    if len(text) > 70:
+        text = f"{years[0]}–{years[-1]} ({len(years)} Erhebungsjahre)"
+    return text
+
+
+def load_public_doku(dataset_names: Iterable[str], wave_year: Dict[str, int]) -> Dict[str, Dict[tuple, Any]]:
+    """Direct questions, survey years and English value labels per (dataset, variable), for the
+    datasets the paneldata export lists. Datasets the release does not contain are never read.
+
+    Years come from the questions first (SOEPhelp.csv, the waves the item was asked in). A
+    generated variable such as pgen/pglabnet was never asked; its generations.csv names the wave
+    files it is built from (apgen, bpgen, ...), and those files' years are its years."""
+    root = PUBLIC_DOKU / "datasets"
+    questions: Dict[tuple, List[Dict[str, Any]]] = {}
+    years: Dict[tuple, List[int]] = {}
+    cats_en: Dict[tuple, str] = {}
+    derived_years: Dict[tuple, set] = defaultdict(set)
+    if not root.exists():
+        print(f"[doku] {PUBLIC_DOKU} missing: git clone https://git.soep.de/kwenzig/publicecoredoku.git")
+        return {"questions": questions, "years": years, "cats_en": cats_en}
+    for ds in sorted(set(dataset_names)):
+        folder = root / ds / DOKU_VERSION
+        help_path = folder / "SOEPhelp.csv"
+        if help_path.exists():
+            h = pd.read_csv(help_path, dtype=str, keep_default_na=False, low_memory=False)
+            h = h[h.get("study", "soep-core") == "soep-core"] if "study" in h else h
+            h["y"] = pd.to_numeric(h["period"].where(h["period"].str.fullmatch(r"\d{4}")), errors="coerce")
+            for var, g in h.groupby(h["variable"].str.lower()):
+                key = (ds.lower(), var)
+                ys = sorted({int(y) for y in g["y"].dropna()})
+                if ys:
+                    years[key] = ys
+                seen, asked = set(), []
+                for r in g.sort_values("y", ascending=False, na_position="last").itertuples(index=False):
+                    de, en = clean(r.questiontext_de), clean(r.questiontext)
+                    if not (de or en) or (de, en) in seen:
+                        continue
+                    seen.add((de, en))
+                    asked.append({"de": de[:600], "en": en[:600], "scale": ""})
+                    if len(asked) >= MAX_QUESTIONS:
+                        break
+                if asked:
+                    questions[key] = asked
+        gen_path = folder / "generations.csv"
+        if gen_path.exists():
+            g = pd.read_csv(gen_path, dtype=str, keep_default_na=False, low_memory=False)
+            if {"output_dataset", "output_variable", "input_dataset"} <= set(g.columns):
+                if "output_version" in g:
+                    g = g[g["output_version"].isin([DOKU_VERSION, ""])]
+                for od, ov, idd in zip(g["output_dataset"].str.lower(), g["output_variable"].str.lower(),
+                                       g["input_dataset"].str.lower()):
+                    if od == ds.lower() and idd in wave_year:
+                        derived_years[(od, ov)].add(wave_year[idd])
+        cat_path = folder / "variable_categories.csv"
+        if cat_path.exists():
+            c = pd.read_csv(cat_path, dtype=str, keep_default_na=False, low_memory=False)
+            c = c[(c["label"] != "") & ~c["value"].str.startswith("-")]
+            for var, g in c.groupby(c["variable"].str.lower()):
+                cats_en[(ds.lower(), var)] = "; ".join(f"{v}: {l}" for v, l in zip(g["value"], g["label"]))
+    year_source = {k: "questions" for k in years}
+    for k, ys in derived_years.items():
+        if k not in years and ys:
+            years[k] = sorted(ys)
+            year_source[k] = "generations"
+    print(f"[doku] {len(questions)} variables with a directly linked question, {len(years)} with survey "
+          f"years ({sum(1 for v in year_source.values() if v == 'generations')} of them from generations.csv), "
+          f"{len(cats_en)} with English value labels")
+    return {"questions": questions, "years": years, "year_source": year_source, "cats_en": cats_en}
 
 
 def substantive_categories(scale: str) -> str:
@@ -105,6 +198,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--out", default=str(OUT_PATH))
+    # Switches for measuring what each addition from the DIW documentation does to retrieval.
+    parser.add_argument("--question-mode", choices=["display", "embed-direct", "concept"], default="display",
+                        help="display (default): the question linked in SOEPhelp.csv is shown to the reader, "
+                             "the embedded text keeps the concept's question; embed-direct: the linked question "
+                             "also goes into the embedded text; concept: only the concept route, as before 2026-09-30")
+    parser.add_argument("--no-english-categories", action="store_true",
+                        help="leave the English value labels out of the embedded text")
     parser.add_argument("--legacy", default=str(REPO_ROOT / "soep_metadata_output" / "soep_metadata_enriched.json"),
                         help="previous corpus, used only for value labels and distribution stats")
     args = parser.parse_args()
@@ -120,9 +220,14 @@ def main() -> None:
     concept_rows = {clean(r["name"]): r for _, r in concepts.iterrows()}
     dataset_rows = {clean(r["name"]): r for _, r in datasets.iterrows()}
 
-    # Question wording per concept. variables.csv and logical_variables.csv use disjoint
-    # dataset name spaces (checked: zero overlap), so the only usable bridge from a published
-    # variable to a question is the shared `concept`.
+    wave_year = {clean(r["name"]).lower(): int(clean(r["period"])) for _, r in datasets.iterrows()
+                 if clean(r["period"]).isdigit() and len(clean(r["period"])) == 4}
+    doku = load_public_doku(variables["dataset"].dropna().astype(str).str.lower(), wave_year)
+
+    # Question wording per concept, the fallback where the documentation links no question
+    # directly. variables.csv and logical_variables.csv of the paneldata export use disjoint
+    # dataset name spaces, so there the only bridge from a variable to a question is the concept,
+    # which may lead to the same concept asked in another questionnaire.
     answer_lists: Dict[tuple, List[str]] = defaultdict(list)
     for _, row in answers.iterrows():
         key = (clean(row["instrument"]), clean(row["answer_list"]))
@@ -152,7 +257,8 @@ def main() -> None:
     if RDS_LABELS.exists():
         table = pd.read_csv(RDS_LABELS, sep="\t", dtype=str, keep_default_na=False, quoting=3)
         for r in table.itertuples(index=False):
-            rds[(r.dataset, r.variable)] = {"value_labels": r.value_labels, "stats_summary": r.stats}
+            rds[(r.dataset, r.variable)] = {"value_labels": r.value_labels, "stats_summary": r.stats,
+                                            "years": [int(y) for y in getattr(r, "years", "").split(",") if y]}
         print(f"[rds] {len(rds)} variables with labels and statistics from the v41 data files")
     else:
         print(f"[rds] {RDS_LABELS} missing: run scripts/extract_soep_v41_value_labels.R first")
@@ -201,15 +307,39 @@ def main() -> None:
         conceptual = clean(dataset_row.get("conceptual_dataset")) if dataset_row is not None else ""
         period = clean(dataset_row.get("period")) if dataset_row is not None else ""
         folder = clean(dataset_row.get("folder")) if dataset_row is not None else ""
-        asked = questions_by_concept.get(concept, [])
+        # Shown and embedded are kept apart on purpose. Measured on 2026-09-30 with the 59-query
+        # SOEP gate: putting the directly linked question into the embedded text of 27,000 more
+        # questionnaire items pushed generated variables (pgbilzeit, pgstib, pgemplst) out of the
+        # candidate pool, three misses instead of none (MRR 0.891 -> 0.860). Years and English
+        # categories alone were neutral to slightly better (0.898). So the reader sees the question
+        # the variable was really asked with, and retrieval keeps the text it was tuned on.
+        direct = doku["questions"].get((dataset.lower(), name.lower())) if args.question_mode != "concept" else None
+        by_concept = questions_by_concept.get(concept, [])
+        asked = direct or by_concept                                  # shown to the reader
+        embedded = asked if args.question_mode == "embed-direct" else by_concept
+        question_source = ("direct" if direct else "concept") if asked else ""
+        own = rds.get((dataset.lower(), name.lower()), {})
+        # Years in order of certainty: the data itself (a long file's syear with a valid value),
+        # then the waves the question was asked in, then the waves a generated variable is built
+        # from, then a raw wave file's own year.
+        years, years_source = own.get("years") or [], "data"
+        if not years:
+            years = doku["years"].get((dataset.lower(), name.lower()), [])
+            years_source = doku["year_source"].get((dataset.lower(), name.lower()), "") if years else ""
+        if not years and period.isdigit() and len(period) == 4:
+            years, years_source = [int(period)], "dataset"   # a raw wave file describes one year
+        categories_en = "" if args.no_english_categories else substantive_categories(
+            doku["cats_en"].get((dataset.lower(), name.lower()), ""))
 
         carried = legacy.get((dataset, name), {})
-        own = rds.get((dataset.lower(), name.lower()), {})
         description_de = clean(getattr(row, "description_de", ""))
         description_en = clean(getattr(row, "description", ""))
         # The variable's own labels first: a question reached through the concept may come from
         # another questionnaire with another scale. v40 only where no v41 file exists.
-        question_scale = next((q["scale"] for q in asked if q["scale"]), "")
+        # A directly linked question carries no answer list here, so the scale of the concept's
+        # question stays the fallback it was before the direct links existed.
+        question_scale = next((q["scale"] for q in list(asked) + questions_by_concept.get(concept, [])
+                               if q.get("scale")), "")
         candidates = [("rds", own.get("value_labels", "")), ("question", question_scale),
                       ("v40", carried.get("value_labels", ""))]
         scale_source, scale = next(((src, substantive_categories(s)) for src, s in candidates
@@ -247,9 +377,10 @@ def main() -> None:
             f"Dataset: {dataset} ({dataset_de or dataset_en})",
             f"Concept: {concept_de} / {concept_en}" if (concept_de or concept_en) else "",
             f"Topic: {path.get('de', '')} / {path.get('en', '')}" if path else "",
-            f"Question (de): {asked[0]['de']}" if asked and asked[0]["de"] else "",
-            f"Question (en): {asked[0]['en']}" if asked and asked[0]["en"] else "",
+            f"Question (de): {embedded[0]['de']}" if embedded and embedded[0]["de"] else "",
+            f"Question (en): {embedded[0]['en']}" if embedded and embedded[0]["en"] else "",
             f"Answer categories: {scale}" if scale else "",
+            f"Answer categories (en): {categories_en}" if categories_en else "",
             f"Type: {clean(getattr(row, 'type', ''))}",
         ])
 
@@ -262,6 +393,13 @@ def main() -> None:
             "label_en_mt": label_en_mt,
             "value_labels": scale,
             "value_labels_source": scale_source,
+            "value_labels_en": categories_en,
+            "question_source": question_source,
+            "survey_years": years,
+            "survey_years_source": years_source,
+            "year_start": years[0] if years else None,
+            "year_end": years[-1] if years else None,
+            "available_years_text": year_text(years),
             "data_type": clean(getattr(row, "type", "")),
             "stats_summary": stats_summary,
             "sample_values": carried.get("sample_values", ""),
@@ -287,6 +425,9 @@ def main() -> None:
 
     with_topic = sum(1 for r in records if r["topic_path"])
     with_question = sum(1 for r in records if "Fragetext:" in r["rich_description"])
+    question_from = {src: sum(1 for r in records if r["question_source"] == src) for src in ("direct", "concept")}
+    with_years = {src: sum(1 for r in records if r["survey_years_source"] == src)
+                  for src in ("data", "questions", "generations", "dataset")}
     with_scale = sum(1 for r in records if r["value_labels"])
     with_stats = sum(1 for r in records if r["stats_summary"])
     scale_sources = {src: sum(1 for r in records if r["value_labels_source"] == src) for src in ("rds", "question", "v40")}
@@ -296,6 +437,9 @@ def main() -> None:
         "with_english_label": sum(1 for r in records if r["label_en"]),
         "with_topic_path": with_topic,
         "with_question_text": with_question,
+        "question_from": question_from,
+        "with_survey_years": with_years,
+        "with_english_value_labels": sum(1 for r in records if r["value_labels_en"]),
         "with_answer_scale": with_scale,
         "with_distribution_stats": with_stats,
         "answer_scale_from": scale_sources,

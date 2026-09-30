@@ -627,9 +627,15 @@ class SOEPRagAdvisorService:
             "sheet": "",
             "spatial_levels": spatial_levels,
             "nuts_levels": nuts_levels,
-            "year_start": 1984,
-            "year_end": 2023,
-            "available_years_text": "SOEP-Core panel waves; verify exact variable-wave availability in the codebook.",
+            # The v41 builder reads the years a variable was asked in from the DIW's documentation
+            # (SOEPhelp.csv), or a raw wave file's own year. Until 2026-09-30 every SOEP record
+            # claimed 1984 to 2023, which made the year filter meaningless and put the same line
+            # into every embedded document. A record without documented years has none here, and
+            # the year filter lets it through rather than guessing.
+            "year_start": row.get("year_start") if "survey_years" in row else 1984,
+            "year_end": row.get("year_end") if "survey_years" in row else 2023,
+            "available_years_text": (self._as_text(row.get("available_years_text")) if "survey_years" in row else
+                                     "SOEP-Core panel waves; verify exact variable-wave availability in the codebook."),
             "geography_reference": "",
             "embedding_context": self._clean_embedding_context(row.get("embedding_context", "") or ""),
         }
