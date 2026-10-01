@@ -215,6 +215,12 @@ ssh vm "sudo systemctl reload caddy"    # wenn das ausgelieferte älter ist als 
 
 ## Nicht anfassen
 
+- **Keine Zugriffsprotokolle mit IP-Adressen über sieben Tage.** Die Datenschutzerklärung sagt
+  höchstens sieben Tage. Deshalb: Caddys Zugriffslog rotiert täglich und behält fünf Dateien
+  (`/etc/logrotate.d/caddy-access`), die drei uvicorn-Dienste schreiben kein Zugriffsprotokoll
+  (`UVICORN_ACCESS_LOG=false` in `no-access-log.conf`), das Journal behält sechs Tage, und Caddy und
+  uvicorn landen nicht in `/var/log/syslog` (`/etc/rsyslog.d/10-geolab-web.conf`). Nichts davon
+  zurückdrehen, ohne die Datenschutzerklärung mitzuändern. Eingerichtet am 2026-10-01.
 - **Zugangsdaten** liegen in `~/.config/secrets/` und `~/kwandel/.config/secrets/`. Skripte lesen
   sie selbst. Nicht öffnen, nicht ausgeben, nicht in ein Repo legen, nicht in einen Chat kopieren.
 - **In `/opt/geolab/` nichts von Hand bearbeiten.** Was dort liegt, wird ausgeliefert und beim
