@@ -71,7 +71,7 @@ values and no microdata are stored in or served by the finders.
 - [GeoDB](https://geodb.geolab.soz.uni-bielefeld.de/): {geodb_rows} indicator,
   table and dataset descriptions from {geodb_sources} German georeferenced data sources.
 - [SOEP Variable Finder](https://soep-faiss.geolab.soz.uni-bielefeld.de/): survey-variable
-  metadata of the Socio-Economic Panel.
+  metadata of the German Socio-Economic Panel (SOEP-Core v41).
 
 Where a source requires attribution for the reuse of its information, that wording is reproduced
 below. Please cite the original source, not the finder, when you use the data itself.
@@ -94,13 +94,21 @@ def main() -> None:
         key = record["source_key"]
         labels.setdefault(key, record.get("source_label", key))
         urls.setdefault(key, record.get("selector_url") or record.get("source_url") or "")
+    # The portal cards share one source key and keep each portal's own name as their label, so
+    # the first label met used to name the whole row: the 43 cards stood on this page as a second
+    # "Regionalatlas Deutschland". They are one entry per portal, compiled by the project, and no
+    # source of their own, so they get a name of their own and stay out of the source count,
+    # which had read 42 against the 41 sources GeoDB holds.
+    if "geoportal" in counts:
+        labels["geoportal"] = "Portal descriptions (one entry per portal)"
+        urls["geoportal"] = ""
     if INKAR.exists():
         counts["inkar"] = len(json.loads(INKAR.read_text(encoding="utf-8")))
         labels["inkar"] = "INKAR (BBSR)"
         urls["inkar"] = "https://www.inkar.de/"
 
     rows_fmt = f"{sum(counts.values()):,}".replace(",", " ")
-    source_count = len([k for k in counts if k != "soep"])
+    source_count = len([k for k in counts if k not in ("soep", "geoportal")])
     lines: List[str] = [HEADER.format(geodb_rows=rows_fmt, geodb_sources=source_count)]
 
     # A pipe inside a cell ends the cell: the Breitbandatlas wording contains one, and the
@@ -170,7 +178,7 @@ def main() -> None:
         f"geodb_sources: \"{source_count}\"\n",
         encoding="utf-8",
     )
-    print(f"wrote {out} ({len(counts)} sources, {sum(counts.values())} records)")
+    print(f"wrote {out} ({source_count} sources, {sum(counts.values())} records)")
     print(f"wrote {variables} (geodb_rows={rows_fmt}, geodb_sources={source_count})")
 
 
