@@ -212,14 +212,16 @@ function App() {
             <a href={`${GEOLAB_SITE}/Accessing.html`}>Accessing</a>
             <a href={`${GEOLAB_SITE}/about.html`}>About</a>
             <a href={`${GEOLAB_SITE}/why.html`}>Why Geodata?</a>
-            {/* GeoDB is the tool most visitors come for, so it is one click away from either
-                finder; on GeoDB itself it is the page you are on. */}
+          </nav>
+          {/* The two searches stand on the right, as in the site's own navbar (_quarto.yml), so all
+              three headers carry the same menu. The finder you are on is the underlined entry. */}
+          <nav className="gl-nav gl-nav-tools" aria-label="GeoLAB tools">
             {APP_MODE === 'inkar'
               ? <span className="gl-current" aria-current="page"><h1>{TITLES.inkar}</h1></span>
               : <a href="https://geodb.geolab.soz.uni-bielefeld.de/">{TITLES.inkar}</a>}
-            {APP_MODE === 'soep' && (
-              <span className="gl-current" aria-current="page"><h1>{TITLES.soep}</h1></span>
-            )}
+            {APP_MODE === 'soep'
+              ? <span className="gl-current" aria-current="page"><h1>{TITLES.soep}</h1></span>
+              : <a href="https://soep-faiss.geolab.soz.uni-bielefeld.de/">{TITLES.soep}</a>}
           </nav>
           {controls}
         </header>

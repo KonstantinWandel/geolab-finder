@@ -1655,6 +1655,9 @@ button, input, select, textarea,
 .gl-brand:focus-visible,
 .gl-nav a:focus-visible { outline: 2px solid var(--gl-accent); outline-offset: 2px; }
 .app-header.gl-header .header-controls { margin-left: auto; }
+/* The searches sit right, before the language and theme menus; the page menu takes the space. */
+.gl-nav-tools { flex: 0 0 auto; }
+.app-header.gl-header .gl-nav-tools + .header-controls { margin-left: 0; }
 /* On a phone the menu scrolled sideways and the finder's own name ended up past the right edge,
    so nothing on screen said which page this is. Below 700px the controls move up beside the mark
    and the menu wraps onto its own line instead. */
@@ -1662,5 +1665,6 @@ button, input, select, textarea,
   .app-header.gl-header { padding: .5rem 1rem; }
   .app-header.gl-header .header-controls { order: 2; }
   .gl-nav { order: 3; flex-basis: 100%; flex-wrap: wrap; overflow: visible; margin-left: -.55rem; }
+  .gl-nav-tools { order: 4; }
   .gl-nav a, .gl-nav .gl-current { padding: .4rem .55rem; }
 }
