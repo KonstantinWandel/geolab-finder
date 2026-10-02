@@ -315,6 +315,9 @@ def main() -> None:
         # candidate pool, three misses instead of none (MRR 0.891 -> 0.860). Years and English
         # categories alone were neutral to slightly better (0.898). So the reader sees the question
         # the variable was really asked with, and retrieval keeps the text it was tuned on.
+        # Re-measured on 2026-10-01 with a test of topic queries as well (eval_soep_concepts.py):
+        # embed-direct puts more relevant items on the first screen (P@10 0.51 -> 0.57) and still
+        # costs the label gate (hit@10 59 -> 57), so display stays the default.
         direct = doku["questions"].get((dataset.lower(), name.lower())) if args.question_mode != "concept" else None
         by_concept = questions_by_concept.get(concept, [])
         asked = direct or by_concept                                  # shown to the reader

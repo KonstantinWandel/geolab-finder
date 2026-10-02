@@ -153,7 +153,7 @@ class SOEPAdviceRequest(BaseModel):
     # systemd startete neu, aber für anderthalb Minuten war der Finder für alle weg, und dazu
     # genügt eine Zeile curl. Was zu groß ist, gehört mit 422 abgewiesen, nicht ausgeführt.
     question: str = Field(..., max_length=2000)
-    top_k: int = Field(12, ge=1, le=100)
+    top_k: int = Field(20, ge=1, le=100)
     # Every facet is multi-select in the UI, so these accept a list of values meaning "any of
     # these". A bare string still works: the API is called directly too, and older clients send
     # scalars.

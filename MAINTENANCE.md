@@ -221,6 +221,13 @@ ssh vm "sudo systemctl reload caddy"    # wenn das ausgelieferte älter ist als 
   (`UVICORN_ACCESS_LOG=false` in `no-access-log.conf`), das Journal behält sechs Tage, und Caddy und
   uvicorn landen nicht in `/var/log/syslog` (`/etc/rsyslog.d/10-geolab-web.conf`). Nichts davon
   zurückdrehen, ohne die Datenschutzerklärung mitzuändern. Eingerichtet am 2026-10-01.
+- **Die Sucheinstellungen in den Drop-ins sind gemessen, nicht geschätzt.** `rerank.conf` legt fest,
+  wie viele Kandidaten der Reranker sieht (12 seit dem 2026-10-01; die ersten zwölf Treffer sind
+  damit genau die von vorher, die Treffer 13 bis 20 folgen in der Reihenfolge der Bedeutungssuche).
+  Beim SOEP-Finder belegt jede Itembatterie nur einen Platz, die übrigen Items stehen aufklappbar
+  darunter (`SOEP_RAG_BATTERIES`, Standard an). Wer daran dreht, misst vorher und nachher mit
+  `scripts/eval_soep_search.py` und `scripts/eval_soep_concepts.py` (SOEP) sowie
+  `scripts/eval_geodb_search.py` und `scripts/eval_geodb_hard.py` (GeoDB) und vergleicht gepaart.
 - **Zugangsdaten** liegen in `~/.config/secrets/` und `~/kwandel/.config/secrets/`. Skripte lesen
   sie selbst. Nicht öffnen, nicht ausgeben, nicht in ein Repo legen, nicht in einen Chat kopieren.
 - **In `/opt/geolab/` nichts von Hand bearbeiten.** Was dort liegt, wird ausgeliefert und beim

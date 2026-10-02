@@ -30,6 +30,15 @@ LINK_LEVEL_BONUS = {
     "portal": -0.04,
 }
 
+# SOEP cuts German variable labels at 80 characters (see _mark_cut_labels); the export appends a
+# version suffix such as " [2018]" or " [harmonisiert]" after the cut.
+SOEP_LABEL_LIMIT = 80
+SOEP_LABEL_SUFFIX = re.compile(r"\s*\[[^\]]*\]\s*$")
+# SOEP's systematic variable names: two to four letters and four digits, then item (i01), loop
+# (l01) and version (_v1, _h) suffixes. The items of one battery share that stem: plh0406i01 to
+# plh0406i10, or plh0298_v1 (2012) and plh0298_v2 (2018). See _one_per_battery.
+SOEP_BATTERY_NAME = re.compile(r"^([a-z]{2,4}\d{4})(?:i\d{2}|l\d{2}|_v\d+|_h)*$", re.I)
+
 CORE_DATASETS = {"pgen", "pequiv", "ppathl", "hgen", "hpathl", "hpath"}      # generated/tracking
 CORE_SURVEY_DATASETS = {"pl", "hl"}                                          # main person/HH survey
 # Gross/administrative/exit-sample + employer-side families: almost never the
@@ -307,9 +316,14 @@ class SOEPRagAdvisorService:
         self._query_vec_cache: Dict[str, Any] = {}
         self._name_index: Optional[Dict[str, List[int]]] = None
         self._label_words: Optional[set] = None
+        self._battery_index: Optional[Dict[Any, List[int]]] = None
+        self._collapse_batteries = os.getenv("SOEP_RAG_BATTERIES", "1").lower() not in {"0", "false", "no"}
         self._link_weight = float(os.getenv("GEOLAB_LINK_LEVEL_WEIGHT", "1.0"))
         self._exact_code_bonus = float(os.getenv("GEOLAB_EXACT_CODE_BONUS", "0.5"))
         self._code_token_bonus = float(os.getenv("GEOLAB_CODE_TOKEN_BONUS", "0.2"))
+        # Fusion weights: dense retrieval, cross-encoder, lexical overlap, in that order.
+        weights = [float(w) for w in os.getenv("SOEP_RAG_FUSION", "0.35,0.50,0.15").split(",") if w.strip()]
+        self._fusion = tuple(weights) if len(weights) == 3 else (0.35, 0.50, 0.15)
 
     def _new_embedder(self) -> SentenceTransformer:
         embedder = SentenceTransformer(self.model_name, device=self.retrieval_device)
@@ -553,6 +567,51 @@ class SOEPRagAdvisorService:
         year_end = max(year_values) if year_values else None
         year_text = "; ".join(f"{level}: {years}" for level, years in (spatial_coverage or {}).items())
         return sorted(set(spatial_levels)), sorted(set(nuts_levels)), year_start, year_end, year_text
+
+    @staticmethod
+    def _mark_cut_labels(rows: List[Dict[str, Any]]) -> int:
+        """Flag SOEP labels that the source cut off at its 80-character limit.
+
+        SOEP's German labels stop where the Stata label limit is, and the export then appends a
+        year or "[harmonisiert]" behind the cut. "Häufigkeit Diskriminierung letzten beiden Jahre
+        aufgrund der sexuellen Orientier" is all there is of plh0406i03 in every source,
+        publicecoredoku included, so the finder can only say that the label is cut, and the UI
+        then shows the English label, which SOEP writes separately and which is usually whole.
+
+        Length alone cannot tell a cut label from a complete one of the same length, so two
+        fields are set. `label_at_limit` says only that the label reaches the limit (520 of the
+        23,855 analysis variables), and the UI adds the English label to those. `label_cut` says
+        the label very likely stops mid-word, and the UI marks it with an ellipsis. A cut leaves
+        a fragment: "Orientier", "küm" and "Absch" occur nowhere else among 125,000 labels as a
+        whole word, while "Bildungsabschluss" does; a final lower-case word of one or two
+        letters ("Auf de", "nicht s") is a fragment too. Words written with an abbreviation dot
+        elsewhere ("Ges.", "Int.") do not count as whole. Checked by eye on 60 long labels: about
+        one marked label in eight is complete after all, and about one cut in five is missed,
+        mostly where the cut falls on a word boundary ("... in Deutsch", "... In der").
+        """
+        words = re.compile(r"([0-9A-Za-zÄÖÜäöüß]+)(\.?)")
+        split = []
+        whole_words: set = set()
+        for row in rows:
+            label = str(row.get("label") or "")
+            base = SOEP_LABEL_SUFFIX.sub("", label)
+            tokens = [(m.group(1), bool(m.group(2))) for m in words.finditer(base)]
+            at_limit = len(base) >= SOEP_LABEL_LIMIT - 1
+            split.append((base, tokens, at_limit))
+            # the last word of a long label may itself be the fragment; every other word is whole
+            for word, dotted in (tokens[:-1] if at_limit else tokens):
+                if not dotted:
+                    whole_words.add(word.lower())
+        cut = 0
+        for row, (base, tokens, at_limit) in zip(rows, split):
+            last = tokens[-1][0] if tokens else ""
+            is_cut = bool(at_limit and last and base[-1:].isalnum() and (
+                last.lower() not in whole_words
+                or (len(last) <= 2 and last.isalpha() and last.islower())))
+            row["label_at_limit"] = at_limit
+            row["label_cut"] = is_cut
+            cut += is_cut
+        return cut
 
     def _normalise_soep_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
         dataset = self._as_text(row.get("dataset"))
@@ -820,7 +879,9 @@ class SOEPRagAdvisorService:
         if self.load_soep and self.metadata_path is not None:
             raw_soep_rows = self._load_json_rows(self.metadata_path)
             soep_rows = [self._normalise_soep_row(row) for row in raw_soep_rows]
-            print(f"Loaded {len(soep_rows)} SOEP metadata rows from {self.metadata_path}")
+            cut = self._mark_cut_labels(soep_rows)
+            print(f"Loaded {len(soep_rows)} SOEP metadata rows from {self.metadata_path} "
+                  f"({cut} German labels cut off at the source's 80-character limit)")
 
         inkar_rows: List[Dict[str, Any]] = []
         if self.load_inkar and self.inkar_metadata_path and self.inkar_metadata_path.exists():
@@ -1234,6 +1295,57 @@ class SOEPRagAdvisorService:
                 self._query_vec_cache.pop(next(iter(self._query_vec_cache)))
             self._query_vec_cache[formatted] = q_vec
         return q_vec
+
+    def _battery_key(self, row: Dict[str, Any]):
+        if row.get("source_key") != "soep":
+            return None
+        match = SOEP_BATTERY_NAME.match(self._as_text(row.get("variable_name")))
+        return ("battery", self._as_text(row.get("dataset")).lower(), match.group(1).lower()) if match else None
+
+    def _battery_members(self, key) -> List[int]:
+        if self._battery_index is None:
+            index: Dict[Any, List[int]] = {}
+            for position, row in enumerate(self._rows):
+                row_key = self._battery_key(row)
+                if row_key:
+                    index.setdefault(row_key, []).append(position)
+            self._battery_index = {k: v for k, v in index.items() if len(v) > 1}
+        return self._battery_index.get(key, []) if key else []
+
+    def _one_per_battery(self, cands: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Keep the first candidate of each SOEP item battery, in the order given.
+
+        For "Diskriminierung" the pool used to hold plh0406i02, i03, i04, ... under one label,
+        "Häufigkeit Diskriminierung letzten beiden Jahre aufgrund der sexuellen Orientier",
+        which SOEP cuts before the part that tells the items apart. They took the reranker's
+        budget and the first screen, and the battery by reason of discrimination (plh0387) and
+        the long-running item on origin (plj0048) came after them. One slot per battery leaves
+        room for the other batteries; the rest of the battery travels with its first item
+        (`battery_items`), so nothing becomes unreachable.
+        """
+        seen = set()
+        out = []
+        for cand in cands:
+            key = self._battery_key(cand)
+            if key is not None:
+                if key in seen:
+                    continue
+                seen.add(key)
+            out.append(cand)
+        return out
+
+    def _battery_siblings(self, row: Dict[str, Any], filters: Optional[Dict[str, Any]],
+                          limit: int = 40) -> List[Dict[str, Any]]:
+        members = [self._rows[p] for p in self._battery_members(self._battery_key(row))]
+        others = [m for m in members if m.get("item_id") != row.get("item_id")
+                  and self._passes_filters(m, filters)]
+        others.sort(key=lambda m: self._as_text(m.get("variable_name")))
+        return [{
+            "variable_name": m.get("variable_name"), "label": m.get("label"),
+            "label_en": m.get("label_en"), "label_cut": m.get("label_cut", False),
+            "item_id": m.get("item_id"), "source_url": m.get("source_url"),
+            "available_years_text": m.get("available_years_text"),
+        } for m in others[:limit]]
 
     def _soep_code_rows(self, query: str, filters: Optional[Dict[str, Any]],
                         limit: int = 4) -> List[Dict[str, Any]]:
@@ -1657,16 +1769,33 @@ class SOEPRagAdvisorService:
         timing = {} if os.getenv("SOEP_RAG_TIMING") == "1" else None
         stage_start = time.time()
 
+        # The reranker sees a fixed number of candidates however many results are asked for.
+        # Until 2026-10-01 the pool was max(top_k, candidates), so asking for 20 results
+        # instead of 12 also changed the order of the first twelve, and for the worse: with the
+        # bge-reranker-base the paired difference on the 59-query SOEP test was -0.024 in
+        # reciprocal rank (95% interval -0.059 to 0.000). Now the first `pool` results are
+        # ranked exactly as before, and the rest follow in the order of the dense retrieval,
+        # below them, without a cross-encoder score.
+        pool = int(os.getenv("SOEP_RAG_RERANK_CANDIDATES", "24"))
+        extra = max(0, k - pool)
+        split_tail_map: Dict[str, List[str]] = {q: [] for q in set(splits)}
         for q in set(splits):
-            cands = self._search(q, max(k, int(os.getenv("SOEP_RAG_RERANK_CANDIDATES", "24"))), filters)
+            # With one slot per battery the dense list is read three times as deep, so the pool
+            # still holds `pool` distinct candidates after the batteries are folded.
+            cands = self._search(q, (pool + extra) * (3 if self._collapse_batteries else 1), filters)
             # A one-word query that names a SOEP variable is that variable; see _soep_code_rows.
-            cands = self._soep_code_rows(q, filters) + cands
-            for cand in cands:
+            code_rows = self._soep_code_rows(q, filters)
+            cands = code_rows + cands
+            if self._collapse_batteries:
+                cands = self._one_per_battery(cands)
+            head = pool + len(code_rows)
+            for position, cand in enumerate(cands[: head + extra]):
                 item_id = cand["item_id"]
                 if item_id not in all_unique_cands:
                     all_unique_cands[item_id] = cand
-                if item_id not in split_cand_map[q]:
-                    split_cand_map[q].append(item_id)
+                target = split_cand_map[q] if position < head else split_tail_map[q]
+                if item_id not in split_cand_map[q] and item_id not in target:
+                    target.append(item_id)
 
         if timing is not None:
             timing["retrieve_ms"] = int((time.time() - stage_start) * 1000)
@@ -1713,7 +1842,8 @@ class SOEPRagAdvisorService:
                     cand["dense_norm_score"] = max(cand.get("dense_norm_score", 0.0), dense_norm[i])
                     cand["rerank_norm_score"] = max(cand.get("rerank_norm_score", 0.0), rerank_norm[i])
                     cand["lexical_score"] = max(cand.get("lexical_score", 0.0), lexical_scores[i])
-                    fused = 0.35 * dense_norm[i] + 0.50 * rerank_norm[i] + 0.15 * lexical_scores[i]
+                    w_dense, w_rerank, w_lexical = self._fusion
+                    fused = w_dense * dense_norm[i] + w_rerank * rerank_norm[i] + w_lexical * lexical_scores[i]
                     cand["fused_score"] = max(cand.get("fused_score", float("-inf")), fused)
                     # Dataset-authority + exact-code prior (max across split-queries).
                     delta = self._authority_delta(q, cand)
@@ -1728,6 +1858,17 @@ class SOEPRagAdvisorService:
         seen_final = set()
         for q in split_cand_map:
             split_cand_map[q].sort(key=lambda item_id: all_unique_cands[item_id].get("score", -999.0), reverse=True)
+            # The tail goes below the reranked head. Its shown score is placed just under the
+            # lowest reranked one, so the list reads in order; the dense similarity it was
+            # ranked by stays in retrieval_score.
+            floor = min((all_unique_cands[i].get("score", 0.0) for i in split_cand_map[q]), default=0.0)
+            for rank, item_id in enumerate(split_tail_map[q], start=1):
+                cand = all_unique_cands[item_id]
+                if "fused_score" not in cand:            # not reranked under another split
+                    cand.setdefault("retrieval_score", cand.get("score", 0.0))
+                    cand["score"] = floor - 0.001 * rank
+                if item_id not in split_cand_map[q]:
+                    split_cand_map[q].append(item_id)
 
         idx = 0
         max_candidates_per_split = max((len(lst) for lst in split_cand_map.values()), default=0)
@@ -1738,8 +1879,12 @@ class SOEPRagAdvisorService:
                 if idx < len(lst):
                     item_id = lst[idx]
                     dedup_key = self._dedup_key(all_unique_cands[item_id])
-                    if dedup_key not in seen_final:
+                    # two split queries can each bring a different item of the same battery
+                    battery = self._battery_key(all_unique_cands[item_id]) if self._collapse_batteries else None
+                    if dedup_key not in seen_final and (battery is None or battery not in seen_final):
                         seen_final.add(dedup_key)
+                        if battery is not None:
+                            seen_final.add(battery)
                         recommended.append(all_unique_cands[item_id])
                         added_in_round = True
                         if len(recommended) == k:
@@ -1761,6 +1906,11 @@ class SOEPRagAdvisorService:
             )
             if others:
                 cand["also_in_datasets"] = others
+            if self._collapse_batteries:
+                siblings = self._battery_siblings(cand, filters)
+                if siblings:
+                    cand["battery_items"] = siblings
+                    cand["battery_stem"] = self._battery_key(cand)[2]
 
         datasets_found = sorted(
             {

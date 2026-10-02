@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '../i18n'
 
 // The project site carries the imprint, the privacy statement and the attribution list.
@@ -35,6 +35,71 @@ function matchConcept(concepts, label) {
     } catch { /* eine kaputte Regel darf die Trefferliste nicht mitnehmen */ }
   }
   return null
+}
+
+// Whether the three-line clamp actually cuts a description depends on the width of the card, so
+// it is measured, not guessed. The old rule showed the button above 240 characters: on a phone
+// three lines are full after about 140, so 3 % of the SOEP and 6 % of the GeoDB descriptions were
+// cut with no way to open them, and on a wide screen some 250-character ones got a button that
+// opened nothing.
+function ResultDescription({ text, open, rowKey, onClamp }) {
+  const ref = useRef(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || open) return undefined
+    const check = () => onClamp(rowKey, el.scrollHeight > el.clientHeight + 1)
+    check()
+    if (typeof ResizeObserver === 'undefined') return undefined
+    const observer = new ResizeObserver(check)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [text, open, rowKey, onClamp])
+  return <p ref={ref} className={open ? 'result-desc is-open' : 'result-desc'}>{text}</p>
+}
+
+// SOEP cuts German labels at 80 characters, and the export may append " [2018]" or
+// " [harmonisiert]" behind the cut. The backend says which labels reach the limit and which very
+// likely stop mid-word (_mark_cut_labels); the ellipsis goes where the cut is, before the suffix.
+const LABEL_SUFFIX = /\s*\[[^\]]*\]\s*$/
+function displayLabel(row) {
+  const label = row.label || row.variable_name || ''
+  if (!row.label_cut) return label
+  const suffix = (label.match(LABEL_SUFFIX) || [''])[0]
+  return `${label.slice(0, label.length - suffix.length)}…${suffix}`
+}
+
+// The other variables of a SOEP item battery travel with its best-ranked item (the backend's
+// _one_per_battery). What tells them apart is the end of the label ("…: Alter", "…: Geschlecht"),
+// so each is shown by what remains after the words all of them share. Where nothing remains,
+// as in plh0406, whose ten labels SOEP cut to the same 80 characters, the code and the years
+// are all there is, and the code links to the variable's page at paneldata.org.
+function BatteryItems({ row, t }) {
+  const items = row.battery_items || []
+  if (!items.length) return null
+  const labels = [row.label || '', ...items.map((it) => it.label || '')]
+  let shared = labels[0]
+  for (const label of labels) {
+    while (shared && !label.startsWith(shared)) shared = shared.slice(0, -1)
+  }
+  const boundary = Math.max(shared.lastIndexOf(' '), shared.lastIndexOf(':'), shared.lastIndexOf('/'))
+  const cut = shared.length === labels[0].length ? shared.length : boundary + 1
+  const rest = (label) => (label || '').slice(cut).replace(LABEL_SUFFIX, '').trim()
+  return (
+    <details className="result-battery">
+      <summary>{t('row.battery', { n: items.length, stem: row.battery_stem || '' })}</summary>
+      <ul>
+        {items.map((it) => (
+          <li key={it.item_id || it.variable_name}>
+            {it.source_url
+              ? <a href={it.source_url} target="_blank" rel="noreferrer" title={it.label}><code>{it.variable_name}</code></a>
+              : <code title={it.label}>{it.variable_name}</code>}
+            {rest(it.label) && <span className="result-battery-rest">{rest(it.label)}</span>}
+            {it.available_years_text && <span className="text-muted">{it.available_years_text}</span>}
+          </li>
+        ))}
+      </ul>
+    </details>
+  )
 }
 
 // One facet: a dropdown that opens onto checkboxes. A plain <select> holds exactly one value, so
@@ -202,7 +267,9 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
     regional_only: false,
     include_raw: false,
     sample_group: [],
-    top_k: 12,
+    // 20 since 2026-10-01: a topic query has many right answers, and twelve rows were often
+    // filled by one battery. The rerank pool does not grow with it (see the backend).
+    top_k: 20,
   })
 
   // How precisely a result's link lands on the thing it describes. Shown as a chip so a
@@ -232,6 +299,11 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
   const [chatHistory, setChatHistory] = useState([])
   const [selectedRows, setSelectedRows] = useState({})
   const [expandedRows, setExpandedRows] = useState({})
+  // which descriptions the clamp really cuts, measured per row by ResultDescription
+  const [clampedRows, setClampedRows] = useState({})
+  const markClamped = useCallback((key, value) => {
+    setClampedRows((current) => (Boolean(current[key]) === value ? current : { ...current, [key]: value }))
+  }, [])
   const messagesEndRef = useRef(null)
   const latestMsgRef = useRef(null)
 
@@ -408,7 +480,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: userQ,
-          top_k: Number(filterSnapshot.top_k) || 12,
+          top_k: Number(filterSnapshot.top_k) || 20,
           // Send the SELECTED source, never the deployment mode. Sending `mode` here hard
           // filtered every GeoDB query to source_key "inkar" no matter what the dropdown said,
           // which made 18 of 19 sources unreachable through the UI while the API was fine.
@@ -621,10 +693,13 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
       // top_k: below 0.015 it catches 18 of the 27 impossible ones and speaks up on 5 of the
       // 31 answerable ones, where the field really is flat. It is a note, never a filter:
       // nothing is hidden or reordered.
+      // Calibrated on twelve rows, so it still looks at the best twelve when more are shown;
+      // the median of twenty sits lower and would silence the note on flat fields.
       const rerankScores = allRows
         .map((row) => Number(row.rerank_score))
         .filter((value) => Number.isFinite(value))
         .sort((a, b) => b - a)
+        .slice(0, 12)
       const median = rerankScores.length
         ? rerankScores[Math.floor(rerankScores.length / 2)]
         : 0
@@ -732,7 +807,12 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                       aria-label={t('row.selectAria', { name: row.variable_name || row.label || '' })}
                     />
                     <div className="result-headline">
-                      <h4 className="result-label">{row.label || row.variable_name}</h4>
+                      <h4 className="result-label"
+                          title={row.label_cut ? t('row.labelCut') : undefined}>{displayLabel(row)}</h4>
+                      {row.label_at_limit && row.label_en && row.label_en !== row.label
+                        && !row.label_en.startsWith('[de]') && (
+                        <p className="result-label-en" lang="en">{row.label_en}</p>
+                      )}
                       <div className="result-ident">
                         <code className="result-code">{row.variable_name}</code>
                         {!einheitlich.has('source') && row.source_label && (
@@ -780,7 +860,8 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                   </dl>
 
                   {description && (
-                    <p className={expanded ? 'result-desc is-open' : 'result-desc'}>{description}</p>
+                    <ResultDescription text={description} open={expanded} rowKey={rowKey}
+                                       onClamp={markClamped} />
                   )}
                   {/* The API hint is a long technical note (Overpass query, INKAR code); it
                       belongs with the full description, not in the default view. */}
@@ -790,6 +871,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                       {t('row.alsoIn', { datasets: row.also_in_datasets.join(', ') })}
                     </p>
                   )}
+                  <BatteryItems row={row} t={t} />
 
                   {/* A link that only opens a search mask needs to say so. A colleague looked up
                       "Krankenhäuser", landed on a portal page where nothing of that name was
@@ -836,7 +918,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                         {level.label}{row.link_verified === false ? '*' : ''}
                       </span>
                     )}
-                    {(row.api_hint || description.length > 240) && (
+                    {(row.api_hint || clampedRows[rowKey] || expanded) && (
                       <button type="button" className="result-toggle"
                               onClick={() => setExpandedRows((c) => ({ ...c, [rowKey]: !c[rowKey] }))}>
                         {expanded ? t('row.less') : t('row.more')}
