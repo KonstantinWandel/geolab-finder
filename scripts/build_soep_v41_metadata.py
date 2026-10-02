@@ -108,10 +108,11 @@ def load_public_doku(dataset_names: Iterable[str], wave_year: Dict[str, int]) ->
     questions: Dict[tuple, List[Dict[str, Any]]] = {}
     years: Dict[tuple, List[int]] = {}
     cats_en: Dict[tuple, str] = {}
+    modules: Dict[tuple, str] = {}
     derived_years: Dict[tuple, set] = defaultdict(set)
     if not root.exists():
         print(f"[doku] {PUBLIC_DOKU} missing: git clone https://git.soep.de/kwenzig/publicecoredoku.git")
-        return {"questions": questions, "years": years, "cats_en": cats_en}
+        return {"questions": questions, "years": years, "cats_en": cats_en, "modules": modules}
     for ds in sorted(set(dataset_names)):
         folder = root / ds / DOKU_VERSION
         help_path = folder / "SOEPhelp.csv"
@@ -145,6 +146,18 @@ def load_public_doku(dataset_names: Iterable[str], wave_year: Dict[str, int]) ->
                                        g["input_dataset"].str.lower()):
                     if od == ds.lower() and idd in wave_year:
                         derived_years[(od, ov)].add(wave_year[idd])
+        # The DIW's own module classification (main module > submodule > extra module), e.g.
+        # "Persönlichkeit > Einstellung > Familie" for the gender-role items plh0298 to plh0309,
+        # which have no topic in the paneldata export.
+        mod_path = folder / "modules.csv"
+        if mod_path.exists():
+            md = pd.read_csv(mod_path, dtype=str, keep_default_na=False, low_memory=False)
+            if {"variable", "mainmodule"} <= set(md.columns):
+                for r in md.itertuples(index=False):
+                    path = " > ".join(x for x in (getattr(r, "mainmodule", ""), getattr(r, "submodule", ""),
+                                                  getattr(r, "extramodule", "")) if clean(x))
+                    if path:
+                        modules[(ds.lower(), str(r.variable).lower())] = path
         cat_path = folder / "variable_categories.csv"
         if cat_path.exists():
             c = pd.read_csv(cat_path, dtype=str, keep_default_na=False, low_memory=False)
@@ -159,7 +172,9 @@ def load_public_doku(dataset_names: Iterable[str], wave_year: Dict[str, int]) ->
     print(f"[doku] {len(questions)} variables with a directly linked question, {len(years)} with survey "
           f"years ({sum(1 for v in year_source.values() if v == 'generations')} of them from generations.csv), "
           f"{len(cats_en)} with English value labels")
-    return {"questions": questions, "years": years, "year_source": year_source, "cats_en": cats_en}
+    print(f"[doku] {len(modules)} variables with a DIW module path")
+    return {"questions": questions, "years": years, "year_source": year_source, "cats_en": cats_en,
+            "modules": modules}
 
 
 def substantive_categories(scale: str) -> str:
@@ -203,6 +218,12 @@ def main() -> None:
                         help="display (default): the question linked in SOEPhelp.csv is shown to the reader, "
                              "the embedded text keeps the concept's question; embed-direct: the linked question "
                              "also goes into the embedded text; concept: only the concept route, as before 2026-09-30")
+    parser.add_argument("--modules", action="store_true",
+                        help="use the DIW module path (modules.csv) as topic where the export has none. "
+                             "Measured 2026-10-02: 12,135 more visible variables get a topic; with "
+                             "bge-reranker-base the first screen holds more distinct relevant variables "
+                             "(DR@10 +0.41, interval +0.07 to +0.83) and first hits are unchanged, with "
+                             "gte-multilingual-reranker-base the label gate loses (-0.036). Off by default.")
     parser.add_argument("--no-english-categories", action="store_true",
                         help="leave the English value labels out of the embedded text")
     parser.add_argument("--legacy", default=str(REPO_ROOT / "soep_metadata_output" / "soep_metadata_enriched.json"),
@@ -302,6 +323,11 @@ def main() -> None:
         concept_en = clean(concept_row.get("label")) if concept_row is not None else ""
         topic = clean(concept_row.get("topic")) if concept_row is not None else ""
         path = paths.get(topic, {})
+        topic_source = "export" if path else ""
+        if not path and args.modules:
+            module = doku.get("modules", {}).get((dataset.lower(), name.lower()), "")
+            if module:
+                path, topic_source = {"de": module, "en": ""}, "modules"
         dataset_row = dataset_rows.get(dataset)
         dataset_de = clean(dataset_row.get("label_de")) if dataset_row is not None else ""
         dataset_en = clean(dataset_row.get("label")) if dataset_row is not None else ""
@@ -381,7 +407,7 @@ def main() -> None:
             f"Label (en, machine translation): {label_en_mt}" if label_en_mt else "",
             f"Dataset: {dataset} ({dataset_de or dataset_en})",
             f"Concept: {concept_de} / {concept_en}" if (concept_de or concept_en) else "",
-            f"Topic: {path.get('de', '')} / {path.get('en', '')}" if path else "",
+            (f"Topic: {path['de']} / {path['en']}" if path.get("en") else f"Topic: {path['de']}") if path else "",
             f"Question (de): {embedded[0]['de']}" if embedded and embedded[0]["de"] else "",
             f"Question (en): {embedded[0]['en']}" if embedded and embedded[0]["en"] else "",
             f"Answer categories: {scale}" if scale else "",
@@ -413,6 +439,7 @@ def main() -> None:
             "topic": topic,
             "topic_path": path.get("de", ""),
             "topic_path_en": path.get("en", ""),
+            "topic_source": topic_source,
             "dataset_label_official": dataset_de or dataset_en,
             "analysis_unit": analysis_unit,
             "conceptual_dataset": conceptual,
