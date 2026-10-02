@@ -233,6 +233,10 @@ class OnnxCrossEncoder:
         features = self._tokenizer(queries, documents, padding=True, truncation=True,
                                    max_length=self._max_length, return_tensors="np")
         feed = {key: value for key, value in features.items() if key in self._inputs}
+        # Some exports declare token_type_ids although their tokenizer never produces them
+        # (onnx-community/gte-multilingual-reranker-base); the model treats them as all zero.
+        if "token_type_ids" in self._inputs and "token_type_ids" not in feed:
+            feed["token_type_ids"] = self._np.zeros_like(feed["input_ids"])
         logits = self._session.run(None, feed)[0].reshape(-1)
         # bge-reranker is a single-logit model and sentence-transformers applies a sigmoid to it;
         # the fusion normalises afterwards, but keeping the same scale keeps the two paths
