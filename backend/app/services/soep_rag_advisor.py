@@ -1079,8 +1079,13 @@ class SOEPRagAdvisorService:
             if isinstance(year, int)
         ]
         # When the index was last rebuilt. Without it a user cannot tell fresh from stale.
+        # The SOEP finder used to show the GeoDB date: geodb_build_info.json lies in the same folder
+        # as the SOEP corpus, and the fallback below found it ("as of 2026-09-11" for an index built
+        # on 2026-09-30). The SOEP corpus has no build-info file, so its date is the corpus file's.
         index_built = ""
-        for candidate in [
+        if self.app_mode == "soep" and self.metadata_path and self.metadata_path.exists():
+            index_built = time.strftime("%Y-%m-%d", time.localtime(self.metadata_path.stat().st_mtime))
+        for candidate in [] if index_built else [
             (self.geodb_metadata_path.parent / "geodb_build_info.json") if self.geodb_metadata_path else None,
             (self.metadata_path.parent / "geodb_build_info.json") if self.metadata_path else None,
         ]:
