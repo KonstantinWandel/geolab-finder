@@ -31,11 +31,13 @@ The index holds descriptions and links. The data stays with the institutions tha
   [`intfloat/multilingual-e5-large-instruct`](https://huggingface.co/intfloat/multilingual-e5-large-instruct)
   over the metadata records. It was chosen over `BAAI/bge-m3` by a comparison on this corpus.
 - **Cross-encoder rerank** of the top candidates. Production uses
-  [`BAAI/bge-reranker-base`](https://huggingface.co/BAAI/bge-reranker-base), exported to ONNX and
-  quantised to int8, which is fast enough on four CPU cores; the code default is
+  [`Alibaba-NLP/gte-multilingual-reranker-base`](https://huggingface.co/Alibaba-NLP/gte-multilingual-reranker-base)
+  as an int8 ONNX graph (from `onnx-community`), about 0.76 s for twelve documents on eight CPU
+  cores. It replaced `BAAI/bge-reranker-base` on 2 October 2026 after a comparison of eleven
+  rerankers on the four retrieval tests; the code default is
   [`BAAI/bge-reranker-v2-m3`](https://huggingface.co/BAAI/bge-reranker-v2-m3), set with
-  `SOEP_RAG_RERANKER_MODEL`. The reranker has to be multilingual: an English-only one buries terse
-  German labels under longer English descriptions.
+  `SOEP_RAG_RERANKER_MODEL`. The reranker has to be multilingual: the records and the queries mix
+  German and English.
 - **Score fusion** of the bi-encoder, the reranker and a lexical-overlap signal, with a bonus for
   an exact match on a record's code.
 - **Filters** by source, spatial level, year range and theme. Each filter shows how many records
@@ -49,7 +51,9 @@ The index holds descriptions and links. The data stays with the institutions tha
 Downloaded from Hugging Face at runtime and cached locally:
 
 - `intfloat/multilingual-e5-large-instruct`, bi-encoder, MIT.
-- `BAAI/bge-reranker-base`, cross-encoder, MIT; `BAAI/bge-reranker-v2-m3`, cross-encoder, Apache-2.0.
+- `Alibaba-NLP/gte-multilingual-reranker-base`, cross-encoder, Apache-2.0 (in production);
+  `BAAI/bge-reranker-v2-m3`, cross-encoder, Apache-2.0 (code default); `BAAI/bge-reranker-base`,
+  cross-encoder, MIT (until 2 October 2026).
 
 The code can load a local answer-generating language model (`SOEP_RAG_LOAD_LLM`). It is off by
 default and off in production; the finders only retrieve.

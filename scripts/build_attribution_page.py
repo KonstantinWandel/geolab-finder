@@ -161,7 +161,7 @@ def main() -> None:
     lines.append("\n## Software and citation\n")
     lines.append("The finders are open source (MIT) and archived on Zenodo. Retrieval uses the "
                  "multilingual `intfloat/multilingual-e5-large-instruct` bi-encoder (MIT) with the "
-                 "`BAAI/bge-reranker-base` cross-encoder (Apache-2.0).\n")
+                 "`Alibaba-NLP/gte-multilingual-reranker-base` cross-encoder (Apache-2.0).\n")
     lines.append("- Code: <https://github.com/KonstantinWandel/geolab-finder> and "
                  "<https://github.com/KonstantinWandel/soep-variable-finder>\n")
 

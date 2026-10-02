@@ -255,6 +255,12 @@ def main() -> None:
         # answerable from unanswerable queries; this margin does, so it is measured on every run.
         rerank = sorted((float(r.get("rerank_score") or 0.0) for r in rows), reverse=True)
         entry["margin"] = (rerank[0] - statistics.median(rerank)) if len(rerank) > 2 else 0.0
+        # Signal B: the best cross-encoder score itself. Useless with bge-reranker-base, where a
+        # conversational answerable query scored below every impossible one; with
+        # gte-multilingual-reranker-base it is the better signal (AUC 0.81 against 0.44 for the
+        # margin, 2026-10-02), and it is what SOEP_RAG_WEAK_MATCH_BELOW thresholds.
+        entry["top_rerank"] = rerank[0] if rerank else 0.0
+        entry["weak_match"] = response.get("weak_match")
 
         if case["kind"] == "negative":
             # nothing here can be right; a hit on `reject` means it answered anyway
@@ -294,25 +300,37 @@ def main() -> None:
         "seconds_median": round(statistics.median([r["seconds"] for r in results]), 2),
         "seconds_max": round(max(r["seconds"] for r in results), 2),
     }
-    # Where would a "nothing here stands out" hint fire, and what would it cost?
-    answerable = [r["margin"] for r in graded]
-    impossible = [r["margin"] for r in negatives]
-    if answerable and impossible:
+    # Where would a "nothing here stands out" hint fire, and what would it cost? Two signals,
+    # because which one works depends on the reranker. The threshold reported is the one that
+    # catches the most impossible questions while speaking up on at most a fifth of the
+    # answerable ones; it is fitted on these 59 queries, so treat it as a starting value.
+    for signal in ("margin", "top_rerank"):
+        answerable = [r[signal] for r in graded]
+        impossible = [r[signal] for r in negatives]
+        if not (answerable and impossible):
+            continue
         best = None
         for threshold in sorted({round(v, 4) for v in answerable + impossible}):
-            kept = sum(1 for v in answerable if v >= threshold)
+            alarms = sum(1 for v in answerable if v < threshold)
             caught = sum(1 for v in impossible if v < threshold)
-            balance = kept / len(answerable) + caught / len(impossible)
-            if best is None or balance > best[0]:
-                best = (balance, threshold, kept, caught)
-        _, threshold, kept, caught = best
-        summary["margin_signal"] = {
+            if alarms <= len(answerable) / 5 and (best is None or caught > best[2]):
+                best = (threshold, alarms, caught)
+        auc = sum((a > i) + 0.5 * (a == i) for a in answerable for i in impossible) / (
+            len(answerable) * len(impossible))
+        threshold, alarms, caught = best or (None, 0, 0)
+        summary[f"{signal}_signal"] = {
+            "auc": round(auc, 3),
             "threshold": threshold,
-            "answerable_kept": f"{kept}/{len(answerable)}",
             "impossible_caught": f"{caught}/{len(impossible)}",
-            "false_alarm_rate": round(1 - kept / len(answerable), 3),
+            "answerable_flagged": f"{alarms}/{len(answerable)}",
             "answerable_median": round(statistics.median(answerable), 4),
             "impossible_median": round(statistics.median(impossible), 4),
+        }
+    flags = [r for r in results if isinstance(r.get("weak_match"), bool)]
+    if flags:
+        summary["weak_match_as_deployed"] = {
+            "impossible_caught": f"{sum(r['weak_match'] for r in negatives)}/{len(negatives)}",
+            "answerable_flagged": f"{sum(r['weak_match'] for r in graded)}/{len(graded)}",
         }
 
     print("\n" + json.dumps(summary, ensure_ascii=False, indent=2))

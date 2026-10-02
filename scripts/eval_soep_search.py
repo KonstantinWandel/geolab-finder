@@ -161,6 +161,7 @@ def main() -> None:
             "query": query, "rank": rank,
             "top_variable": top.get("variable_name", ""), "top_label": top.get("label", ""),
             "top_dataset": top.get("dataset", ""),
+            "weak_match": response.get("weak_match"),
         })
         mark = "  ok " if rank == 1 else (f"  #{rank} " if rank else "  MISS")
         print(f"{mark} {query[:46]:<46} -> {top.get('dataset', ''):<10} "
@@ -173,6 +174,8 @@ def main() -> None:
         "hit@3": sum(1 for r in found if r["rank"] <= 3),
         "hit@10": len(found),
         "misses": [r["query"] for r in results if not r["rank"]],
+        # every query here has an answer, so each "nothing stands out" note is a false alarm
+        "weak_match_flags": sum(1 for r in results if r.get("weak_match") is True),
     }
     print("\n" + json.dumps(summary, ensure_ascii=False, indent=2))
     if args.json_out:

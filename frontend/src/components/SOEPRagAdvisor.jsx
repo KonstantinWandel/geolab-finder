@@ -703,7 +703,13 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
       const median = rerankScores.length
         ? rerankScores[Math.floor(rerankScores.length / 2)]
         : 0
-      const flatField = rerankScores.length > 2 && rerankScores[0] - median < 0.015
+      // Since 2026-10-02 the backend decides (`weak_match`), because the rule depends on the
+      // reranker: with gte-multilingual-reranker-base the margin above no longer separates
+      // answerable from impossible questions, its absolute top score does. The margin rule stays
+      // for a backend that sends no decision.
+      const flatField = typeof result.weak_match === 'boolean'
+        ? result.weak_match
+        : rerankScores.length > 2 && rerankScores[0] - median < 0.015
 
       /* Die Felder, die eine Zeile von der nächsten unterscheiden sollen. Trägt eines bei
          allen Treffern denselben Wert, steht es einmal über der Liste statt an jeder Zeile. */

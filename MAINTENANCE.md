@@ -225,7 +225,11 @@ ssh vm "sudo systemctl reload caddy"    # wenn das ausgelieferte älter ist als 
   wie viele Kandidaten der Reranker sieht (12 seit dem 2026-10-01; die ersten zwölf Treffer sind
   damit genau die von vorher, die Treffer 13 bis 20 folgen in der Reihenfolge der Bedeutungssuche).
   Beim SOEP-Finder belegt jede Itembatterie nur einen Platz, die übrigen Items stehen aufklappbar
-  darunter (`SOEP_RAG_BATTERIES`, Standard an). Wer daran dreht, misst vorher und nachher mit
+  darunter (`SOEP_RAG_BATTERIES`, Standard an). Der Reranker steht in `onnx.conf` (seit dem
+  2026-10-02 gte-multilingual-reranker-base), zusammen mit der Schwelle für den Hinweis „kein
+  Treffer sticht heraus“ (`SOEP_RAG_WEAK_MATCH_BELOW`). Die Schwelle gehört zum Modell: wer den
+  Reranker wechselt, liest sie in der Ausgabe von `scripts/eval_geodb_hard.py` neu ab
+  (`top_rerank_signal`). Wer daran dreht, misst vorher und nachher mit
   `scripts/eval_soep_search.py` und `scripts/eval_soep_concepts.py` (SOEP) sowie
   `scripts/eval_geodb_search.py` und `scripts/eval_geodb_hard.py` (GeoDB) und vergleicht gepaart.
 - **Zugangsdaten** liegen in `~/.config/secrets/` und `~/kwandel/.config/secrets/`. Skripte lesen

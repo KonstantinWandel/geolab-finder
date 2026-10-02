@@ -158,6 +158,7 @@ def evaluate(service, cases, top_k: int, include_raw: bool = False):
             "top": [f"{r.get('dataset', '')}:{r.get('variable_name', '')}" for r in rows[:10]],
             "ranked": [f"{r.get('dataset', '')}:{r.get('variable_name', '')}" for r in rows],
             "top_label": str(rows[0].get("label", "")) if rows else "",
+            "weak_match": response.get("weak_match"),
         })
     return results
 
@@ -172,6 +173,8 @@ def summarise(results):
         "mrr": round(sum(1 / r["rank"] for r in found) / len(results), 3),
         "p@10": round(sum(r["p_at_10"] for r in results) / len(results), 3),
         "dr@10": round(sum(r["dr_at_10"] for r in results) / len(results), 2),
+        # every query here has an answer, so each "nothing stands out" note is a false alarm
+        "weak_match_flags": sum(1 for r in results if r.get("weak_match") is True),
         "misses": [r["query"] for r in results if not r["rank"] or r["rank"] > 10],
     }
 

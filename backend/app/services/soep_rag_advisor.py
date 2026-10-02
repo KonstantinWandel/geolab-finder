@@ -222,7 +222,12 @@ class OnnxCrossEncoder:
         # Tokenise with the ORIGINAL tokenizer, not the copy written next to the export: the two
         # must agree or the ONNX path scores a different tokenisation than the torch path, and
         # transformers already warns that a re-saved tokenizer can carry a wrong regex.
-        self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_name or str(directory))
+        # trust_remote_code=False on purpose: gte-multilingual-reranker-base's config points at
+        # Alibaba's own model code, and without the flag transformers asks "Do you wish to run the
+        # custom code? [y/N]" on stdin, inside a systemd service. The tokenizer itself is the plain
+        # XLM-RoBERTa one (same ids as bge-reranker-base), and the model runs from the ONNX graph.
+        self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_name or str(directory),
+                                                        trust_remote_code=False)
         self._max_length = max_length
 
     def predict(self, pairs, **_kwargs):
@@ -326,6 +331,15 @@ class SOEPRagAdvisorService:
         self._exact_code_bonus = float(os.getenv("GEOLAB_EXACT_CODE_BONUS", "0.5"))
         self._code_token_bonus = float(os.getenv("GEOLAB_CODE_TOKEN_BONUS", "0.2"))
         # Fusion weights: dense retrieval, cross-encoder, lexical overlap, in that order.
+        # Below this top cross-encoder score the UI notes that nothing stands out. It belongs to
+        # the reranker (scores are on that model's scale), so it is set next to the model in the
+        # unit's drop-in; unset, the UI falls back to its old margin rule. Measured 2026-10-02 for
+        # gte-multilingual-reranker-base on eval_geodb_hard.py: 0.48 catches 20 of 28 impossible
+        # questions and speaks up on 5 of 31 answerable ones (AUC 0.81; the margin rule's AUC
+        # under gte was 0.44). On the 105 answerable SOEP test queries 0.48 would speak up 11
+        # times and 0.40 once, and SOEP has no impossible questions to calibrate against.
+        weak = os.getenv("SOEP_RAG_WEAK_MATCH_BELOW", "").strip()
+        self._weak_match_below = float(weak) if weak else None
         weights = [float(w) for w in os.getenv("SOEP_RAG_FUSION", "0.35,0.50,0.15").split(",") if w.strip()]
         self._fusion = tuple(weights) if len(weights) == 3 else (0.35, 0.50, 0.15)
 
@@ -571,6 +585,14 @@ class SOEPRagAdvisorService:
         year_end = max(year_values) if year_values else None
         year_text = "; ".join(f"{level}: {years}" for level, years in (spatial_coverage or {}).items())
         return sorted(set(spatial_levels)), sorted(set(nuts_levels)), year_start, year_end, year_text
+
+    def _weak_match(self, rows: List[Dict[str, Any]]) -> Optional[bool]:
+        """True when no result clears the reranker's weak-match threshold; None when unset."""
+        if self._weak_match_below is None:
+            return None
+        scores = [float(r["rerank_score"]) for r in rows
+                  if isinstance(r.get("rerank_score"), (int, float)) and r["rerank_score"] > float("-inf")]
+        return bool(scores) and max(scores) < self._weak_match_below
 
     @staticmethod
     def _mark_cut_labels(rows: List[Dict[str, Any]]) -> int:
@@ -1947,4 +1969,5 @@ class SOEPRagAdvisorService:
             "metadata_source": str(self.metadata_path),
             "inkar_metadata_source": str(self.inkar_metadata_path) if self.inkar_metadata_path else None,
             "filters_applied": filters,
+            "weak_match": self._weak_match(recommended),
         }

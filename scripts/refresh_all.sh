@@ -41,11 +41,13 @@ echo "[3c] IÖR deep links (browser)"
 "$HOME/miniconda3/envs/webshot/bin/python" scripts/check_ioer_links.py \
   --json-out output/ioer_link_check.json 2>&1 | tail -6 || echo "  (IÖR-Linkprüfung übersprungen)"
 
-echo "[4/6] retrieval gate"
-GEOLAB_APP_MODE=inkar SOEP_RAG_DEVICE=cuda \
+echo "[4/6] retrieval gate (CPU, the production reranker)"
+GEOLAB_APP_MODE=inkar SOEP_RAG_DEVICE=cpu \
   INKAR_METADATA_ROOT="$PWD/soep_metadata_output" SOEP_METADATA_ROOT="$PWD/soep_metadata_output" \
   SOEP_RAG_CACHE_DIR="$PWD/soep_metadata_output/cache" \
-  SOEP_RAG_RERANKER_MODEL=BAAI/bge-reranker-base SOEP_RAG_RERANK_CANDIDATES=16 \
+  SOEP_RAG_RERANKER_MODEL=Alibaba-NLP/gte-multilingual-reranker-base \
+  SOEP_RAG_RERANK_ONNX="$PWD/models/gte-multilingual-reranker-base-onnx-int8" \
+  SOEP_RAG_RERANK_CANDIDATES=12 SOEP_RAG_RERANK_DOC_CHARS=480 SOEP_RAG_WEAK_MATCH_BELOW=0.48 \
   $E scripts/eval_geodb_search.py --json-out output/eval_latest.json | tail -8
 
 if [[ "$DEPLOY" == "1" ]]; then
