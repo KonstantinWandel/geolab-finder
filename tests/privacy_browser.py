@@ -86,7 +86,7 @@ async def run():
                 await page.get_by_role('button', name='Allow both', exact=True).click()
                 await page.wait_for_timeout(150)
                 old_id = await page.evaluate(f'JSON.parse(localStorage.getItem("geolab_visitor_{mode}")).id')
-                await page.evaluate('Storage.prototype.setItem = function() { throw new Error("quota") }')
+                await page.evaluate('() => { Storage.prototype.setItem = function() { throw new Error("quota") } }')
                 await page.get_by_role('button', name='Privacy settings', exact=True).click()
                 await page.get_by_role('button', name='Decline both', exact=True).click()
                 await page.get_by_text('Your browser blocked saving these choices.', exact=False).wait_for()
