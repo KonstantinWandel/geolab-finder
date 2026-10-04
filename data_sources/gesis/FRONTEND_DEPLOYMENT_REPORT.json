@@ -1,21 +1,21 @@
 {
-  "published_at": "20261004T192141Z",
-  "build_index_sha256": "fb1c062c8c17e8b75078813db0b8478da4b298340c5a7a257d30eb56b4d23939",
-  "backup": "/opt/geolab/backups/gesis-frontend-20261004T192141Z",
+  "published_at": "20261004T224014Z",
+  "build_index_sha256": "6e87ce31ced5de7d1c82294f4d33e5f47c11ad1e5ac69838a048e4eb8df8c6b2",
+  "backup": "/opt/geolab/backups/gesis-frontend-20261004T224014Z",
   "before": {
-    "https://geolab.soz.uni-bielefeld.de/": "fcf5fa38f00da6ac653c03805715fff2ef57a2ba9bea8036af81c7b6638e2b5c",
-    "https://geodb.geolab.soz.uni-bielefeld.de/": "523cd6e7f8ee22cbca6f83a6d2081dec071bbd78aecfeb80a6d5fb1b34b2d233",
+    "https://geolab.soz.uni-bielefeld.de/": "4f57218a7ff2b7d204a73735fd7622d82b4dc63c0917449da785e0f48bd9af06",
+    "https://geodb.geolab.soz.uni-bielefeld.de/": "fb1c062c8c17e8b75078813db0b8478da4b298340c5a7a257d30eb56b4d23939",
     "https://soep-faiss.geolab.soz.uni-bielefeld.de/": "5bade61745106bff5f102464761bd9ed9b41cf38e2f10336061554f415fe55fb",
     "https://germaparl.geolab.soz.uni-bielefeld.de/": "cd9a8b3621a0c1660429a61f3e616e04639df4ad40240568d0fa927739955726"
   },
   "after": {
-    "https://geolab.soz.uni-bielefeld.de/": "fcf5fa38f00da6ac653c03805715fff2ef57a2ba9bea8036af81c7b6638e2b5c",
-    "https://geodb.geolab.soz.uni-bielefeld.de/": "fb1c062c8c17e8b75078813db0b8478da4b298340c5a7a257d30eb56b4d23939",
+    "https://geolab.soz.uni-bielefeld.de/": "4f57218a7ff2b7d204a73735fd7622d82b4dc63c0917449da785e0f48bd9af06",
+    "https://geodb.geolab.soz.uni-bielefeld.de/": "6e87ce31ced5de7d1c82294f4d33e5f47c11ad1e5ac69838a048e4eb8df8c6b2",
     "https://soep-faiss.geolab.soz.uni-bielefeld.de/": "5bade61745106bff5f102464761bd9ed9b41cf38e2f10336061554f415fe55fb",
     "https://germaparl.geolab.soz.uni-bielefeld.de/": "cd9a8b3621a0c1660429a61f3e616e04639df4ad40240568d0fa927739955726"
   },
   "other_roots_unchanged": true,
   "old_bundles_retained": true,
   "service_restart": false,
-  "local_browser_check_sha256": "bc4bc40463e0861b75a657dc7a934345d0741f8790182bbf5a7b166bdb110572"
+  "local_browser_check_sha256": "23dcb4deb9427708a628933ddf426b797a1f01ffc8b21606f5240eb14dcbd10c"
 }

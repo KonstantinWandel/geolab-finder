@@ -80,7 +80,7 @@ export const STRINGS = {
     'filter.includeRawTitle': 'soepdata/raw: the raw questionnaire files behind the analysis datasets',
     'filter.active': 'Active: {source}',
     'filter.years': 'indexed years {min}-{max}',
-    'filter.indexBuilt': 'index as of {date}',
+    'filter.indexBuilt': 'Index as of {date}',
 
     'placeholder.inkar': 'Example: regional indicators for rural infrastructure, employment, childcare, or commuting (Shift+Enter for new line)',
     'placeholder.soep': 'Example: net individual income from labour; household equivalised income; years of education (Shift+Enter for new line)',
@@ -445,6 +445,19 @@ export function makeTranslator(language) {
       text,
     )
   }
+}
+
+export function formatIndexDate(value, language) {
+  if (typeof value !== 'string' || !value.trim()) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const german = language === 'de'
+  return new Intl.DateTimeFormat(german ? 'de-DE' : 'en-GB', {
+    day: german ? '2-digit' : 'numeric',
+    month: german ? '2-digit' : 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Berlin',
+  }).format(date)
 }
 
 // Topic paths from SOEP are long ("Arbeit und Beschaeftigung > Erwerbsstatus > ..."), and a

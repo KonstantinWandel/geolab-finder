@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '../i18n'
+import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels, formatIndexDate } from '../i18n'
 import { loadHistory, saveHistory, clearHistory, analyticsEvent, qualityRequest } from '../privacy'
 import ResultFeedback from './ResultFeedback'
 import { descriptionSections } from '../descriptions'
@@ -252,6 +252,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en', consent }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [filterOptions, setFilterOptions] = useState(null)
+  const indexDate = formatIndexDate(filterOptions?.index_built, language)
   // Values a source change made unavailable, kept only to say so once.
   const [droppedFilters, setDroppedFilters] = useState([])
   // Every facet holds a LIST of chosen values; an empty list means no restriction. The SOEP
@@ -1162,11 +1163,15 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en', consent }) {
               {t('filter.dropped', { values: droppedFilters.join(', ') })}
             </p>
           )}
-          <div className="filter-note">
+          {isInkar ? indexDate && (
+            <div className="filter-note">
+              {t('filter.indexBuilt', { date: indexDate })}
+            </div>
+          ) : <div className="filter-note">
             {t('filter.active', { source: sourceLabel })}
             {filterOptions?.year_min && filterOptions?.year_max && ` | ${t('filter.years', { min: filterOptions.year_min, max: filterOptions.year_max })}`}
             {filterOptions?.index_built && ` | ${t('filter.indexBuilt', { date: filterOptions.index_built })}`}
-          </div>
+          </div>}
           </div>
 
           <div className="chat-section glass-panel">
