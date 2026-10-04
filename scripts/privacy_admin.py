@@ -10,10 +10,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 from app.services.privacy_store import PrivacyStore
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("action", choices=["purge", "metrics"])
+parser.add_argument("action", choices=["purge", "metrics", "service-metrics"])
 args = parser.parse_args()
 store = PrivacyStore(Path(os.getenv("GEOLAB_LOG_DIR", "/opt/geolab/logs")))
 if args.action == "purge":
     store.purge()
-else:
+elif args.action == "metrics":
     print(json.dumps(store.metrics(), indent=2))
+else:
+    print(json.dumps(store.service_metrics(), indent=2))

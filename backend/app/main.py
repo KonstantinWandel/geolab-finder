@@ -14,7 +14,7 @@ from app.services.soep_aggregator import SOEPAggregatorService
 from app.services.soep_search import SOEPSearchService
 from app.services.soep_rag_advisor import SOEPRagAdvisorService
 from app.services import usage_log
-from app.services.privacy_store import PrivacyStore, CONSENT_VERSION
+from app.services.privacy_store import PrivacyStore, CONSENT_VERSION, QUALITY_CONSENT_VERSION
 from app.services.inkar_permalink import from_environment as inkar_permalinks_from_environment
 
 app = FastAPI(title="Destatis Local RAG", version="1.0.0")
@@ -170,6 +170,9 @@ class SOEPAdviceRequest(BaseModel):
     regional_only: bool = False
     include_raw: bool = False
     sample_groups: Union[str, List[str], None] = None
+    quality_consent: bool = False
+    quality_consent_version: Optional[Literal[QUALITY_CONSENT_VERSION]] = None
+    quality_id: Optional[str] = Field(None, pattern=r"^[a-f0-9]{32}$")
 
 @legacy.get("/api/search_soep")
 async def search_soep(q: str):
@@ -203,8 +206,12 @@ def soep_advice(req: SOEPAdviceRequest):
     result = soep_rag_advisor.answer_research_question(req.question, req.top_k, filters)
     query_id = usage_log.new_query_id()
     result["query_id"] = query_id
-    usage_log.log_query(query_id, soep_rag_advisor.app_mode, req.question, filters,
-                        result.get("recommended_variables") or [], time.perf_counter() - started)
+    try:
+        privacy_store.search(soep_rag_advisor.app_mode, query_id, req.question, filters,
+                             result.get("recommended_variables") or [], time.perf_counter() - started,
+                             req.quality_id if req.quality_consent and req.quality_consent_version == QUALITY_CONSENT_VERSION else None)
+    except (OSError, sqlite3.Error):
+        print("[privacy] optional search metrics unavailable")
     try:
         result["feedback_token"] = privacy_store.token(
             soep_rag_advisor.app_mode, query_id, result.get("recommended_variables") or [],
@@ -231,7 +238,7 @@ class FeedbackRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     query_id: str = Field(pattern=r"^[a-f0-9]{16}$")
     item_id: str = Field(min_length=1, max_length=500)
-    vote: Literal["useful", "not_useful"]
+    vote: Optional[Literal["useful", "not_useful"]]
     token: str = Field(min_length=1, max_length=100000)
 
 
@@ -255,6 +262,15 @@ def analytics_withdraw(req: VisitorRequest, request: Request):
     check_origin(request)
     try:
         privacy_store.withdraw(soep_rag_advisor.app_mode, req.visitor_id)
+    except (OSError, sqlite3.Error):
+        raise HTTPException(503, "Deletion temporarily unavailable")
+
+
+@app.post("/api/quality/withdraw", status_code=204)
+def quality_withdraw(req: VisitorRequest, request: Request):
+    check_origin(request)
+    try:
+        privacy_store.withdraw_quality(soep_rag_advisor.app_mode, req.visitor_id)
     except (OSError, sqlite3.Error):
         raise HTTPException(503, "Deletion temporarily unavailable")
 

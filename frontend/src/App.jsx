@@ -72,12 +72,14 @@ function App() {
     const sync = () => {
       const current = readConsent(APP_MODE)
       setConsent((previous) => previous.decided === current.decided && previous.history === current.history
-        && previous.analytics === current.analytics && previous.expires_at === current.expires_at ? previous : current)
+        && previous.analytics === current.analytics && previous.quality === current.quality && previous.expires_at === current.expires_at ? previous : current)
       if (!current.history) clearHistory(APP_MODE)
       if (!current.decided) setPrivacyOpen(true)
       if (!current.analytics) withdrawAnalytics(APP_MODE, API_URL).catch(() => {})
+      if (!current.quality) withdrawAnalytics(APP_MODE, API_URL, 'quality').catch(() => {})
     }
     retryWithdrawal(APP_MODE, API_URL).catch(() => {})
+    retryWithdrawal(APP_MODE, API_URL, 'quality').catch(() => {})
     sync()
     if (readConsent(APP_MODE).analytics && !visitSent.current) {
       visitSent.current = true
@@ -97,12 +99,21 @@ function App() {
       withdrawAnalytics(APP_MODE, API_URL).catch(() => {
         setPrivacyNotice(`${t('privacy.storageFailed')} ${t('privacy.withdrawPending')}`)
       })
+      withdrawAnalytics(APP_MODE, API_URL, 'quality').catch(() => {
+        setPrivacyNotice(`${t('privacy.storageFailed')} ${t('privacy.withdrawPending')}`)
+      })
       return
     }
     const before = consent.analytics
     setConsent(readConsent(APP_MODE))
     setPrivacyNotice('')
     setPrivacyOpen(false)
+    if (!choices.quality) {
+      try { await withdrawAnalytics(APP_MODE, API_URL, 'quality') } catch {
+        setPrivacyNotice(t('privacy.withdrawPending'))
+        setPrivacyOpen(true)
+      }
+    }
     if (!choices.analytics) {
       try { await withdrawAnalytics(APP_MODE, API_URL) } catch {
         setPrivacyNotice(t('privacy.withdrawPending'))
@@ -283,7 +294,6 @@ function App() {
           {controls}
         </header>
       )}
-      {privacyOpen && <PrivacyChoices consent={consent} onSave={choosePrivacy} t={t} notice={privacyNotice} />}
       <main className="main-content">
         <Absturzfang t={t}>
           <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} language={language} consent={consent} />
@@ -333,7 +343,6 @@ function App() {
                 setPrivacyOpen(true)
                 window.setTimeout(() => {
                   const panel = document.getElementById('privacy-settings')
-                  panel?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   panel?.focus({ preventScroll: true })
                 }, 0)
               }}>{t('privacy.settings')}</button><br />
@@ -343,6 +352,7 @@ function App() {
           </div>
         </div>
       </footer>
+      {privacyOpen && <PrivacyChoices consent={consent} onSave={choosePrivacy} t={t} notice={privacyNotice} />}
     </div>
   )
 }

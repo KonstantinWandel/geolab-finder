@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readConsent, saveConsent, loadHistory, saveHistory, visitor, analyticsEvent, withdrawAnalytics } from './privacy.js'
+import { readConsent, saveConsent, loadHistory, saveHistory, visitor, analyticsEvent, withdrawAnalytics, qualityRequest } from './privacy.js'
 
 class MemoryStorage {
   values = new Map()
@@ -78,4 +78,23 @@ test('expired/malformed preferences and blocked storage fail closed', () => {
   assert.equal(saveConsent('soep', { history: true }), false)
   assert.deepEqual(loadHistory('soep'), [])
   assert.equal(visitor('soep'), null)
+})
+test('legacy analytics consent never authorises search text and quality withdrawal has its own ID', async () => {
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, writable: true, value: new MemoryStorage() })
+  localStorage.setItem('geolab_privacy_inkar', JSON.stringify({ version: '2026-10-04',
+    history: false, analytics: true, expires_at: Date.now() + 86400000 }))
+  assert.equal(readConsent('inkar').analytics, true)
+  assert.deepEqual(qualityRequest('inkar'), {})
+  saveConsent('inkar', { quality: true, analytics: true })
+  const quality = qualityRequest('inkar')
+  assert.equal(quality.quality_consent, true)
+  assert.notEqual(quality.quality_id, visitor('inkar'))
+  const sent = []
+  globalThis.fetch = async (url, req) => { sent.push({ url, body: JSON.parse(req.body) }); return { ok: true } }
+  saveConsent('inkar', { quality: false, analytics: true })
+  await withdrawAnalytics('inkar', '/api', 'quality')
+  assert.equal(sent[0].url, '/api/quality/withdraw')
+  assert.equal(sent[0].body.visitor_id, quality.quality_id)
+  assert.deepEqual(qualityRequest('inkar'), {})
+  assert.ok(visitor('inkar'))
 })

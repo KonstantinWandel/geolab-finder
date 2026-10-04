@@ -27,6 +27,7 @@ class PrivacyStoreTests(unittest.TestCase):
             columns = {row[1] for row in db.execute('PRAGMA table_info(visitor_days)')}
             self.assertFalse(columns & {'question', 'query_id', 'ip', 'user_agent'})
         self.store.withdraw('soep', 'a' * 32)
+        self.store.event('soep', 'a' * 32, 'search')
         self.assertEqual([r['app_mode'] for r in self.store.metrics()], ['inkar'])
 
     def test_feedback_validated_and_updated_without_visitor_id(self):
@@ -64,6 +65,37 @@ class PrivacyStoreTests(unittest.TestCase):
         self.assertEqual(len(boundary.read_text().splitlines()), 1)
         self.assertEqual(current.read_text(), 'current file left alone\n')
         self.assertEqual(self.store.metrics()[0]['returning_browsers'], 1)
+
+    def test_quality_deletion_is_scoped_and_preserves_anonymous_daily_counts(self):
+        for mode, identity, query in [('soep', 'a' * 32, 'b' * 16), ('inkar', 'a' * 32, 'c' * 16)]:
+            self.store.search(mode, query, 'synthetic question', {}, [{'item_id': 'x'}], 1.0, identity)
+        self.store.withdraw_quality('soep', 'a' * 32)
+        self.store.search('soep', 'd' * 16, 'delayed question', {}, [], 1.0, 'a' * 32)
+        with self.store.connect() as db:
+            self.assertEqual(db.execute('SELECT app_mode FROM quality_queries').fetchall(), [('inkar',)])
+            columns = {row[1] for row in db.execute('PRAGMA table_info(service_days)')}
+        self.assertEqual(columns, {'app_mode', 'day', 'searches'})
+        self.assertEqual(sum(r['searches'] for r in self.store.service_metrics()), 3)
+
+    def test_legacy_text_removed_without_duplicating_counts(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('redaction', Path(__file__).resolve().parents[1] / 'scripts/redact_legacy_queries.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.store.prepare()
+        path = self.store.directory / 'queries-2026-09.jsonl'
+        contents = json.dumps({'ts': '2026-09-15T10:00:00+00:00', 'app_mode': 'soep', 'question': 'must disappear'}) + '\n'
+        path.write_text(contents)
+        self.assertEqual(module.redact(self.store)[0]['searches'], 1)
+        self.assertTrue(path.exists())
+        module.redact(self.store, apply=True)
+        self.assertFalse(path.exists())
+        self.assertEqual(self.store.service_metrics()[0]['searches'], 1)
+        # Simulate an interruption after SQLite committed but before the file was removed.
+        path.write_text(contents)
+        module.redact(self.store, apply=True)
+        self.assertFalse(path.exists())
+        self.assertEqual(self.store.service_metrics()[0]['searches'], 1)
 
 
 if __name__ == '__main__':

@@ -703,6 +703,8 @@ class SOEPRagAdvisorService:
             "stats_summary": self._as_text(row.get("stats_summary")),
             "sample_values": self._as_text(row.get("sample_values")),
             "rich_description": rich_description,
+            # Display preserves documentation fields; retrieval keeps its existing normalized text.
+            "description_original": row.get("rich_description") if isinstance(row.get("rich_description"), str) else "",
             "search_description": " ".join(part for part in (
                 self._build_search_description(row, dataset, label), label_de_mt, label_en_mt
             ) if part),
@@ -1957,7 +1959,7 @@ class SOEPRagAdvisorService:
 
         if timing is not None:
             timing["assemble_ms"] = int((time.time() - stage_start) * 1000)
-            print(f"[timing] {timing} query={question[:48]!r}", flush=True)
+            print(f"[timing] {timing}", flush=True)
 
         return {
             "answer": answer_text,

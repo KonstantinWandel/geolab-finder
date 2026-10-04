@@ -41,6 +41,7 @@ for mode, question in QUERIES:
         assert post(base, 'soep/feedback', rating, base)[0] == 204
         feedback_ids.append(response['query_id'])
         assert post(base, 'soep/feedback', {**rating, 'token': 'forged'}, base)[0] == 422
+        assert post(base, 'soep/feedback', {**rating, 'vote': None}, base)[0] == 204
         identity = 'f' * 32  # test only, remove after checking; never a browser's real identity
         event = {'visitor_id': identity, 'consent': True, 'consent_version': '2026-10-04', 'event': 'visit'}
         assert post(base, 'analytics/event', {**event, 'consent': False}, base)[0] == 422

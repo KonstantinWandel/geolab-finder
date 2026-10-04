@@ -9,14 +9,15 @@ export default function ResultFeedback({ apiUrl, result, row, t }) {
     not_useful: <ThumbsDown size={16} aria-hidden="true" /> }
   if (!result.query_id || !result.feedback_token || !row.item_id) return null
   const send = async (value) => {
+    const next = vote === value ? null : value
     setBusy(true)
     setFailed(false)
     try {
       const response = await fetch(`${apiUrl}/soep/feedback`, { method: 'POST',
         headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-          query_id: result.query_id, item_id: row.item_id, vote: value, token: result.feedback_token }) })
+          query_id: result.query_id, item_id: row.item_id, vote: next, token: result.feedback_token }) })
       if (!response.ok) throw new Error('Feedback unavailable')
-      setVote(value)
+      setVote(next)
     } catch { setFailed(true) } finally { setBusy(false) }
   }
   return (

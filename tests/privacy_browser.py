@@ -15,6 +15,10 @@ ROWS = [{'item_id': f'soep/pgen/item{i}', 'variable_name': f'pgtest{i}', 'label'
          'rich_description': 'Monthly individual employment measure in the longitudinal panel.',
          'score': .85, 'dataset': 'pgen', 'source_key': 'soep', 'source_label': 'SOEP',
          'source_url': 'https://paneldata.org/', 'available_years_text': '2000-2024'} for i in range(3)]
+ROWS[0].update(soep_version='v41', description_original=(
+    'Employment measure (pgtest0).\nOfficial note: Monthly individual employment measure in the longitudinal panel.\n'
+    'Question wording: First questionnaire wording | First questionnaire wording | Second wording\n'
+    'Verteilung: Range: 0 to 100'))
 RESULT = {'query_id': 'b' * 16, 'feedback_token': 'test-token', 'recommended_variables': ROWS}
 OPTIONS = {'sources': [{'value': 'soep', 'label': 'SOEP'}], 'datasets': [], 'themes': [],
            'spatial_levels': [], 'nuts_levels': [], 'sample_groups': [], 'year_min': 2000, 'year_max': 2024}
@@ -27,11 +31,12 @@ async def run():
             for width, height in [(1440, 960), (390, 844)]:
                 context = await browser.new_context(viewport={'width': width, 'height': height}, accept_downloads=True)
                 page = await context.new_page()
-                errors, events = [], []
+                errors, events, queries = [], [], []
                 page.on('pageerror', lambda e: errors.append(str(e)))
                 async def api(route):
                     path = route.request.url
                     if path.endswith('/soep/advice'):
+                        queries.append(route.request.post_data_json)
                         await route.fulfill(json=RESULT)
                     elif path.endswith('/soep/filter-options') or '/soep/filter-options?' in path:
                         await route.fulfill(json=OPTIONS)
@@ -44,19 +49,31 @@ async def run():
                 await page.goto(f'http://127.0.0.1:{port}/')
                 await page.get_by_role('heading', name='Your privacy choices').wait_for()
                 assert await page.locator('.privacy-options input:checked').count() == 0
-                await page.screenshot(path=str(OUTPUT / f'{mode}-{width}-choices.png'), full_page=True)
-                await page.get_by_role('button', name='Decline both', exact=True).click()
+                await page.screenshot(path=str(OUTPUT / f'{mode}-{width}-choices.png'))
+                bounds = await page.locator('.privacy-choices').bounding_box()
+                assert abs(bounds['y'] + bounds['height'] - height) <= 1
+                await page.get_by_role('button', name='Decline all', exact=True).click()
                 await page.locator('textarea').fill('employment')
                 await page.get_by_role('button', name='Ask', exact=True).click()
                 await page.locator('.result-item').first.wait_for()
                 await page.wait_for_timeout(150)
+                first = page.locator('.result-item').first
+                await first.get_by_role('button', name='Show full description', exact=True).click()
+                await first.get_by_role('heading', name='Official note', exact=True).wait_for()
+                assert await first.get_by_role('heading', name='Question wording', exact=True).count() == 1
+                assert await first.locator('.result-description-sections').inner_text()
+                assert await first.locator('.source-description').count() == 1
                 keys = await page.evaluate('Object.keys(localStorage)')
                 assert f'geolab_history_{mode}' not in keys and f'geolab_visitor_{mode}' not in keys
                 assert not any('/analytics/event' in event['path'] for event in events)
+                assert 'quality_id' not in queries[-1]
                 await page.get_by_role('button', name='Useful for this search', exact=True).first.click()
                 await page.get_by_text('Feedback saved', exact=True).wait_for()
                 assert events[-1]['body']['item_id'] == ROWS[0]['item_id']
                 assert 'visitor_id' not in events[-1]['body']
+                await page.get_by_role('button', name='Useful for this search', exact=True).first.click()
+                await page.wait_for_timeout(100)
+                assert events[-1]['body']['vote'] is None
                 await page.locator('.result-select').first.check()
                 csv_button = page.get_by_role('button', name='CSV', exact=True)
                 async with page.expect_download() as download:
@@ -65,30 +82,38 @@ async def run():
                 csv_path = await csv.path()
                 assert 'pgtest0' in Path(csv_path).read_text(encoding='utf-8-sig')
                 assert 'pgtest1' not in Path(csv_path).read_text(encoding='utf-8-sig')
-                await page.screenshot(path=str(OUTPUT / f'{mode}-{width}-results.png'), full_page=True)
+                await page.screenshot(path=str(OUTPUT / f'{mode}-{width}-results.png'))
                 assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
                 await page.get_by_role('button', name='Privacy settings', exact=True).click()
-                await page.get_by_role('button', name='Allow both', exact=True).click()
+                await page.get_by_role('button', name='Allow all', exact=True).click()
                 await page.wait_for_timeout(150)
                 assert await page.evaluate(f'!!localStorage.getItem("geolab_history_{mode}")')
                 assert await page.evaluate(f'!!localStorage.getItem("geolab_visitor_{mode}")')
+                await page.locator('textarea').fill('another synthetic search')
+                await page.get_by_role('button', name='Ask', exact=True).click()
+                await page.wait_for_timeout(150)
+                assert queries[-1]['quality_consent'] is True
+                assert queries[-1]['quality_id'] != await page.evaluate(f'JSON.parse(localStorage.getItem("geolab_visitor_{mode}")).id')
                 await page.reload()
                 await page.locator('.result-item').first.wait_for()
+                visible_before = await page.locator('.result-item').count()
                 await page.get_by_role('button', name='Privacy settings', exact=True).click()
-                await page.get_by_role('button', name='Decline both', exact=True).click()
+                await page.get_by_role('button', name='Decline all', exact=True).click()
                 await page.wait_for_timeout(150)
                 assert await page.evaluate(f'localStorage.getItem("geolab_history_{mode}") === null')
                 assert await page.evaluate(f'localStorage.getItem("geolab_visitor_{mode}") === null')
                 assert any('/analytics/withdraw' in event['path'] for event in events)
-                assert await page.locator('.result-item').count() == 3
+                assert any('/quality/withdraw' in event['path'] for event in events)
+                assert await page.evaluate(f'localStorage.getItem("geolab_quality_{mode}") === null')
+                assert await page.locator('.result-item').count() == visible_before
                 # An old grant must not survive a storage-quota failure during withdrawal.
                 await page.get_by_role('button', name='Privacy settings', exact=True).click()
-                await page.get_by_role('button', name='Allow both', exact=True).click()
+                await page.get_by_role('button', name='Allow all', exact=True).click()
                 await page.wait_for_timeout(150)
                 old_id = await page.evaluate(f'JSON.parse(localStorage.getItem("geolab_visitor_{mode}")).id')
                 await page.evaluate('() => { Storage.prototype.setItem = function() { throw new Error("quota") } }')
                 await page.get_by_role('button', name='Privacy settings', exact=True).click()
-                await page.get_by_role('button', name='Decline both', exact=True).click()
+                await page.get_by_role('button', name='Decline all', exact=True).click()
                 await page.get_by_text('Your browser blocked saving these choices.', exact=False).wait_for()
                 await page.wait_for_timeout(150)
                 assert await page.evaluate(f'localStorage.getItem("geolab_visitor_{mode}") === null')

@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
 from fastapi.testclient import TestClient
-from app.services.privacy_store import PrivacyStore
+from app.services.privacy_store import PrivacyStore, QUALITY_CONSENT_VERSION
 
 
 class Stub:
@@ -58,10 +58,11 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/analytics/metrics').status_code, 404)
 
     def test_search_works_without_analytics_and_feedback_validates_returned_item(self):
-        with patch.object(self.main.usage_log, 'log_query') as log:
-            response = self.client.post('/api/soep/advice', json={'question': 'education', 'top_k': 2})
+        response = self.client.post('/api/soep/advice', json={'question': 'education', 'top_k': 2})
         self.assertEqual(response.status_code, 200)
-        log.assert_called_once()
+        with self.main.privacy_store.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM quality_queries').fetchone()[0], 0)
+            self.assertEqual(db.execute('SELECT searches FROM service_days').fetchone()[0], 1)
         self.assertEqual(self.main.privacy_store.metrics(), [])
         result = response.json()
         body = {'query_id': result['query_id'], 'item_id': 'soep/pgen/pgtest', 'vote': 'useful',
@@ -69,6 +70,26 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.client.post('/api/soep/feedback', json=body).status_code, 204)
         self.assertEqual(self.client.post('/api/soep/feedback', json={**body, 'item_id': 'invented'}).status_code, 422)
         self.assertEqual(self.client.post('/api/soep/feedback', json={**body, 'visitor_id': 'a' * 32}).status_code, 422)
+        self.assertEqual(self.client.post('/api/soep/feedback', json={**body, 'vote': None}).status_code, 204)
+        with self.main.privacy_store.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM feedback').fetchone()[0], 0)
+
+    def test_raw_queries_require_separate_consent_and_withdrawal_blocks_delayed_search(self):
+        body = {'question': 'education', 'quality_id': 'c' * 32}
+        for extras in [{}, {'quality_consent': True}, {'quality_consent_version': QUALITY_CONSENT_VERSION}]:
+            self.assertEqual(self.client.post('/api/soep/advice', json={**body, **extras}).status_code, 200)
+        with self.main.privacy_store.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM quality_queries').fetchone()[0], 0)
+        grant = {**body, 'quality_consent': True, 'quality_consent_version': QUALITY_CONSENT_VERSION}
+        self.assertEqual(self.client.post('/api/soep/advice', json=grant).status_code, 200)
+        with self.main.privacy_store.connect() as db:
+            self.assertEqual(db.execute('SELECT question FROM quality_queries').fetchall(), [('education',)])
+        self.assertEqual(self.client.post('/api/quality/withdraw', json={'visitor_id': 'c' * 32},
+                         headers={'Origin': 'https://attacker.example'}).status_code, 403)
+        self.assertEqual(self.client.post('/api/quality/withdraw', json={'visitor_id': 'c' * 32}).status_code, 204)
+        self.client.post('/api/soep/advice', json=grant)
+        with self.main.privacy_store.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM quality_queries').fetchone()[0], 0)
 
 
 if __name__ == '__main__':

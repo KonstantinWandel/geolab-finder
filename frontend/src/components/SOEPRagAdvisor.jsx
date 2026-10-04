@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '../i18n'
-import { loadHistory, saveHistory, clearHistory, analyticsEvent } from '../privacy'
+import { loadHistory, saveHistory, clearHistory, analyticsEvent, qualityRequest } from '../privacy'
 import ResultFeedback from './ResultFeedback'
+import { descriptionSections } from '../descriptions'
 
 // The project site carries the imprint, the privacy statement and the attribution list.
 const GEOLAB_SITE = 'https://geolab.soz.uni-bielefeld.de'
@@ -44,19 +45,30 @@ function matchConcept(concepts, label) {
 // three lines are full after about 140, so 3 % of the SOEP and 6 % of the GeoDB descriptions were
 // cut with no way to open them, and on a wide screen some 250-character ones got a button that
 // opened nothing.
-function ResultDescription({ text, open, rowKey, onClamp }) {
+function ResultDescription({ row, language, t, open, rowKey, onClamp }) {
+  const sections = descriptionSections(row, language)
+  const text = sections[0]?.text || ''
   const ref = useRef(null)
   useLayoutEffect(() => {
     const el = ref.current
     if (!el || open) return undefined
-    const check = () => onClamp(rowKey, el.scrollHeight > el.clientHeight + 1)
+    const check = () => onClamp(rowKey, sections.length > 1 || Boolean(row.soep_version === 'v41') || el.scrollHeight > el.clientHeight + 1)
     check()
     if (typeof ResizeObserver === 'undefined') return undefined
     const observer = new ResizeObserver(check)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [text, open, rowKey, onClamp])
-  return <p ref={ref} className={open ? 'result-desc is-open' : 'result-desc'}>{text}</p>
+  }, [text, open, rowKey, onClamp, sections.length, row.soep_version])
+  if (!open) return <p ref={ref} className="result-desc">{text}</p>
+  return <div className="result-description-sections">
+    {sections.map((section, i) => <section key={i}>
+      <h5>{section.title || t(`description.${section.kind}`)}{section.language && section.language !== language ? ` (${section.language.toUpperCase()})` : ''}</h5>
+      <p lang={section.language || undefined}>{section.text}</p>
+    </section>)}
+    {(row.soep_version === 'v41' || row.source_key === 'regionalatlas') && <details className="source-description">
+      <summary>{t('description.original')}</summary><p>{row.description_original || row.rich_description}</p>
+    </details>}
+  </div>
 }
 
 // SOEP cuts German labels at 80 characters, and the export may append " [2018]" or
@@ -459,6 +471,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en', consent }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: userQ,
+          ...qualityRequest(mode),
           top_k: Number(filterSnapshot.top_k) || 20,
           // Send the SELECTED source, never the deployment mode. Sending `mode` here hard
           // filtered every GeoDB query to source_key "inkar" no matter what the dropdown said,
@@ -834,7 +847,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en', consent }) {
                   </dl>
 
                   {description && (
-                    <ResultDescription text={description} open={expanded} rowKey={rowKey}
+                    <ResultDescription row={row} language={language} t={t} open={expanded} rowKey={rowKey}
                                        onClamp={markClamped} />
                   )}
                   {/* The API hint is a long technical note (Overpass query, INKAR code); it

@@ -1704,11 +1704,15 @@ button, input, select, textarea,
 .gl-nav-tools { flex: 0 0 auto; }
 .app-header.gl-header .gl-nav-tools + .header-controls { margin-left: 0; }
 
-.privacy-choices { background: var(--surface); border-bottom: 1px solid var(--border); }
+.app-container { padding-bottom: var(--privacy-height, 0px); }
+html { scroll-padding-bottom: calc(var(--privacy-height, 0px) + 12px); }
+.privacy-choices { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; max-height: 65dvh; overflow-y: auto; background: var(--surface); border-top: 1px solid var(--border); box-shadow: 0 -2px 12px #00000012; }
 .privacy-inner { max-width: 1100px; margin: 0 auto; padding: 1rem 1.25rem; }
 .privacy-inner h2 { font-size: 1.05rem; margin: 0 0 .4rem; letter-spacing: 0; }
 .privacy-inner p { margin: .4rem 0; font-size: .88rem; line-height: 1.5; }
-.privacy-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem 1.5rem; margin: .8rem 0; }
+.privacy-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem 1.5rem; margin: .8rem 0; }
+.privacy-customize { margin: .7rem 0; }
+.privacy-customize summary { cursor: pointer; font-size: .88rem; }
 .privacy-options label { display: flex; align-items: flex-start; gap: .55rem; cursor: pointer; }
 .privacy-options input { margin-top: .25rem; flex: 0 0 auto; }
 .privacy-options small { display: block; font-size: .85rem; color: var(--muted); line-height: 1.45; margin-top: .2rem; }
@@ -1716,6 +1720,10 @@ button, input, select, textarea,
 .privacy-actions button { white-space: normal; min-height: 40px; border-radius: 5px; letter-spacing: 0; }
 .privacy-settings-link { border: 0; background: transparent; color: inherit; padding: 0; text-decoration: underline; font: inherit; cursor: pointer; }
 .query-privacy-note { color: var(--muted); font-size: .8rem; line-height: 1.45; margin: 0; }
+.result-description-sections h5 { margin: .8rem 0 .3rem; font-size: .85rem; letter-spacing: 0; }
+.result-description-sections p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; line-height: 1.5; font-size: .88rem; }
+.source-description { margin-top: .8rem; color: var(--muted); font-size: .85rem; }
+.source-description summary { cursor: pointer; }
 .result-feedback { display: flex; align-items: center; gap: .35rem; margin-top: .6rem; min-height: 32px; }
 .result-feedback button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--muted); cursor: pointer; }
 .result-feedback button:hover, .result-feedback button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }

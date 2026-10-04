@@ -10,6 +10,13 @@ Datenschutzstand vom 2026-10-04: `PRIVACY_OPERATIONS.md` beschreibt Einwilligung
 Trefferbewertungen, private Browser-Statistik, 90-Tage-Löschung und Backup-Ausschlüsse. Auf der VM
 läuft dafür `geolab-privacy-retention.timer`. Monatszahlen sind Browser mit Einwilligung, keine
 nachgewiesenen Einzelpersonen. Die Bewertungen ändern die Suche nicht automatisch.
+Suchtexte werden nur nach einer gesonderten Einwilligung zur Qualitätsprüfung gespeichert;
+alte Rohprotokolle wurden auf Nutzerwunsch durch reine Tageszählungen ersetzt. Der Banner steht
+unten, alle drei Optionen beginnen ausgeschaltet. Tageszählungen ohne Texte sind mit
+`privacy_admin.py service-metrics` abrufbar. Die Website-Karte verwendet keine externen CARTO-Kacheln
+mehr. Zum Vorgänger-Plotter siehe `../geolab_regiohub/DATAEXPLORER_HANDOFF.md`.
+`DESCRIPTION_REVIEW.md` erklärt die neue Darstellung offizieller Beschreibungen und den
+separaten Embedding-Vergleich. Die produktiven Embeddings wurden dabei nicht ersetzt.
 
 ## Was es gibt
 

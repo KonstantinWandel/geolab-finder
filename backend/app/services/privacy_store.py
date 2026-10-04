@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 CONSENT_VERSION = "2026-10-04"
+QUALITY_CONSENT_VERSION = "2026-10-04.2"
 RETENTION_DAYS = 90
 
 
@@ -49,6 +50,24 @@ class PrivacyStore:
                 embedding_model TEXT NOT NULL, reranker_model TEXT NOT NULL,
                 PRIMARY KEY (app_mode, query_id, item_id)
             );
+            CREATE TABLE IF NOT EXISTS service_days (
+                app_mode TEXT NOT NULL, day TEXT NOT NULL, searches INTEGER NOT NULL,
+                PRIMARY KEY (app_mode, day)
+            );
+            CREATE TABLE IF NOT EXISTS quality_queries (
+                app_mode TEXT NOT NULL, query_id TEXT NOT NULL, quality_id TEXT NOT NULL,
+                day TEXT NOT NULL, question TEXT NOT NULL, filters TEXT NOT NULL,
+                top_results TEXT NOT NULL, duration REAL NOT NULL, consent_version TEXT NOT NULL,
+                PRIMARY KEY (app_mode, query_id)
+            );
+            CREATE TABLE IF NOT EXISTS quality_withdrawals (
+                app_mode TEXT NOT NULL, quality_id TEXT NOT NULL, day TEXT NOT NULL,
+                PRIMARY KEY (app_mode, quality_id)
+            );
+            CREATE TABLE IF NOT EXISTS visitor_withdrawals (
+                app_mode TEXT NOT NULL, visitor_id TEXT NOT NULL, day TEXT NOT NULL,
+                PRIMARY KEY (app_mode, visitor_id)
+            );
         """)
         try:
             with db:
@@ -60,6 +79,9 @@ class PrivacyStore:
         day = datetime.now(timezone.utc).date().isoformat()
         visits, searches = (1, 0) if event == "visit" else (0, 1)
         with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            if db.execute('SELECT 1 FROM visitor_withdrawals WHERE app_mode=? AND visitor_id=?', (mode, visitor_id)).fetchone():
+                return
             db.execute("""INSERT INTO visitor_days VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT(app_mode, visitor_id, day) DO UPDATE SET
                 visits=visits+excluded.visits, searches=searches+excluded.searches
@@ -67,7 +89,30 @@ class PrivacyStore:
 
     def withdraw(self, mode, visitor_id):
         with self.connect() as db:
+            db.execute('INSERT OR REPLACE INTO visitor_withdrawals VALUES (?, ?, ?)',
+                       (mode, visitor_id, datetime.now(timezone.utc).date().isoformat()))
             db.execute("DELETE FROM visitor_days WHERE app_mode=? AND visitor_id=?", (mode, visitor_id))
+
+    def search(self, mode, query_id, question, filters, rows, duration, quality_id=None):
+        day = datetime.now(timezone.utc).date().isoformat()
+        with self.connect() as db:
+            db.execute("""INSERT INTO service_days VALUES (?, ?, 1)
+                ON CONFLICT(app_mode, day) DO UPDATE SET searches=searches+1""", (mode, day))
+            if quality_id and not db.execute("SELECT 1 FROM quality_withdrawals WHERE app_mode=? AND quality_id=?",
+                                           (mode, quality_id)).fetchone():
+                db.execute("INSERT INTO quality_queries VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                           (mode, query_id, quality_id, day, question, json.dumps(filters),
+                            json.dumps([row.get('item_id') for row in rows[:5]]), duration,
+                            QUALITY_CONSENT_VERSION))
+
+    def withdraw_quality(self, mode, quality_id):
+        day = datetime.now(timezone.utc).date().isoformat()
+        with self.connect() as db:
+            # Reject delayed searches as well as deleting already completed ones.
+            db.execute("INSERT OR REPLACE INTO quality_withdrawals VALUES (?, ?, ?)", (mode, quality_id, day))
+            db.execute("""DELETE FROM feedback WHERE app_mode=? AND query_id IN
+                (SELECT query_id FROM quality_queries WHERE app_mode=? AND quality_id=?)""", (mode, mode, quality_id))
+            db.execute("DELETE FROM quality_queries WHERE app_mode=? AND quality_id=?", (mode, quality_id))
 
     def key(self):
         self.prepare()
@@ -110,10 +155,13 @@ class PrivacyStore:
             embedding, reranker = payload["models"]
         except (ValueError, KeyError, TypeError, IndexError, binascii.Error) as exc:
             raise ValueError("Invalid or expired feedback token") from exc
-        if vote not in {"useful", "not_useful"}:
+        if vote not in {"useful", "not_useful", None}:
             raise ValueError("Invalid vote")
         day = datetime.now(timezone.utc).date().isoformat()
         with self.connect() as db:
+            if vote is None:
+                db.execute("DELETE FROM feedback WHERE app_mode=? AND query_id=? AND item_id=?", (mode, query_id, item_id))
+                return
             db.execute("""INSERT INTO feedback VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(app_mode, query_id, item_id) DO UPDATE SET vote=excluded.vote
                 """, (mode, query_id, item_id, rank, vote, day, embedding, reranker))
@@ -123,6 +171,9 @@ class PrivacyStore:
         with self.connect() as db:
             db.execute("DELETE FROM visitor_days WHERE day < ?", (cutoff.date().isoformat(),))
             db.execute("DELETE FROM feedback WHERE day < ?", (cutoff.date().isoformat(),))
+            db.execute("DELETE FROM quality_queries WHERE day < ?", (cutoff.date().isoformat(),))
+            db.execute("DELETE FROM quality_withdrawals WHERE day < ?", (cutoff.date().isoformat(),))
+            db.execute("DELETE FROM visitor_withdrawals WHERE day < ?", (cutoff.date().isoformat(),))
         # Rewrite old monthly files only: searches append to the current month's file.
         current = (now or datetime.now(timezone.utc)).strftime("%Y-%m")
         for path in [*self.directory.glob("queries-????-??.jsonl"),
@@ -160,3 +211,8 @@ class PrivacyStore:
                          SELECT visitor_id FROM visitor_days WHERE app_mode=? AND substr(day,1,7)=?
                          GROUP BY visitor_id HAVING COUNT(*) > 1)""", (mode, month)).fetchone()[0]}
                     for mode, month, browsers, visits, searches in rows]
+
+    def service_metrics(self):
+        with self.connect() as db:
+            return [{"app_mode": mode, "day": day, "searches": count}
+                    for mode, day, count in db.execute('SELECT app_mode, day, searches FROM service_days ORDER BY 1,2')]

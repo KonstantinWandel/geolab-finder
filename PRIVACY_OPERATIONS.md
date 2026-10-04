@@ -10,14 +10,16 @@ to remain unchanged. A prominent current GeoLAB addendum identifies the historic
 
 | Store | Contents | Retention | Basis/design |
 |---|---|---|---|
-| `queries-YYYY-MM.jsonl` | Search text, filters, time, duration, count, top five result IDs/scores, random query ID | 90 days, daily purge | Existing research-quality purpose, not anonymous: free text may identify someone. Public-task basis must be confirmed by the university. No IP/UA/browser ID. |
-| SQLite `feedback` | Query ID, result ID, rank in returned list, vote, UTC day, embedding/reranker model names | 90 days, daily purge | Voluntary rating tied to one search, not a persistent browser. Offline evaluation only. No automated live ranking updates. |
+| SQLite `quality_queries` | Opt-in search text, filters, day, duration, top-five result IDs, query ID, separate quality ID and notice version | 90 days, daily purge; current-ID deletion on withdrawal | Separate consent under Article 6(1)(a), not an unconfirmed public-task basis. No IP/UA/analytics ID. |
+| SQLite `service_days` | Finder, UTC day, count of completed searches | Long-term anonymous aggregate | No questions, filters, query IDs, results, exact times or visitor IDs. Includes user-approved migration of the old logs into daily counts. |
+| SQLite `feedback` | Query ID, result ID, rank in returned list, vote, UTC day, embedding/reranker model names | 90 days, daily purge; selected rating can be clicked again to delete | Affirmative optional rating with a purpose/retention notice, Article 6(1)(a). Offline evaluation only. No automated live ranking updates. |
 | SQLite `visitor_days` | Finder mode, random browser ID, UTC day, visit/search counts, consent version | 90 days, daily purge; current-ID deletion on withdrawal | Explicit analytics consent only. No question, query ID, feedback, IP or UA. |
 | Caddy access logs | IP, path without query string, time, status, volume/timing | Existing daily rotation, five old files, maxage six | Security/troubleshooting. No request headers/referrer/user agent in new entries. Older entries expire normally. |
 
 The two finders share `/opt/geolab/logs/privacy.sqlite3` but every key/query is scoped by app mode.
-Browser IDs are independently generated per origin. Operators must not correlate raw query and
-access-log timestamps to reconstruct browsing histories, or add visitor IDs to search requests.
+Browser IDs are independently generated per origin. Operators must not correlate query records,
+access logs and analytics IDs to reconstruct browsing histories. The new quality-purpose ID is
+separate from usage analytics and is used for deletion, not visitor counting.
 Monthly statistics count consenting browsers, not actual people or all visitors. Returning means
 an ID appeared on at least two different UTC days within the month. Counts cannot be extended
 beyond the rolling 90-day window without an explicit policy decision; truly anonymous monthly
@@ -25,10 +27,12 @@ totals may later be retained separately, but that is not implemented here.
 
 ## Browser storage
 
-- `geolab_privacy_<mode>`: independent booleans, notice version `2026-10-04`, decision expiry 180 days; no ID.
+- `geolab_privacy_<mode>`: three independent booleans, notice version `2026-10-04.2`, decision expiry 180 days; no ID. Existing `2026-10-04` history/analytics grants remain valid but never grant the new quality purpose. The analytics API's own purpose version remains `2026-10-04`.
 - `geolab_history_<mode>`: opt-in only; last 12 messages, expiry 30 days after saving a search.
 - `geolab_visitor_<mode>`: opt-in only; crypto-random 128-bit ID, fixed 90-day expiry, not renewed on visits.
 - `geolab_withdrawal_<mode>`: previous ID retained only for deletion retry, maximum seven days.
+- `geolab_quality_<mode>`: random 128-bit ID only after the quality opt-in; independent from analytics. Kept while consent remains active, so renewing other choices cannot rotate away deletion access. Withdraw/expired consent requests deletion before removing this ID.
+- `geolab_qualitywithdrawal_<mode>`: equivalent seven-day retry for quality deletion.
 - Manual language/theme choices remain functional without analytics; no visitor ID from OS theme detection.
 
 New builds remove old, unconsented history instead of silently importing it. Search results remain
@@ -37,17 +41,21 @@ again before saving a completed asynchronous search or sending queued telemetry.
 storage, optional features fail closed and search remains usable. Storage events sync another tab;
 open tabs check expiry each minute. Browser-closed storage can only be cleaned on next use.
 
-The consent panel is an ordinary inline section, not a blocking overlay. Both options start off;
-Allow both and Decline both have equal styling, with a third Save selected choices command.
-The footer reopens the same choices. No consent wall or account requirement was introduced.
+The consent panel is a nonblocking bottom bar with measured reserved page space. All three
+options start off; Allow all and Decline all have equal styling. Choose individually reveals
+independent checkboxes and Save selected choices. The footer reopens the same choices. No
+consent wall or account requirement was introduced.
 
 ## API and feedback integrity
 
 - `POST /api/analytics/event` requires explicit `consent: true`, current notice version, valid ID and event.
-- `POST /api/analytics/withdraw` deletes the current ID's rows in this finder only.
+- `POST /api/analytics/withdraw` deletes the current ID's rows in this finder only. Minimal ID/day withdrawal records block delayed/replayed events for 90 days; these records are not counted in usage statistics.
+- Advice requests save raw queries only with `quality_consent: true`, the separate current quality notice version, and a valid quality ID. Legacy clients omit these and cannot log raw questions.
+- `POST /api/quality/withdraw` deletes this quality ID's queries/linked ratings. A minimal ID/day revocation record is retained for 90 days solely to prevent in-flight searches from recreating withdrawn records.
 - `POST /api/soep/feedback` verifies a per-search HMAC token and returned result membership.
 - Extra fields (including question/visitor ID in the wrong purpose) and disallowed cross-site Origins are rejected.
 - There is deliberately no public statistics, raw-query-log or database download endpoint.
+- Performance debug output never includes a query snippet, including when `SOEP_RAG_TIMING` is enabled.
 
 `.feedback-signing-key` is a private 32-byte key persisted under the runtime log directory. It
 allows signed feedback to survive backend restarts and is **never committed or generally backed
@@ -65,8 +73,12 @@ change the e5/GTE ONNX models, cached embeddings, or reranking configuration as 
 Runtime directory mode is 0750; query logs, SQLite and signing key are 0600. General backups exclude
 `geolab/logs/**` and `**/geolab/logs/**`. The exclusion does NOT remove pre-existing copies. The
 scoped `scripts/remove_legacy_telemetry_backups.sh` previews by default and, with `--apply`, removes
-only telemetry filenames from the known live mirror and dated archive directories. Primary useful
-query logs remain available for their retention period; no metadata or service backups are deleted.
+only telemetry filenames from the known live mirror and dated archive directories. No metadata
+or service backups are deleted. On the user's explicit instruction, pre-consent raw query JSONL
+files are replaced with daily counts by `scripts/redact_legacy_queries.py --apply`. Run preview
+first and stop both backends while applying. A SQLite filename-only ledger makes this idempotent
+after interruption; raw text is never put in a rollback backup. Legacy feedback JSONL is removed
+too. New quality records live in SQLite only.
 
 Configuration snapshots (no credential bytes) live in `deploy/university/`. Before deployment:
 back up changed code/configuration, validate the Caddyfile, install the retention units, run an
@@ -82,14 +94,16 @@ ssh vm 'sudo -u geolab /opt/geolab/.venv/bin/python /opt/geolab/app/destatis-rag
 
 The metrics command prints monthly aggregates only, never IDs or questions. Records are not
 backed up, deliberately: losing optional usage statistics is preferable to defeating withdrawal
-or expiry. A deletion request about raw queries requires a scoped operator action using the
-query ID; do not request additional identification unless necessary.
+or expiry. Raw-query withdrawal is handled automatically using the separate quality ID. Individual
+queries can also be located by query ID; do not request additional identification unless necessary.
+`privacy_admin.py service-metrics` prints anonymous daily search totals independently of optional
+consenting-browser metrics.
 
 ## Verification
 
 ```bash
 /home/researcher/miniconda3/envs/geolab-rag/bin/python -m unittest discover -s tests -v
-/home/researcher/miniconda3/envs/nodejs/bin/node --test frontend/src/privacy.test.js
+/home/researcher/miniconda3/envs/nodejs/bin/node --test frontend/src/privacy.test.js frontend/src/descriptions.test.js
 bash frontend/build.sh soep
 bash frontend/build.sh inkar
 ```
@@ -103,12 +117,14 @@ generated bundles and already has unrelated unused-variable/environment errors.
 
 ## Decisions still requiring institutional review
 
-1. Confirm the university controller, public-task statutory basis for raw query/feedback logging,
-   authorised staff and chosen 90-day necessity. Consent for analytics does not authorise other uses.
-2. The interactive website demonstration map still loads CARTO tiles automatically. Disclose it,
-   but do not call it resolved: terms now require a valid CARTO API key and prohibit bulk downloads,
-   server-side caching and proxying. No institutional contract was accepted on the user's behalf.
-   Decide provider/transfer arrangements or an appropriately licensed local replacement.
+1. Confirm the university controller, authorised staff, consent notice and chosen 90-day necessity.
+   Raw-query retention no longer invokes an unconfirmed public-task basis: it is an independent
+   optional consent purpose. Consent for analytics never authorises quality logging.
+2. The website demonstration map now uses local public-domain Natural Earth data. Its original
+   SOEP grid/district polygon calls are unchanged; CARTO calls are removed and the self-contained
+   widget has a CSP blocking network subresources. No institutional provider contract was accepted.
+   Recheck release permissions separately for the predecessor's GitHub Pages Data Explorer before
+   rehosting its derived SOEP regional aggregates; see `../geolab_regiohub/DATAEXPLORER_HANDOFF.md`.
 3. Review existing Quarto theme/tab preference storage separately; do not assume every default
    framework write automatically qualifies for the essential-storage exception.
 4. Confirm incident-log exceptions, backup access policy and Article 13 disclosures with the DPO.
@@ -149,3 +165,41 @@ model names; neither inference settings nor embedding files were rebuilt.
 A final quota-failure test also verifies withdrawal when an earlier consent grant exists but a
 new choice cannot be saved. The old grant is invalidated, analytics fails closed, and deletion
 can still be sent using an in-memory retry record. Cross-visit retries require available storage.
+
+## Corrective deployment: bottom bar, opt-in quality, local map
+
+The subsequent deployment on 4 October 2026 supersedes the earlier raw-log and CARTO review
+points. Rollback source/public-site copies are in
+`/opt/geolab/backups/quality_privacy_20261004-125443/`; no raw logs, SQLite or keys were copied.
+`deploy/university/install_quality_privacy.sh` stops both backends while migrating, restarts them
+and their retention timer, and keeps old public bundles available. Its `GEOLAB_USAGE_LOG=0`
+systemd drop-ins prevent an older-code rollback from re-enabling unconsented JSONL logging.
+New consented SQLite quality records are independent of this legacy switch.
+
+User-approved redaction preserved 1,118 August, 1,434 September and 137 October searches as
+51 mode/day count rows, then removed all three raw-query files and the legacy feedback JSONL.
+The private schema was checked: zero quality-query rows before any explicit opt-in, no raw JSONL
+files, and no leftover synthetic ratings. A seven-day journal check found no historic timing
+query snippets; the source no longer prints them even if performance logging is enabled.
+
+Verified nine backend/API/migration/display tests, seven Node privacy/description tests, four staged
+Playwright mode/viewport runs, selected CSV exports, opt-in query payloads, feedback removal and
+quality/analytics withdrawal. Four public before/after query comparisons retained identical
+result IDs and scores. Descriptions are frontend-formatted official v41 metadata or source-specific
+Regionalatlas sections; original text/export content and retrieval documents are unchanged.
+The API retains line breaks separately in `description_original` for this display; existing
+normalized search/reranker text remains unchanged. Six public desktop/mobile checks covered
+official income and education notes and life-satisfaction question wording. The final description
+deployment uses build `202610041510`, with its prior-code/site copy at
+`/opt/geolab/backups/quality_privacy_20261004-133100/`.
+
+The website map preserves all original polygon/legend calls and map bounds exactly. Two
+Playwright viewport runs verified visible paths, local Berlin/Potsdam labels, no tile layers,
+no external requests after pan/zoom, and no browser exceptions. Natural Earth sources are
+public domain with pinned revision/checksums; no CARTO tiles were obtained or contract accepted.
+The copied university privacy accordion remains unchanged. This resolves these technical
+dependencies without representing a complete institutional legal approval.
+
+Separately, `DESCRIPTION_REVIEW.md` records an offline three-representation embedding comparison
+on 23,855 analysis variables and 59 existing gate queries, including limitations of that gate.
+Both alternatives regressed; production embeddings and reranker inputs remain unchanged.

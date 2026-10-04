@@ -1,0 +1,1306 @@
+{
+  "run_utc": "2026-10-04T13:40:00.195963+00:00",
+  "metadata": "soep_v41_metadata.json",
+  "metadata_sha256": "42794de91504ce0f92cdc4e956776a97b224c758bc1cea5a6379051bbb6c8883",
+  "rows": 23855,
+  "queries": 59,
+  "cohort": "default analysis variables, no raw files",
+  "model": "intfloat/multilingual-e5-large-instruct",
+  "max_seq_length": 512,
+  "precision": "fp32",
+  "reranker": "Alibaba-NLP/gte-multilingual-reranker-base",
+  "rerank_candidates": "12",
+  "limitation": "Known broad-pattern gate, not held-out expert relevance. No automatic deployment.",
+  "variants": {
+    "current": {
+      "docs_sha256": "0e52ca48a3feec36fad8648549616a07b2f30a7c1ac0713a84420830f7626a20",
+      "dense": {
+        "hit@1": 45,
+        "hit@10": 58,
+        "hit@30": 59,
+        "mrr@30": 0.8392728740186368
+      },
+      "cases": [
+        {
+          "query": "Nettoerwerbseinkommen im letzten Monat",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plc0014_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plc0014_h"
+        },
+        {
+          "query": "Bruttoerwerbseinkommen aus Haupttätigkeit",
+          "dense_rank": 8,
+          "dense_top": "soep:pl:plc0073_v1",
+          "reranked_rank": 8,
+          "reranked_top": "soep:pl:plc0073_v1"
+        },
+        {
+          "query": "monatliches Haushaltsnettoeinkommen",
+          "dense_rank": 1,
+          "dense_top": "soep:hgen:hghinc",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hgen:hghinc"
+        },
+        {
+          "query": "bedarfsgewichtetes Haushaltseinkommen",
+          "dense_rank": 11,
+          "dense_top": "soep:pl:plc0001_h",
+          "reranked_rank": 6,
+          "reranked_top": "soep:pl:plc0001_h"
+        },
+        {
+          "query": "Bildungsjahre einer Person",
+          "dense_rank": 8,
+          "dense_top": "soep:lkal:lkalg043",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgbilzeit"
+        },
+        {
+          "query": "höchster Schulabschluss",
+          "dense_rank": 2,
+          "dense_top": "soep:lee2estab:elb0282",
+          "reranked_rank": 2,
+          "reranked_top": "soep:lee2estab:elb0282"
+        },
+        {
+          "query": "berufliche Stellung",
+          "dense_rank": 2,
+          "dense_top": "soep:pl:plb0568_v1",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgstib"
+        },
+        {
+          "query": "Beruf nach ISCO-Klassifikation",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:l_isco08_l0anerx",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:l_isco08_l0anerx"
+        },
+        {
+          "query": "Beruf nach KldB 2010",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:p_kldb2010",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:p_kldb2010"
+        },
+        {
+          "query": "tatsächliche Arbeitszeit pro Woche",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plb0186_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgtatzeit"
+        },
+        {
+          "query": "vereinbarte Wochenarbeitszeit",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plb0176_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plb0176_h"
+        },
+        {
+          "query": "Beschäftigungsstatus und Erwerbsstatus",
+          "dense_rank": 4,
+          "dense_top": "soep:pl:plb0022_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgemplst"
+        },
+        {
+          "query": "arbeitslos gemeldet",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plb0021",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plb0021"
+        },
+        {
+          "query": "Nettovermögen des Haushalts",
+          "dense_rank": 1,
+          "dense_top": "soep:hwealth:w011he",
+          "reranked_rank": 2,
+          "reranked_top": "soep:hl:hlc0214"
+        },
+        {
+          "query": "Wohnfläche der Wohnung in Quadratmetern",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlf0019_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0019_h"
+        },
+        {
+          "query": "Miete pro Monat",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlf0065_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlj0017"
+        },
+        {
+          "query": "Wohneigentum oder Mieter",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlf0002",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0002"
+        },
+        {
+          "query": "allgemeiner Gesundheitszustand",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0008",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0008"
+        },
+        {
+          "query": "Lebenszufriedenheit heute",
+          "dense_rank": 2,
+          "dense_top": "soep:youthl:ylh0079",
+          "reranked_rank": 2,
+          "reranked_top": "soep:youthl:ylh0079"
+        },
+        {
+          "query": "Zufriedenheit mit dem Haushaltseinkommen",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0175",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0175"
+        },
+        {
+          "query": "Rauchen und Zigarettenkonsum",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0081_v2",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0089"
+        },
+        {
+          "query": "wie oft wird Fleisch gegessen",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0179",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0179"
+        },
+        {
+          "query": "Sport und körperliche Aktivität",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:pli0092_v3",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:pli0092_v3"
+        },
+        {
+          "query": "Big Five Persönlichkeitsmerkmale",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0219",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0219"
+        },
+        {
+          "query": "Risikobereitschaft",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0204_v2",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0204_v2"
+        },
+        {
+          "query": "allgemeines Vertrauen in andere Menschen",
+          "dense_rank": 1,
+          "dense_top": "soep:youthl:ylh0007",
+          "reranked_rank": 1,
+          "reranked_top": "soep:timepref:pelz03"
+        },
+        {
+          "query": "Locus of Control, Kontrollüberzeugung",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0381_v2",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0374"
+        },
+        {
+          "query": "Pflegebedürftige Person im Haushalt",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlf0291",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0291"
+        },
+        {
+          "query": "Anzahl der Kinder einer Person",
+          "dense_rank": 5,
+          "dense_top": "soep:jugendl:jl0232_v2",
+          "reranked_rank": 2,
+          "reranked_top": "soep:pl:pld0301i01"
+        },
+        {
+          "query": "Geburtsjahr der befragten Person",
+          "dense_rank": 1,
+          "dense_top": "soep:bioedu:gebjahr",
+          "reranked_rank": 1,
+          "reranked_top": "soep:ppathl:gebjahr"
+        },
+        {
+          "query": "Geschlecht der befragten Person",
+          "dense_rank": 1,
+          "dense_top": "soep:interviewer:gender",
+          "reranked_rank": 1,
+          "reranked_top": "soep:interviewer:gender"
+        },
+        {
+          "query": "Haushaltsgröße, Zahl der Personen",
+          "dense_rank": 1,
+          "dense_top": "soep:kidlong:k_size",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlk0007"
+        },
+        {
+          "query": "Familienstand",
+          "dense_rank": 7,
+          "dense_top": "soep:biol:lb0311_v2",
+          "reranked_rank": 5,
+          "reranked_top": "soep:pl:pld0131_v2"
+        },
+        {
+          "query": "Migrationshintergrund",
+          "dense_rank": 1,
+          "dense_top": "soep:ppath:migback",
+          "reranked_rank": 2,
+          "reranked_top": "soep:ppathl:corigin"
+        },
+        {
+          "query": "Staatsangehörigkeit",
+          "dense_rank": 1,
+          "dense_top": "soep:pgen:pgnation",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plj0764l01"
+        },
+        {
+          "query": "Partner im Haushalt",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:pld0133",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:pld0133"
+        },
+        {
+          "query": "Interesse an Politik",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0007",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0007"
+        },
+        {
+          "query": "Parteineigung",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0012_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0012_h"
+        },
+        {
+          "query": "Religionszugehörigkeit",
+          "dense_rank": 1,
+          "dense_top": "soep:biol:lb1268_v2",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgreli"
+        },
+        {
+          "query": "Bundesland des Haushalts",
+          "dense_rank": 1,
+          "dense_top": "soep:hbrutt:bula_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0638"
+        },
+        {
+          "query": "Gewichtungsfaktor für Hochrechnungen",
+          "dense_rank": 1,
+          "dense_top": "soep:hpathl:hhrf",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hpathl:hhrf"
+        },
+        {
+          "query": "Erhebungsjahr der Befragung",
+          "dense_rank": 1,
+          "dense_top": "soep:gkal:syear",
+          "reranked_rank": 1,
+          "reranked_top": "soep:gkal:syear"
+        },
+        {
+          "query": "net labour income last month",
+          "dense_rank": 2,
+          "dense_top": "soep:youthl:ylc0011",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plc0014_h"
+        },
+        {
+          "query": "years of education",
+          "dense_rank": 1,
+          "dense_top": "soep:pequiv:d11109",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:d11109"
+        },
+        {
+          "query": "current self-rated health",
+          "dense_rank": 1,
+          "dense_top": "soep:pequiv:m11126",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:m11126"
+        },
+        {
+          "query": "overall life satisfaction",
+          "dense_rank": 1,
+          "dense_top": "soep:pequiv:p11101",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:p11101"
+        },
+        {
+          "query": "household net wealth",
+          "dense_rank": 1,
+          "dense_top": "soep:hwealth:w011hd",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hwealth:w011hd"
+        },
+        {
+          "query": "actual weekly working hours",
+          "dense_rank": 1,
+          "dense_top": "soep:pgen:pgtatzeit",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgtatzeit"
+        },
+        {
+          "query": "employment status of the individual",
+          "dense_rank": 2,
+          "dense_top": "soep:P-File:PL040",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:e11102"
+        },
+        {
+          "query": "frequency of meat consumption",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0179",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0179"
+        },
+        {
+          "query": "political interest",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0007",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0007"
+        },
+        {
+          "query": "migration background of the respondent",
+          "dense_rank": 1,
+          "dense_top": "soep:ppath:migback",
+          "reranked_rank": 1,
+          "reranked_top": "soep:ppathl:migback"
+        },
+        {
+          "query": "number of children in the household",
+          "dense_rank": 4,
+          "dense_top": "soep:H-File:HX060",
+          "reranked_rank": 3,
+          "reranked_top": "soep:kidlong:k_size"
+        },
+        {
+          "query": "size of the dwelling in square metres",
+          "dense_rank": 1,
+          "dense_top": "soep:hgen:hgsize",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hgen:hgsize"
+        },
+        {
+          "query": "wie viel verdient jemand netto im Monat",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plb0420_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plc0014_h"
+        },
+        {
+          "query": "wie zufrieden sind die Leute mit ihrem Leben",
+          "dense_rank": 3,
+          "dense_top": "soep:biol:lm0255i02",
+          "reranked_rank": 5,
+          "reranked_top": "soep:biol:lm0255i02"
+        },
+        {
+          "query": "Bildungsabschluss der Eltern",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plg0249",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plg0249"
+        },
+        {
+          "query": "Einkommensarmut und Armutsgefährdung",
+          "dense_rank": 2,
+          "dense_top": "soep:pl:plh0426i04",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0418i08"
+        },
+        {
+          "query": "Wohnort in Ost- oder Westdeutschland",
+          "dense_rank": 1,
+          "dense_top": "soep:biol:lr3367_ew",
+          "reranked_rank": 1,
+          "reranked_top": "soep:biol:lr3369_ew"
+        }
+      ],
+      "reranked": {
+        "hit@1": 49,
+        "hit@3": 55,
+        "hit@10": 59,
+        "mrr@10": 0.8902542372881356
+      }
+    },
+    "titles_only": {
+      "docs_sha256": "802805903d0384b7ec391a89671614df0fe3a1331cc9198a9a39bb6a881bf185",
+      "dense": {
+        "hit@1": 44,
+        "hit@10": 55,
+        "hit@30": 58,
+        "mrr@30": 0.8094656050164525
+      },
+      "cases": [
+        {
+          "query": "Nettoerwerbseinkommen im letzten Monat",
+          "dense_rank": 13,
+          "dense_top": "soep:biol:lr3039",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plc0014_h"
+        },
+        {
+          "query": "Bruttoerwerbseinkommen aus Haupttätigkeit",
+          "dense_rank": null,
+          "dense_top": "soep:R-File:RB170",
+          "reranked_rank": null,
+          "reranked_top": "soep:pl:plc0062_h"
+        },
+        {
+          "query": "monatliches Haushaltsnettoeinkommen",
+          "dense_rank": 1,
+          "dense_top": "soep:hgen:hghinc",
+          "reranked_rank": 2,
+          "reranked_top": "soep:mihinc:ihinc"
+        },
+        {
+          "query": "bedarfsgewichtetes Haushaltseinkommen",
+          "dense_rank": 1,
+          "dense_top": "soep:hgen:hghinc",
+          "reranked_rank": 2,
+          "reranked_top": "soep:pl:plc0001_v2"
+        },
+        {
+          "query": "Bildungsjahre einer Person",
+          "dense_rank": 1,
+          "dense_top": "soep:pequiv:d11109",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:d11109"
+        },
+        {
+          "query": "höchster Schulabschluss",
+          "dense_rank": 1,
+          "dense_top": "soep:more_local:bjp_lmore126",
+          "reranked_rank": 2,
+          "reranked_top": "soep:lee2estab:elb0282"
+        },
+        {
+          "query": "berufliche Stellung",
+          "dense_rank": 1,
+          "dense_top": "soep:hbrutt:stellbei",
+          "reranked_rank": 2,
+          "reranked_top": "soep:more_local:bjp_lmore208"
+        },
+        {
+          "query": "Beruf nach ISCO-Klassifikation",
+          "dense_rank": 1,
+          "dense_top": "soep:pgen:pgisco08",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:p_isco88"
+        },
+        {
+          "query": "Beruf nach KldB 2010",
+          "dense_rank": 1,
+          "dense_top": "soep:jugendl:j_kldb2010_jcurrent",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgkldb2010"
+        },
+        {
+          "query": "tatsächliche Arbeitszeit pro Woche",
+          "dense_rank": 1,
+          "dense_top": "soep:pgen:pgtatzeit",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgtatzeit"
+        },
+        {
+          "query": "vereinbarte Wochenarbeitszeit",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plb0176_v1",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plb0176_v1"
+        },
+        {
+          "query": "Beschäftigungsstatus und Erwerbsstatus",
+          "dense_rank": 1,
+          "dense_top": "soep:pgen:pgemplst",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgemplst"
+        },
+        {
+          "query": "arbeitslos gemeldet",
+          "dense_rank": 1,
+          "dense_top": "soep:gkal:gkal1d",
+          "reranked_rank": 1,
+          "reranked_top": "soep:jugendl:jl0387"
+        },
+        {
+          "query": "Nettovermögen des Haushalts",
+          "dense_rank": 5,
+          "dense_top": "soep:hbrutt:hheinki",
+          "reranked_rank": 3,
+          "reranked_top": "soep:hl:hlc0213"
+        },
+        {
+          "query": "Wohnfläche der Wohnung in Quadratmetern",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlj0024",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0019_v3"
+        },
+        {
+          "query": "Miete pro Monat",
+          "dense_rank": 1,
+          "dense_top": "soep:hgen:hgrent",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlj0017"
+        },
+        {
+          "query": "Wohneigentum oder Mieter",
+          "dense_rank": 1,
+          "dense_top": "soep:hgen:hgowner",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hgen:hgowner"
+        },
+        {
+          "query": "allgemeiner Gesundheitszustand",
+          "dense_rank": 6,
+          "dense_top": "soep:youthl:yle0001",
+          "reranked_rank": 2,
+          "reranked_top": "soep:youthl:yle0001"
+        },
+        {
+          "query": "Lebenszufriedenheit heute",
+          "dense_rank": 2,
+          "dense_top": "soep:youthl:ylh0079",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0151"
+        },
+        {
+          "query": "Zufriedenheit mit dem Haushaltseinkommen",
+          "dense_rank": 1,
+          "dense_top": "soep:interviewer:plh0175",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0175"
+        },
+        {
+          "query": "Rauchen und Zigarettenkonsum",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0086_v2",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0089"
+        },
+        {
+          "query": "wie oft wird Fleisch gegessen",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0179",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0179"
+        },
+        {
+          "query": "Sport und körperliche Aktivität",
+          "dense_rank": 1,
+          "dense_top": "soep:childl:cld0032",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:m11104"
+        },
+        {
+          "query": "Big Five Persönlichkeitsmerkmale",
+          "dense_rank": 16,
+          "dense_top": "soep:more_local:bjp_lmore255",
+          "reranked_rank": null,
+          "reranked_top": "soep:more_local:bjp_lmore255"
+        },
+        {
+          "query": "Risikobereitschaft",
+          "dense_rank": 1,
+          "dense_top": "soep:youthl:ylh0003",
+          "reranked_rank": 1,
+          "reranked_top": "soep:biopupil:char30"
+        },
+        {
+          "query": "allgemeines Vertrauen in andere Menschen",
+          "dense_rank": 1,
+          "dense_top": "soep:interviewer:ivertr03",
+          "reranked_rank": 1,
+          "reranked_top": "soep:interviewer:ivertr03"
+        },
+        {
+          "query": "Locus of Control, Kontrollüberzeugung",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0381_v1",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0431"
+        },
+        {
+          "query": "Pflegebedürftige Person im Haushalt",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlf0291",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0291"
+        },
+        {
+          "query": "Anzahl der Kinder einer Person",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:pld0172",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:pld0172"
+        },
+        {
+          "query": "Geburtsjahr der befragten Person",
+          "dense_rank": 1,
+          "dense_top": "soep:interviewer:birth",
+          "reranked_rank": 1,
+          "reranked_top": "soep:interviewer:birth"
+        },
+        {
+          "query": "Geschlecht der befragten Person",
+          "dense_rank": 1,
+          "dense_top": "soep:bioagel:sexresp",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:isex"
+        },
+        {
+          "query": "Haushaltsgröße, Zahl der Personen",
+          "dense_rank": 1,
+          "dense_top": "soep:hbrutt:hhgri",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hbrutt:hhgri"
+        },
+        {
+          "query": "Familienstand",
+          "dense_rank": 5,
+          "dense_top": "soep:more_local:bjp_lmore226",
+          "reranked_rank": 8,
+          "reranked_top": "soep:more_local:bjp_lmore226"
+        },
+        {
+          "query": "Migrationshintergrund",
+          "dense_rank": 1,
+          "dense_top": "soep:ppath:migback",
+          "reranked_rank": 1,
+          "reranked_top": "soep:ppathl:migback"
+        },
+        {
+          "query": "Staatsangehörigkeit",
+          "dense_rank": 1,
+          "dense_top": "soep:abroad:pnat",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgnation"
+        },
+        {
+          "query": "Partner im Haushalt",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:pld0133",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:pld0133"
+        },
+        {
+          "query": "Interesse an Politik",
+          "dense_rank": 4,
+          "dense_top": "soep:biopupil:polparty1",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0007"
+        },
+        {
+          "query": "Parteineigung",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0012_v8",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0012_v8"
+        },
+        {
+          "query": "Religionszugehörigkeit",
+          "dense_rank": 1,
+          "dense_top": "soep:biol:lb1268_v1",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgreli"
+        },
+        {
+          "query": "Bundesland des Haushalts",
+          "dense_rank": 1,
+          "dense_top": "soep:hbrutto:bula_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0638_h"
+        },
+        {
+          "query": "Gewichtungsfaktor für Hochrechnungen",
+          "dense_rank": 1,
+          "dense_top": "soep:hpathl:hhrf",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hpathl:hhrf"
+        },
+        {
+          "query": "Erhebungsjahr der Befragung",
+          "dense_rank": 1,
+          "dense_top": "soep:bioagel:syear",
+          "reranked_rank": 1,
+          "reranked_top": "soep:bioagel:syear"
+        },
+        {
+          "query": "net labour income last month",
+          "dense_rank": 2,
+          "dense_top": "soep:jugendl:jl0536",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plc0014_h"
+        },
+        {
+          "query": "years of education",
+          "dense_rank": 1,
+          "dense_top": "soep:pequiv:d11109",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:d11109"
+        },
+        {
+          "query": "current self-rated health",
+          "dense_rank": 1,
+          "dense_top": "soep:pequiv:m11126",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:m11126"
+        },
+        {
+          "query": "overall life satisfaction",
+          "dense_rank": 2,
+          "dense_top": "soep:biopupil:lifesati",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:p11101"
+        },
+        {
+          "query": "household net wealth",
+          "dense_rank": 1,
+          "dense_top": "soep:hwealth:w011he",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hwealth:w011hc"
+        },
+        {
+          "query": "actual weekly working hours",
+          "dense_rank": 2,
+          "dense_top": "soep:pl:plc0456",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plb0723"
+        },
+        {
+          "query": "employment status of the individual",
+          "dense_rank": 2,
+          "dense_top": "soep:P-File:PL040",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgemplst"
+        },
+        {
+          "query": "frequency of meat consumption",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0179",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0179"
+        },
+        {
+          "query": "political interest",
+          "dense_rank": 6,
+          "dense_top": "soep:interviewer:ipol1",
+          "reranked_rank": 4,
+          "reranked_top": "soep:jugendl:jl0388"
+        },
+        {
+          "query": "migration background of the respondent",
+          "dense_rank": 1,
+          "dense_top": "soep:youthl:yld0001",
+          "reranked_rank": 1,
+          "reranked_top": "soep:youthl:yld0001"
+        },
+        {
+          "query": "number of children in the household",
+          "dense_rank": 28,
+          "dense_top": "soep:kidlong:k_nrkid",
+          "reranked_rank": null,
+          "reranked_top": "soep:kidlong:k_nrkid"
+        },
+        {
+          "query": "size of the dwelling in square metres",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlj0024",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlj0024"
+        },
+        {
+          "query": "wie viel verdient jemand netto im Monat",
+          "dense_rank": 1,
+          "dense_top": "soep:biol:lm0610_v1",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hgen:hgi1hinc"
+        },
+        {
+          "query": "wie zufrieden sind die Leute mit ihrem Leben",
+          "dense_rank": 10,
+          "dense_top": "soep:interviewer:izule",
+          "reranked_rank": 7,
+          "reranked_top": "soep:interviewer:izule"
+        },
+        {
+          "query": "Bildungsabschluss der Eltern",
+          "dense_rank": 1,
+          "dense_top": "soep:bioparen:fsedu",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plg0249"
+        },
+        {
+          "query": "Einkommensarmut und Armutsgefährdung",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0418i08",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0418i08"
+        },
+        {
+          "query": "Wohnort in Ost- oder Westdeutschland",
+          "dense_rank": 1,
+          "dense_top": "soep:biol:lr3367_ew",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plf0018"
+        }
+      ],
+      "reranked": {
+        "hit@1": 47,
+        "hit@3": 53,
+        "hit@10": 56,
+        "mrr@10": 0.8534100080710251
+      }
+    },
+    "official_fields": {
+      "docs_sha256": "cec488bb45a682efe8107cf9114020605fe1ca5988669f928a10e687d1a59258",
+      "dense": {
+        "hit@1": 38,
+        "hit@10": 53,
+        "hit@30": 55,
+        "mrr@30": 0.757165362885702
+      },
+      "cases": [
+        {
+          "query": "Nettoerwerbseinkommen im letzten Monat",
+          "dense_rank": 5,
+          "dense_top": "soep:pl:plc0458_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plc0014_h"
+        },
+        {
+          "query": "Bruttoerwerbseinkommen aus Haupttätigkeit",
+          "dense_rank": null,
+          "dense_top": "soep:pl:plc0062_v1",
+          "reranked_rank": null,
+          "reranked_top": "soep:pl:plb0474_h"
+        },
+        {
+          "query": "monatliches Haushaltsnettoeinkommen",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlc0005_v1",
+          "reranked_rank": 2,
+          "reranked_top": "soep:pl:plc0001_v2"
+        },
+        {
+          "query": "bedarfsgewichtetes Haushaltseinkommen",
+          "dense_rank": null,
+          "dense_top": "soep:pl:plc0001_v1",
+          "reranked_rank": null,
+          "reranked_top": "soep:hl:hlc0017"
+        },
+        {
+          "query": "Bildungsjahre einer Person",
+          "dense_rank": null,
+          "dense_top": "soep:bioedu:bet4age",
+          "reranked_rank": null,
+          "reranked_top": "soep:bioedu:bex4age"
+        },
+        {
+          "query": "höchster Schulabschluss",
+          "dense_rank": 2,
+          "dense_top": "soep:lee2estab:elb0282",
+          "reranked_rank": 2,
+          "reranked_top": "soep:lee2estab:elb0282"
+        },
+        {
+          "query": "berufliche Stellung",
+          "dense_rank": 3,
+          "dense_top": "soep:interviewer:istell",
+          "reranked_rank": 4,
+          "reranked_top": "soep:pl:plb0064_v2"
+        },
+        {
+          "query": "Beruf nach ISCO-Klassifikation",
+          "dense_rank": 1,
+          "dense_top": "soep:biol:l3anerx_v2",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:p_isco88"
+        },
+        {
+          "query": "Beruf nach KldB 2010",
+          "dense_rank": 1,
+          "dense_top": "soep:jugendl:j_kldb2010_jcurrent",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:p_kldb2010"
+        },
+        {
+          "query": "tatsächliche Arbeitszeit pro Woche",
+          "dense_rank": 2,
+          "dense_top": "soep:pl:plc0456",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plb0723"
+        },
+        {
+          "query": "vereinbarte Wochenarbeitszeit",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plb0176_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plb0176_h"
+        },
+        {
+          "query": "Beschäftigungsstatus und Erwerbsstatus",
+          "dense_rank": 16,
+          "dense_top": "soep:pl:plb0022_v8",
+          "reranked_rank": 4,
+          "reranked_top": "soep:pl:plb0015"
+        },
+        {
+          "query": "arbeitslos gemeldet",
+          "dense_rank": 1,
+          "dense_top": "soep:youthl:ylb0019",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plb0021"
+        },
+        {
+          "query": "Nettovermögen des Haushalts",
+          "dense_rank": 2,
+          "dense_top": "soep:hl:hlc0213",
+          "reranked_rank": 3,
+          "reranked_top": "soep:hl:hlc0213"
+        },
+        {
+          "query": "Wohnfläche der Wohnung in Quadratmetern",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlf0019_v3",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0019_v3"
+        },
+        {
+          "query": "Miete pro Monat",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlj0017",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlj0017"
+        },
+        {
+          "query": "Wohneigentum oder Mieter",
+          "dense_rank": 2,
+          "dense_top": "soep:hl:hlf0001_v3",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0002"
+        },
+        {
+          "query": "allgemeiner Gesundheitszustand",
+          "dense_rank": 3,
+          "dense_top": "soep:childl:cle0003",
+          "reranked_rank": 2,
+          "reranked_top": "soep:childl:cle0003"
+        },
+        {
+          "query": "Lebenszufriedenheit heute",
+          "dense_rank": 3,
+          "dense_top": "soep:youthl:ylh0079",
+          "reranked_rank": 2,
+          "reranked_top": "soep:youthl:ylh0079"
+        },
+        {
+          "query": "Zufriedenheit mit dem Haushaltseinkommen",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0175",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0175"
+        },
+        {
+          "query": "Rauchen und Zigarettenkonsum",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0081_v2",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0089"
+        },
+        {
+          "query": "wie oft wird Fleisch gegessen",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0179",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0179"
+        },
+        {
+          "query": "Sport und körperliche Aktivität",
+          "dense_rank": 2,
+          "dense_top": "soep:biol:lm0268i08",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:m11104"
+        },
+        {
+          "query": "Big Five Persönlichkeitsmerkmale",
+          "dense_rank": 2,
+          "dense_top": "soep:pl:plh0255",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0219"
+        },
+        {
+          "query": "Risikobereitschaft",
+          "dense_rank": 1,
+          "dense_top": "soep:youthl:ylh0003",
+          "reranked_rank": 1,
+          "reranked_top": "soep:youthl:ylh0003"
+        },
+        {
+          "query": "allgemeines Vertrauen in andere Menschen",
+          "dense_rank": 1,
+          "dense_top": "soep:interviewer:ivertr03",
+          "reranked_rank": 1,
+          "reranked_top": "soep:interviewer:ivertr03"
+        },
+        {
+          "query": "Locus of Control, Kontrollüberzeugung",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0381_v2",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0375"
+        },
+        {
+          "query": "Pflegebedürftige Person im Haushalt",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlf0291",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0291"
+        },
+        {
+          "query": "Anzahl der Kinder einer Person",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:pld0172",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:pld0172"
+        },
+        {
+          "query": "Geburtsjahr der befragten Person",
+          "dense_rank": 1,
+          "dense_top": "soep:interviewer:birth",
+          "reranked_rank": 1,
+          "reranked_top": "soep:interviewer:birth"
+        },
+        {
+          "query": "Geschlecht der befragten Person",
+          "dense_rank": 1,
+          "dense_top": "soep:interviewer:gender",
+          "reranked_rank": 1,
+          "reranked_top": "soep:interviewer:gender"
+        },
+        {
+          "query": "Haushaltsgröße, Zahl der Personen",
+          "dense_rank": 1,
+          "dense_top": "soep:interviewer:hhgr",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlk0007"
+        },
+        {
+          "query": "Familienstand",
+          "dense_rank": 13,
+          "dense_top": "soep:biol:lb0311_v2",
+          "reranked_rank": 9,
+          "reranked_top": "soep:pl:pld0131_h"
+        },
+        {
+          "query": "Migrationshintergrund",
+          "dense_rank": 2,
+          "dense_top": "soep:pequiv:d11112ll",
+          "reranked_rank": 2,
+          "reranked_top": "soep:pequiv:d11112ll"
+        },
+        {
+          "query": "Staatsangehörigkeit",
+          "dense_rank": 1,
+          "dense_top": "soep:biol:lb0885_v1",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plj0014_v6"
+        },
+        {
+          "query": "Partner im Haushalt",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:pld0133",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:pld0133"
+        },
+        {
+          "query": "Interesse an Politik",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0007",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0007"
+        },
+        {
+          "query": "Parteineigung",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plh0012_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0012_h"
+        },
+        {
+          "query": "Religionszugehörigkeit",
+          "dense_rank": 1,
+          "dense_top": "soep:biol:lb1268_v2",
+          "reranked_rank": 1,
+          "reranked_top": "soep:biol:lb1268_v2"
+        },
+        {
+          "query": "Bundesland des Haushalts",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlf0638_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlf0638_h"
+        },
+        {
+          "query": "Gewichtungsfaktor für Hochrechnungen",
+          "dense_rank": 1,
+          "dense_top": "soep:ppathl:phrf",
+          "reranked_rank": 1,
+          "reranked_top": "soep:ppathl:phrf"
+        },
+        {
+          "query": "Erhebungsjahr der Befragung",
+          "dense_rank": 1,
+          "dense_top": "soep:gkal:syear",
+          "reranked_rank": 1,
+          "reranked_top": "soep:gkal:syear"
+        },
+        {
+          "query": "net labour income last month",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plc0014_h",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plc0014_h"
+        },
+        {
+          "query": "years of education",
+          "dense_rank": 1,
+          "dense_top": "soep:pgen:pgbilzeit",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pgen:pgbilzeit"
+        },
+        {
+          "query": "current self-rated health",
+          "dense_rank": 1,
+          "dense_top": "soep:pequiv:m11126",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:m11126"
+        },
+        {
+          "query": "overall life satisfaction",
+          "dense_rank": 1,
+          "dense_top": "soep:pequiv:p11101",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:p11101"
+        },
+        {
+          "query": "household net wealth",
+          "dense_rank": 1,
+          "dense_top": "soep:hwealth:w011hd",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hwealth:w011hd"
+        },
+        {
+          "query": "actual weekly working hours",
+          "dense_rank": 1,
+          "dense_top": "soep:pgen:pgtatzeit",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plb0186_v1"
+        },
+        {
+          "query": "employment status of the individual",
+          "dense_rank": 2,
+          "dense_top": "soep:P-File:PL040",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pequiv:e11102"
+        },
+        {
+          "query": "frequency of meat consumption",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:ple0179",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:ple0179"
+        },
+        {
+          "query": "political interest",
+          "dense_rank": 2,
+          "dense_top": "soep:jugendl:jl0388",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0007"
+        },
+        {
+          "query": "migration background of the respondent",
+          "dense_rank": 1,
+          "dense_top": "soep:selfempl:elb0633",
+          "reranked_rank": 1,
+          "reranked_top": "soep:ppathl:migback"
+        },
+        {
+          "query": "number of children in the household",
+          "dense_rank": null,
+          "dense_top": "soep:pequiv:kidy",
+          "reranked_rank": null,
+          "reranked_top": "soep:kidlong:k_nrkid"
+        },
+        {
+          "query": "size of the dwelling in square metres",
+          "dense_rank": 1,
+          "dense_top": "soep:hl:hlf0019_v3",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlj0024"
+        },
+        {
+          "query": "wie viel verdient jemand netto im Monat",
+          "dense_rank": 1,
+          "dense_top": "soep:biol:lm0610_v1",
+          "reranked_rank": 1,
+          "reranked_top": "soep:hl:hlc0005_h"
+        },
+        {
+          "query": "wie zufrieden sind die Leute mit ihrem Leben",
+          "dense_rank": 3,
+          "dense_top": "soep:interviewer:izule",
+          "reranked_rank": 8,
+          "reranked_top": "soep:interviewer:izule"
+        },
+        {
+          "query": "Bildungsabschluss der Eltern",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plg0243",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plg0243"
+        },
+        {
+          "query": "Einkommensarmut und Armutsgefährdung",
+          "dense_rank": 2,
+          "dense_top": "soep:pl:plh0426i04",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plh0418i08"
+        },
+        {
+          "query": "Wohnort in Ost- oder Westdeutschland",
+          "dense_rank": 1,
+          "dense_top": "soep:pl:plf0018",
+          "reranked_rank": 1,
+          "reranked_top": "soep:pl:plf0018"
+        }
+      ],
+      "reranked": {
+        "hit@1": 45,
+        "hit@3": 51,
+        "hit@10": 55,
+        "mrr@10": 0.823210922787194
+      }
+    }
+  }
+}
