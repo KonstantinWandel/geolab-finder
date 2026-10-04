@@ -22,7 +22,7 @@ MODUS="${1:?usage: build.sh <inkar|soep> [--print]}"
 NUR_ZEIGEN="${2:-}"
 
 zahlen() {
-  "$HOME/miniconda3/bin/python3" - "$WURZEL" <<'PY'
+  "${GEOLAB_PYTHON:-$HOME/miniconda3/envs/geolab-rag/bin/python}" - "$WURZEL" <<'PY'
 import json, sys
 from pathlib import Path
 wurzel = Path(sys.argv[1]) / "soep_metadata_output"

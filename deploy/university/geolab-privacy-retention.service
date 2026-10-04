@@ -1,0 +1,15 @@
+[Unit]
+Description=Delete expired GeoLAB query logs, feedback and browser statistics
+
+[Service]
+Type=oneshot
+User=geolab
+Group=geolab
+UMask=0077
+Environment=GEOLAB_LOG_DIR=/opt/geolab/logs
+ExecStart=/opt/geolab/.venv/bin/python /opt/geolab/app/destatis-rag/scripts/privacy_admin.py purge
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/geolab/logs
+ProtectHome=true
+PrivateTmp=true

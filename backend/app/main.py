@@ -1,10 +1,11 @@
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from typing import List, Optional, Union, Any
+from pydantic import BaseModel, Field, ConfigDict
+from typing import List, Optional, Union, Any, Literal
 import os
 import time
+import sqlite3
 from app.services.search import SearchService
 from app.services.data_fetch_agent import DataFetchAgentService
 from app.services.execution_service import ExecutionService
@@ -13,6 +14,7 @@ from app.services.soep_aggregator import SOEPAggregatorService
 from app.services.soep_search import SOEPSearchService
 from app.services.soep_rag_advisor import SOEPRagAdvisorService
 from app.services import usage_log
+from app.services.privacy_store import PrivacyStore, CONSENT_VERSION
 from app.services.inkar_permalink import from_environment as inkar_permalinks_from_environment
 
 app = FastAPI(title="Destatis Local RAG", version="1.0.0")
@@ -54,6 +56,7 @@ harmonizer = HarmonizerService()
 soep_aggregator = SOEPAggregatorService()
 soep_search_service = SOEPSearchService()
 soep_rag_advisor = SOEPRagAdvisorService()
+privacy_store = PrivacyStore(usage_log.LOG_DIR)
 
 class SearchRequest(BaseModel):
     query: str
@@ -202,7 +205,69 @@ def soep_advice(req: SOEPAdviceRequest):
     result["query_id"] = query_id
     usage_log.log_query(query_id, soep_rag_advisor.app_mode, req.question, filters,
                         result.get("recommended_variables") or [], time.perf_counter() - started)
+    try:
+        result["feedback_token"] = privacy_store.token(
+            soep_rag_advisor.app_mode, query_id, result.get("recommended_variables") or [],
+            [os.getenv("SOEP_EMBEDDING_MODEL", "BAAI/bge-m3"),
+             os.getenv("SOEP_RAG_RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")])
+    except OSError:
+        # Optional feedback must not make a successful metadata search unavailable.
+        print("[privacy] feedback token unavailable")
     return result
+
+
+class VisitorRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    visitor_id: str = Field(pattern=r"^[a-f0-9]{32}$")
+
+
+class AnalyticsRequest(VisitorRequest):
+    consent: Literal[True]
+    consent_version: Literal[CONSENT_VERSION]
+    event: Literal["visit", "search"]
+
+
+class FeedbackRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    query_id: str = Field(pattern=r"^[a-f0-9]{16}$")
+    item_id: str = Field(min_length=1, max_length=500)
+    vote: Literal["useful", "not_useful"]
+    token: str = Field(min_length=1, max_length=100000)
+
+
+def check_origin(request: Request):
+    origin = request.headers.get("origin")
+    if origin and origin not in ALLOW_ORIGINS and origin != f"{request.url.scheme}://{request.url.netloc}":
+        raise HTTPException(403, "Cross-site telemetry is not accepted")
+
+
+@app.post("/api/analytics/event", status_code=204)
+def analytics_event(req: AnalyticsRequest, request: Request):
+    check_origin(request)
+    try:
+        privacy_store.event(soep_rag_advisor.app_mode, req.visitor_id, req.event)
+    except (OSError, sqlite3.Error):
+        raise HTTPException(503, "Optional analytics unavailable")
+
+
+@app.post("/api/analytics/withdraw", status_code=204)
+def analytics_withdraw(req: VisitorRequest, request: Request):
+    check_origin(request)
+    try:
+        privacy_store.withdraw(soep_rag_advisor.app_mode, req.visitor_id)
+    except (OSError, sqlite3.Error):
+        raise HTTPException(503, "Deletion temporarily unavailable")
+
+
+@app.post("/api/soep/feedback", status_code=204)
+def result_feedback(req: FeedbackRequest, request: Request):
+    check_origin(request)
+    try:
+        privacy_store.feedback(soep_rag_advisor.app_mode, req.query_id, req.item_id, req.vote, req.token)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except (OSError, sqlite3.Error):
+        raise HTTPException(503, "Feedback temporarily unavailable")
 
 
 @app.get("/api/soep/filter-options")

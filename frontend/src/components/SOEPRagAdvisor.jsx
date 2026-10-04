@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { makeTranslator, shortenPath, datasetLabel, sortSpatialLevels } from '../i18n'
+import { loadHistory, saveHistory, clearHistory, analyticsEvent } from '../privacy'
+import ResultFeedback from './ResultFeedback'
 
 // The project site carries the imprint, the privacy statement and the attribution list.
 const GEOLAB_SITE = 'https://geolab.soz.uni-bielefeld.de'
@@ -209,7 +211,7 @@ function FacetChecks({ label, options, selected, onToggle, onClear, allLabel, em
   )
 }
 
-function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
+function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en', consent }) {
   const t = makeTranslator(language)
   const measureConcepts = useMeasureConcepts()
   const isInkar = mode === 'inkar'
@@ -217,7 +219,6 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
   const isAll = mode === 'all'
   const showRegionalFilters = isInkar || isAll
   const showSoepFilters = isSoep || isAll
-  const STORAGE_KEY = `geolab_history_${mode}`
   const headerBlurb = t(isInkar ? 'blurb.inkar' : isSoep ? 'blurb.soep' : 'blurb.all')
 
   // Spatial levels are one concept with a translated label; an unmapped level falls back to
@@ -296,7 +297,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
     return group ? sampleOptionLabel(group) : null
   }
 
-  const [chatHistory, setChatHistory] = useState([])
+  const [chatHistory, setChatHistory] = useState(() => loadHistory(mode))
   const [selectedRows, setSelectedRows] = useState({})
   const [expandedRows, setExpandedRows] = useState({})
   // which descriptions the clamp really cuts, measured per row by ResultDescription
@@ -307,34 +308,12 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
   const messagesEndRef = useRef(null)
   const latestMsgRef = useRef(null)
 
+  const historyEnabled = useRef(Boolean(consent?.history))
   useEffect(() => {
-    const hist = localStorage.getItem(STORAGE_KEY)
-    if (hist) {
-      try {
-        /* Ein einziger unbrauchbarer Eintrag im gespeicherten Verlauf hat die ganze Seite
-           geleert: die Liste wird beim Aufbau durchlaufen, und an `null.role` stirbt der
-           Aufbau. Der Browser-Cache zu leeren half nicht, denn der Verlauf liegt im
-           localStorage; im Inkognitofenster war er leer, und dort ging alles. Was nicht wie
-           ein Eintrag aussieht, wird beim Laden verworfen. */
-        const roh = JSON.parse(hist)
-        const sauber = Array.isArray(roh)
-          ? roh.filter((m) => m && typeof m === 'object' && typeof m.role === 'string')
-          : []
-        /* Auch beim Laden gekürzt, sonst bleibt ein längst zu groß gewordener Verlauf für
-           immer zu groß: gespeichert wurde er ja vor dieser Begrenzung. */
-        const gekuerzt = sauber.slice(-12)
-        if (gekuerzt.length !== (Array.isArray(roh) ? roh.length : 0)) {
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gekuerzt))
-          } catch (e) { localStorage.removeItem(STORAGE_KEY) }
-        }
-        setChatHistory(gekuerzt)
-      } catch (e) {
-        console.error(e)
-        localStorage.removeItem(STORAGE_KEY)
-      }
-    }
-  }, [])
+    if (!consent?.history) clearHistory(mode)
+    else if (!historyEnabled.current && chatHistory.length) saveHistory(mode, chatHistory)
+    historyEnabled.current = Boolean(consent?.history)
+  }, [consent?.history, mode, chatHistory])
 
   // Facets are re-fetched whenever the source changes, scoped to that source, so the
   // dataset/theme/level lists only ever offer values that exist within it. Any dependent
@@ -505,19 +484,8 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
 
       const updatedHist = [...newHist, { role: 'assistant', data }]
       setChatHistory(updatedHist)
-      /* Jede Antwort bringt Dutzende Treffer mit langen Beschreibungen mit. Ungekürzt
-         gespeichert ist der Platz nach einigen Dutzend Suchen voll, das Schreiben scheitert,
-         und beim nächsten Besuch baut die Seite minutenlang an einer Liste, die niemand mehr
-         lesen will. Die letzten zwölf Wortmeldungen reichen. */
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHist.slice(-12)))
-      } catch (e) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHist.slice(-2)))
-        } catch (e2) {
-          localStorage.removeItem(STORAGE_KEY)
-        }
-      }
+      saveHistory(mode, updatedHist)
+      analyticsEvent(mode, apiUrl, 'search')
     } catch (err) {
       setError(err.message || 'Unknown error')
       const updatedHist = [...newHist, { role: 'error', content: err.message || 'Error occurred' }]
@@ -878,6 +846,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                     </p>
                   )}
                   <BatteryItems row={row} t={t} />
+                  <ResultFeedback apiUrl={apiUrl} result={result} row={row} t={t} />
 
                   {/* A link that only opens a search mask needs to say so. A colleague looked up
                       "Krankenhäuser", landed on a portal page where nothing of that name was
@@ -1007,7 +976,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
             className="btn-back"
             onClick={() => {
               setChatHistory([])
-              localStorage.removeItem(STORAGE_KEY)
+              clearHistory(mode)
             }}
           >
             {t('action.clear')}
@@ -1182,6 +1151,7 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en' }) {
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={handleKeyDown}
               />
+              <p className="query-privacy-note">{t('privacy.queryNotice')} <a href={`${GEOLAB_SITE}/privacy.html`} target="_blank" rel="noreferrer">{t('legal.privacy')}</a></p>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button className="btn-primary" type="submit" disabled={loading || !question.trim()}>
                   {loading ? t('action.searching') : t('action.ask')}

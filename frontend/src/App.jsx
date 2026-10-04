@@ -1,9 +1,11 @@
-import { Component, useState, useEffect } from 'react'
+import { Component, useState, useEffect, useRef } from 'react'
 import SearchBar from './components/SearchBar'
 import ResultsList from './components/ResultsList'
 import AnalysisView from './components/AnalysisView'
 import SOEPView from './components/SOEPView'
 import SOEPRagAdvisor from './components/SOEPRagAdvisor'
+import PrivacyChoices from './components/PrivacyChoices'
+import { readConsent, saveConsent, clearHistory, analyticsEvent, withdrawAnalytics, retryWithdrawal } from './privacy'
 import { LANGUAGES, detectLanguage, makeTranslator } from './i18n'
 import './App.css'
 import './geolab-fonts.css'
@@ -61,6 +63,56 @@ function App() {
 
   const API_URL = import.meta.env.VITE_API_URL || "/api"
   const APP_MODE = import.meta.env.VITE_APP_MODE || "all"
+  const [consent, setConsent] = useState(() => readConsent(APP_MODE))
+  const [privacyOpen, setPrivacyOpen] = useState(!consent.decided)
+  const [privacyNotice, setPrivacyNotice] = useState('')
+  const visitSent = useRef(false)
+
+  useEffect(() => {
+    const sync = () => {
+      const current = readConsent(APP_MODE)
+      setConsent((previous) => previous.decided === current.decided && previous.history === current.history
+        && previous.analytics === current.analytics && previous.expires_at === current.expires_at ? previous : current)
+      if (!current.history) clearHistory(APP_MODE)
+      if (!current.decided) setPrivacyOpen(true)
+      if (!current.analytics) withdrawAnalytics(APP_MODE, API_URL).catch(() => {})
+    }
+    retryWithdrawal(APP_MODE, API_URL).catch(() => {})
+    sync()
+    if (readConsent(APP_MODE).analytics && !visitSent.current) {
+      visitSent.current = true
+      analyticsEvent(APP_MODE, API_URL, 'visit')
+    }
+    const onStorage = (event) => { if (event.key === `geolab_privacy_${APP_MODE}`) sync() }
+    window.addEventListener('storage', onStorage)
+    const timer = window.setInterval(sync, 60000)
+    return () => { window.removeEventListener('storage', onStorage); window.clearInterval(timer) }
+  }, [APP_MODE, API_URL])
+
+  const choosePrivacy = async (choices) => {
+    if (!saveConsent(APP_MODE, choices)) {
+      setConsent(readConsent(APP_MODE))
+      setPrivacyOpen(true)
+      setPrivacyNotice(t('privacy.storageFailed'))
+      withdrawAnalytics(APP_MODE, API_URL).catch(() => {
+        setPrivacyNotice(`${t('privacy.storageFailed')} ${t('privacy.withdrawPending')}`)
+      })
+      return
+    }
+    const before = consent.analytics
+    setConsent(readConsent(APP_MODE))
+    setPrivacyNotice('')
+    setPrivacyOpen(false)
+    if (!choices.analytics) {
+      try { await withdrawAnalytics(APP_MODE, API_URL) } catch {
+        setPrivacyNotice(t('privacy.withdrawPending'))
+        setPrivacyOpen(true)
+      }
+    } else if (!before) {
+      visitSent.current = true
+      analyticsEvent(APP_MODE, API_URL, 'visit')
+    }
+  }
 
   // Darstellung. Voreinstellung ist das System; wer von Hand umschaltet, bekommt seine Wahl
   // 24 Stunden lang und danach wieder die Systemeinstellung. Dieselbe Regel gilt auf der
@@ -231,9 +283,10 @@ function App() {
           {controls}
         </header>
       )}
+      {privacyOpen && <PrivacyChoices consent={consent} onSave={choosePrivacy} t={t} notice={privacyNotice} />}
       <main className="main-content">
         <Absturzfang t={t}>
-          <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} language={language} />
+          <SOEPRagAdvisor apiUrl={API_URL} mode={APP_MODE} language={language} consent={consent} />
         </Absturzfang>
       </main>
       {/* The same footer as the project site: a row of partner marks under a label, then three
@@ -276,6 +329,14 @@ function App() {
             <p>
               <a href={`${GEOLAB_SITE}/imprint.html`} target="_blank" rel="noreferrer">{t('legal.imprint')}</a><br />
               <a href={`${GEOLAB_SITE}/privacy.html`} target="_blank" rel="noreferrer">{t('legal.privacy')}</a><br />
+              <button className="privacy-settings-link" type="button" onClick={() => {
+                setPrivacyOpen(true)
+                window.setTimeout(() => {
+                  const panel = document.getElementById('privacy-settings')
+                  panel?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  panel?.focus({ preventScroll: true })
+                }, 0)
+              }}>{t('privacy.settings')}</button><br />
               <a href={`${GEOLAB_SITE}/data-sources.html`} target="_blank" rel="noreferrer">{t('legal.sources')}</a><br />
               <a href={GEOLAB_SITE} target="_blank" rel="noreferrer">GeoLAB</a>
             </p>

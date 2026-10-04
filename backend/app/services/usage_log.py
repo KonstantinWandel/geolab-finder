@@ -1,18 +1,8 @@
-"""Anonymous usage log for the finders.
+"""Private query-quality log, retained for 90 days by the daily retention job.
 
-One thing is recorded, without any personal data: the query that was asked and what came back.
-No IP address, no user agent, no cookie, no session identifier, nothing that could tie two
-queries to the same person. The `query_id` on a search is a random value used only to identify
-one entry in the log; it is never stored anywhere else and never reaches a cookie.
-
-A per-result rating was built and then removed: at this traffic level it would not have
-produced enough signal to act on, and it invited the reading that ranking adjusts itself.
-
-Why log at all: without it, ranking work is guided by a hand-written eval instead of real
-demand, and there is no way to notice that a whole class of question returns nothing useful.
-
-Files are newline-delimited JSON under GEOLAB_LOG_DIR (default /opt/geolab/logs), one file
-per month so they can be rotated or deleted wholesale.
+Questions can contain personal data, so this is not described as anonymous. No IP, user agent,
+or visitor identifier is recorded. A random per-search query_id links voluntary result feedback
+to the corresponding search; it does not link searches to a persistent browser identity.
 """
 from __future__ import annotations
 
@@ -40,10 +30,13 @@ def _append(name: str, payload: Dict[str, Any]) -> None:
     payload = {"ts": stamp.isoformat(timespec="seconds"), **payload}
     path = LOG_DIR / f"{name}-{stamp:%Y-%m}.jsonl"
     try:
-        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        LOG_DIR.mkdir(parents=True, exist_ok=True, mode=0o750)
+        LOG_DIR.chmod(0o750)
         line = json.dumps(payload, ensure_ascii=False)
         with _LOCK:
-            with path.open("a", encoding="utf-8") as handle:
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+            os.chmod(path, 0o600)
+            with os.fdopen(fd, "a", encoding="utf-8") as handle:
                 handle.write(line + "\n")
     except OSError as exc:  # logging must never break a search
         print(f"[usage-log] could not write {path}: {exc}")

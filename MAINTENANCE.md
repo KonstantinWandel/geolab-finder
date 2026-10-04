@@ -6,6 +6,11 @@ SSH-Zugang zur geolab-VM und die Bereitschaft, einmal im Monat zehn Minuten hine
 Dieses Dokument ist die Bedienungsanleitung: was von selbst läuft, was du tun musst, und was zu
 tun ist, wenn etwas kaputt ist.
 
+Datenschutzstand vom 2026-10-04: `PRIVACY_OPERATIONS.md` beschreibt Einwilligungen, freiwillige
+Trefferbewertungen, private Browser-Statistik, 90-Tage-Löschung und Backup-Ausschlüsse. Auf der VM
+läuft dafür `geolab-privacy-retention.timer`. Monatszahlen sind Browser mit Einwilligung, keine
+nachgewiesenen Einzelpersonen. Die Bewertungen ändern die Suche nicht automatisch.
+
 ## Was es gibt
 
 | Was | Adresse |

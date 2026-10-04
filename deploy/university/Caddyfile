@@ -1,0 +1,152 @@
+(appsite) {
+	encode gzip zstd
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+
+	# Always revalidate a document, so a deployment is visible on the next request.
+	@doc path / *.html
+	header @doc Cache-Control "no-cache"
+
+	# An access log, added 2026-09-08. Until then there was none, so a report of a white screen
+	# could not be traced at all: it was impossible to tell whether the browser had even reached
+	# the server, which status it got, and for which bundle address. Rolled, so it cannot fill
+	# the disk.
+	log {
+		output file /var/log/caddy/access.log {
+			# Rotated daily by /etc/logrotate.d/caddy-access, which keeps five days. The privacy
+			# statement promises at most seven days for IP addresses; size-based rolling kept
+			# three weeks and could never guarantee a limit. Changed 2026-10-01.
+			roll_disabled
+		}
+		# Keep useful security diagnostics, but never log search URL parameters or headers.
+		format filter {
+			wrap json
+			fields {
+				request>headers delete
+				request>uri regexp "[?].*$" ""
+			}
+		}
+	}
+
+	tls /etc/ssl/geolab.soz.uni-bielefeld.de/fullchain.cer /etc/ssl/geolab.soz.uni-bielefeld.de/geolab.soz.uni-bielefeld.de.key
+}
+
+soep-faiss.geolab.soz.uni-bielefeld.de {
+	import appsite
+
+	# Vite writes the content hash into every bundle name, so a bundle never changes under
+	# the same address and may be cached for a year. The `file` test is what makes that safe:
+	# without it the header came from the request path alone, so a MISSING bundle was also
+	# answered "immutable" for a year, and thanks to the try_files fallback below what it
+	# answered with was index.html. The browser then stored an HTML document under the
+	# bundle's address, permanently, and the app rendered a white screen on every visit.
+	# Found 2026-09-05 while chasing exactly that report.
+	root * /opt/geolab/sites/soep
+
+	@bundle {
+		path /assets/*
+		file
+	}
+	header @bundle Cache-Control "public, max-age=31536000, immutable"
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:18001
+	}
+	# Assets are files, not app routes: a missing one has to answer 404 rather than be
+	# rewritten to the app shell. Only real navigation falls back to index.html.
+	handle /assets/* {
+		file_server
+	}
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+geodb.geolab.soz.uni-bielefeld.de {
+	import appsite
+
+	# Vite writes the content hash into every bundle name, so a bundle never changes under
+	# the same address and may be cached for a year. The `file` test is what makes that safe:
+	# without it the header came from the request path alone, so a MISSING bundle was also
+	# answered "immutable" for a year, and thanks to the try_files fallback below what it
+	# answered with was index.html. The browser then stored an HTML document under the
+	# bundle's address, permanently, and the app rendered a white screen on every visit.
+	# Found 2026-09-05 while chasing exactly that report.
+	root * /opt/geolab/sites/inkar
+
+	@bundle {
+		path /assets/*
+		file
+	}
+	header @bundle Cache-Control "public, max-age=31536000, immutable"
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:18002
+	}
+	# Assets are files, not app routes: a missing one has to answer 404 rather than be
+	# rewritten to the app shell. Only real navigation falls back to index.html.
+	handle /assets/* {
+		file_server
+	}
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# The GeoLAB project site, served here since 2026-09-04. This host used to serve the GeoDB finder,
+# which keeps its own name above. The earlier designs are no longer published: they are reproducible
+# from the git repository, `git worktree` at the tag plus a render, and were removed from the web on
+# 2026-09-05.
+geolab.soz.uni-bielefeld.de {
+	import appsite
+	import /etc/caddy/annotation_access.caddy
+
+	# The font files carry their hash in the name, everything else here keeps its address across
+	# edits, so it is revalidated after ten minutes rather than cached hard.
+	@fonts path *.woff2 *.woff *.ttf
+	header @fonts Cache-Control "public, max-age=31536000, immutable"
+	@rest path *.css *.js *.svg *.png *.jpg *.jpeg *.webp *.ico *.json
+	header @rest Cache-Control "public, max-age=600"
+
+	handle {
+		root * /opt/geolab/sites/geolab
+		# A static site: try the file, then the same name with .html so an extensionless link works,
+		# then a directory index. No catch-all to index.html, so a wrong address gives a 404 instead
+		# of silently showing the front page.
+		try_files {path} {path}.html {path}/index.html
+		file_server
+	}
+}
+
+germaparl.geolab.soz.uni-bielefeld.de {
+	import appsite
+
+	# Vite writes the content hash into every bundle name, so these never change under the same
+	# address and may be cached for a year. The document stays revalidated.
+	@bundles path /assets/*
+	header @bundles Cache-Control "public, max-age=31536000, immutable"
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:18004
+	}
+	handle {
+		root * /opt/geolab/sites/germaparl
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Alte Namen aus der Zeit vor der Umbenennung. Sie lösen im DNS auf und das Zertifikat deckt sie
+# ab, aber kein Block bediente sie: der Besucher bekam 200 und eine leere Seite. Vorübergehende
+# Umleitung, nicht dauerhaft, damit die Namen später ohne Altlast in den Browsern wieder frei sind.
+inkar.geolab.soz.uni-bielefeld.de {
+	redir https://geodb.geolab.soz.uni-bielefeld.de{uri} 302
+}
+
+soep.geolab.soz.uni-bielefeld.de {
+	redir https://soep-faiss.geolab.soz.uni-bielefeld.de{uri} 302
+}
