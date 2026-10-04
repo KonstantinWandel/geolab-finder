@@ -1,0 +1,41 @@
+{
+  "deployed_at": "20261004T190240Z",
+  "index": {
+    "built_at": "2026-10-04T18:58:38.625994+00:00",
+    "model": "intfloat/multilingual-e5-large-instruct",
+    "new_vector_precision": "fp32",
+    "max_seq_length": 512,
+    "existing_geodb_rows": 11841,
+    "new_gesis_rows": 24222,
+    "geodb_rows": 36063,
+    "inkar_rows": 660,
+    "existing_records_unchanged": true,
+    "existing_vectors_unchanged": true,
+    "preexisting_duplicate_item_ids": {
+      "ba_sdi:Strukturindikatoren:W100": 2
+    },
+    "baseline_metadata_sha256": "65f1d16dd201ad60fc4b97015feb3dc9625d1acaa01d07b97b121a131cb6216d",
+    "baseline_vectors_sha256": "b7774f3d5d8cb1a62a53922025e765aba2eea2c98ab4f48ea802c05a1cd8bd77",
+    "baseline_service_sha256": "f9e3a8d3d35d2b2c29455005140413df87a7b06f1d96c30955d8241ad02d3273",
+    "candidate_service_sha256": "fb9541562a04722bfa6f9d144f063ce5b86ed2075fbca0e43b5722fabfd8a22e",
+    "candidate_files": {
+      "geodb_build_info.json": "0c58103a008b157715f2a8766783a27fa5b12b58c925597fe50d7243ccabd6c5",
+      "geodb_metadata.json": "381990c313524c95814f86dec5701e1913cb3bed79b526bf31ab86a5cc487d4a",
+      "inkar_metadata_2025.json": "b61c31bd957d12c90c161a3975db568cc606a9ab4bda6e3461dbbbc6567cd6af",
+      "inkar_metadata_2025_embeddings.npy.meta.json": "9dac02e508544631fe45001f57920a99a6a6091e243d210c4036c7f380e81a5a",
+      "inkar_metadata_2025_embeddings.npy": "3529ec209eaa4441a60c554237d2ccc8981c200d3105893ae1416419948aade2",
+      "geodb_metadata_embeddings.npy": "51b70951a686918a8de4eabaa25624ecd5f7b52b05eefd6cff995f2f586b4faa",
+      "geodb_metadata_embeddings.npy.meta.json": "5575d5e3d18da35fa9974f8c698a8d7b16152584babaed1152aafd2894f50069"
+    }
+  },
+  "checks": "/home/kwandel/geodb-gesis-stage-20261004T190240Z/geodb_metadata.json: OK\n/home/kwandel/geodb-gesis-stage-20261004T190240Z/geodb_metadata_embeddings.npy: OK\n/home/kwandel/geodb-gesis-stage-20261004T190240Z/geodb_metadata_embeddings.npy.meta.json: OK\n/home/kwandel/geodb-gesis-stage-20261004T190240Z/geodb_build_info.json: OK\n{\"verified_gesis_results\": 3, \"labels\": [\"S12.1. Wohnort (Bundesland)\", \"Arbeitsst\u00e4tte: Selbes Bundesland wie Wohnsitz\", \"Wohnungswechsel (i.d. letzten 12 Mon.): Bundesland des fr\u00fch. Wohnsitzes\"]}\nBackup: /opt/geolab/backups/gesis-20261004T190240Z",
+  "root_html_unchanged": {
+    "https://geolab.soz.uni-bielefeld.de/": "fcf5fa38f00da6ac653c03805715fff2ef57a2ba9bea8036af81c7b6638e2b5c",
+    "https://geodb.geolab.soz.uni-bielefeld.de/": "523cd6e7f8ee22cbca6f83a6d2081dec071bbd78aecfeb80a6d5fb1b34b2d233",
+    "https://soep-faiss.geolab.soz.uni-bielefeld.de/": "5bade61745106bff5f102464761bd9ed9b41cf38e2f10336061554f415fe55fb",
+    "https://germaparl.geolab.soz.uni-bielefeld.de/": "cd9a8b3621a0c1660429a61f3e616e04639df4ad40240568d0fa927739955726"
+  },
+  "backup": "/opt/geolab/backups/gesis-20261004T190240Z",
+  "changed_service": "geolab-inkar",
+  "app_code_changed": "Provider-resource identity, bounded GeoDB provider-diverse candidates and exact alphanumeric-code lookup; SOEP ranking path unchanged"
+}

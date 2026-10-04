@@ -77,10 +77,11 @@ def strip_tags(fragment: str) -> str:
 
 
 def registry_sources() -> Dict[str, Dict[str, Any]]:
+    from registry_extras import supplement_sources
     data = json.loads(REGISTRY.read_text(encoding="utf-8"))
     out: Dict[str, Dict[str, Any]] = {}
-    for position, record in enumerate(data["sources"], start=1):
-        record["folder"] = DATA_SOURCES / f"{position:02d}-{record['slug']}"
+    for position, record in enumerate(supplement_sources(data["sources"], REGISTRY.parent), start=1):
+        record["folder"] = DATA_SOURCES / record.get("folder_name", f"{position:02d}-{record['slug']}")
         out[record["slug"]] = record
     return out
 
@@ -5001,7 +5002,20 @@ def flatten_gbe(source: Dict[str, Any]) -> List[Dict[str, Any]]:
     return records
 
 
+def flatten_gesis(source: Dict[str, Any]) -> List[Dict[str, Any]]:
+    folder = source["folder"]
+    report = json.loads((folder / "REGIONAL_REPORT.json").read_text())
+    raw = (folder / "geodb_records.json").read_bytes()
+    if not report["harvest_complete"] or hashlib.sha256(raw).hexdigest() != report["records_sha256"]:
+        raise ValueError("GESIS regional snapshot is incomplete or changed")
+    records = json.loads(raw)
+    if len(records) != report["indexed_records"]:
+        raise ValueError("GESIS regional snapshot count mismatch")
+    return records
+
+
 FLATTENERS: Dict[str, Callable[[Dict[str, Any]], List[Dict[str, Any]]]] = {
+    "gesis": flatten_gesis,
     "openstreetmap-poi-layer-overpass": flatten_osm_poi,
     "wegweiser-kommune-bertelsmann-stiftung": flatten_wegweiser,
     "dwd-climate-data-center-cdc": flatten_dwd,

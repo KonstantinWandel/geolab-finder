@@ -1,0 +1,11 @@
+name: geo
+channels:
+  - conda-forge
+dependencies:
+  - python=3.14
+  - requests
+  - pandas
+  - openpyxl
+  - pip
+  - pip:
+      - pyoxigraph==0.5.11

@@ -14,6 +14,7 @@ import argparse
 import collections
 import json
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -45,10 +46,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--metadata", default=str(DEFAULT))
     parser.add_argument("--examples", type=int, default=3)
+    parser.add_argument("--json-out", type=Path)
     args = parser.parse_args()
 
     rows: List[Dict[str, Any]] = json.loads(Path(args.metadata).read_text(encoding="utf-8"))
     print(f"{len(rows)} Datensätze aus {args.metadata}\n")
+    report = {"checked_at": datetime.now(timezone.utc).isoformat(), "metadata": args.metadata,
+              "records": len(rows), "scope": "Text heuristics requiring source review; source-level boilerplate is not evidence about an individual record.",
+              "level_mentions": {}, "missing_facets": {}, "uniform_level_sources": {}}
 
     # 1. the raster defect's shape: the text claims a level the facets do not carry
     print("== Text nennt eine Ebene, die Facette führt sie nicht")
@@ -63,6 +68,9 @@ def main() -> None:
         if not offenders:
             continue
         by_source = collections.Counter(row.get("source_key") for row in offenders)
+        report["level_mentions"][level] = {"count": len(offenders), "by_source": dict(by_source),
+            "examples": [{k: r.get(k) for k in ("item_id", "source_key", "label", "spatial_levels")}
+                         for r in offenders[:args.examples]]}
         print(f"  {level:<22} {len(offenders):>5} Datensätze  {dict(by_source.most_common(4))}")
         for row in offenders[: args.examples]:
             print(f"      - [{row.get('source_key')}] {str(row.get('label'))[:58]} "
@@ -76,6 +84,7 @@ def main() -> None:
         missing = [row for row in rows if not row.get(field)]
         if missing:
             counts = collections.Counter(row.get("source_key") for row in missing)
+            report["missing_facets"][field] = {"count": len(missing), "by_source": dict(counts)}
             print(f"  {label:<24} {len(missing):>5}  {dict(counts.most_common(5))}")
 
     # 3. a source whose records all carry exactly one level set is suspicious: either it really
@@ -87,15 +96,21 @@ def main() -> None:
     for source, combos in sorted(per_source.items()):
         count = sum(1 for row in rows if row.get("source_key") == source)
         if len(combos) == 1 and count >= 20:
+            report["uniform_level_sources"][source] = {"records": count, "levels": list(next(iter(combos)))}
             print(f"  {source:<22} {count:>5} Datensätze  {list(combos)[0]}")
 
     # 4. link precision, the other facet a user reads as a promise
     print("\n== Verlinkungstiefe")
     print(" ", dict(collections.Counter(row.get("link_level") for row in rows).most_common()))
+    report["link_levels"] = dict(collections.Counter(row.get("link_level") for row in rows))
     unverified = [row for row in rows if row.get("link_verified") is False]
     if unverified:
+        report["unverified_links"] = {"count": len(unverified), "by_source": dict(collections.Counter(r.get("source_key") for r in unverified))}
         print(f"  ungeprüfte Links: {len(unverified)} "
               f"{dict(collections.Counter(r.get('source_key') for r in unverified).most_common(5))}")
+    if args.json_out:
+        args.json_out.parent.mkdir(parents=True, exist_ok=True)
+        args.json_out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
 
 
 if __name__ == "__main__":

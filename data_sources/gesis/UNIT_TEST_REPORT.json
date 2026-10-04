@@ -1,0 +1,23 @@
+{
+  "tested_at": "2026-10-04T19:33:12.054043+00:00",
+  "interpreter": "/home/researcher/miniconda3/envs/geo/bin/python",
+  "passed": true,
+  "checks": [
+    {
+      "pattern": "test*gesis*.py",
+      "tests": 34,
+      "passed": true,
+      "interpreter": "/home/researcher/miniconda3/envs/geo/bin/python",
+      "skipped": 0,
+      "output": "................................OAI de: page 0, records 1\nOAI de: page 1, records 2\n..\n----------------------------------------------------------------------\nRan 34 tests in 0.155s\n\nOK\n"
+    },
+    {
+      "pattern": "test_geodb_*.py",
+      "tests": 9,
+      "passed": true,
+      "interpreter": "/home/researcher/miniconda3/envs/geolab-rag/bin/python",
+      "skipped": 0,
+      "output": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.001s\n\nOK\n"
+    }
+  ]
+}

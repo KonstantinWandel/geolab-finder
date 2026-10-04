@@ -22,14 +22,19 @@ MODUS="${1:?usage: build.sh <inkar|soep> [--print]}"
 NUR_ZEIGEN="${2:-}"
 
 zahlen() {
-  "${GEOLAB_PYTHON:-$HOME/miniconda3/envs/geolab-rag/bin/python}" - "$WURZEL" <<'PY'
+  "${GEOLAB_PYTHON:-$HOME/miniconda3/envs/geolab-rag/bin/python}" - "${GEOLAB_METADATA_ROOT:-$WURZEL/soep_metadata_output}" <<'PY'
 import json, sys
 from pathlib import Path
-wurzel = Path(sys.argv[1]) / "soep_metadata_output"
+wurzel = Path(sys.argv[1])
 info = json.loads((wurzel / "geodb_build_info.json").read_text())
 inkar = json.loads((wurzel / "inkar_metadata_2025.json").read_text())
-anzahl = int(info["records"]) + len(inkar if isinstance(inkar, list) else inkar.get("records", []))
-print(f"{anzahl:,}".replace(",", " "), info["sources"], sep="|")
+inkar_rows = inkar if isinstance(inkar, list) else inkar.get("records", [])
+anzahl = int(info["records"]) + len(inkar_rows)
+sources = {key for key, count in info["per_source_key"].items()
+           if count and key not in {"soep", "geoportal"}}
+if inkar_rows:
+    sources.add("inkar")
+print(f"{anzahl:,}".replace(",", " "), len(sources), sep="|")
 PY
 }
 
@@ -43,7 +48,7 @@ case "$MODUS" in
   inkar)
     IFS="|" read -r DATENSAETZE QUELLEN <<<"$(zahlen)"
     TITEL="GeoDB"
-    BESCHREIBUNG="Semantische Suche in Beschreibungen deutscher Geodaten: ${DATENSAETZE} Indikatoren, Tabellen und Datensätze aus ${QUELLEN} Datenquellen. Nur Metadaten."
+    BESCHREIBUNG="Semantische Suche in deutschen und internationalen Geodaten-Metadaten: ${DATENSAETZE} Indikator-, Tabellen-, Datensatz- und Variablenbeschreibungen aus ${QUELLEN} Datenquellen."
     AUSGABE="dist-inkar"
     ADRESSE="https://geodb.geolab.soz.uni-bielefeld.de/"
     DOI="https://doi.org/10.5281/zenodo.21134145"

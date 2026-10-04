@@ -1,0 +1,34 @@
+{
+  "name": "GESIS",
+  "slug": "gesis",
+  "folder_name": "gesis",
+  "url": "https://search.gesis.org/",
+  "url_former": "",
+  "maintenance_note": "Public catalogue-wide metadata snapshot; research-data access is separate.",
+  "excel_row": null,
+  "provider": "GESIS - Leibniz Institute for the Social Sciences",
+  "access_modes": [
+    "metadata API",
+    "web UI / search form only"
+  ],
+  "access_flags": {
+    "Direkter Download": false,
+    "GUI": true,
+    "API": true,
+    "Karte": false,
+    "Beantragung": true
+  },
+  "spatial_levels": [
+    "weitere räumliche Gliederungen"
+  ],
+  "topic_groups": [],
+  "topics": [],
+  "topic_labels": [],
+  "coverage_start_month": null,
+  "coverage_start_year": null,
+  "coverage_end_month": null,
+  "coverage_end_year": null,
+  "update_frequency": "snapshot",
+  "note": "Catalogue-wide public metadata snapshot from official GESIS archive OAI-PMH and Knowledge Graph RDF exports, verified against the SPARQL API. Only evidenced regional datasets/studies and geographic variables enter GeoDB. Vitrine search currently responds with a provider challenge; its external partner catalogues are not claimed as harvested. No respondent data or automatic historical-geography crosswalk.",
+  "source_origin": "additional"
+}

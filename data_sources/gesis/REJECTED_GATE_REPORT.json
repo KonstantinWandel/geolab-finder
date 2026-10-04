@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-04",
+  "candidate_rule_version": "1.3",
+  "deployed": false,
+  "source_scripts": ["scripts/eval_geodb_search.py", "scripts/eval_geodb_hard.py"],
+  "source_outputs": ["output/gesis-index/baseline-smoke.json", "output/gesis-index/baseline-hard.json", "output/gesis-index/rejected-v1.3-smoke.json", "output/gesis-index/rejected-v1.3-hard.json"],
+  "smoke_before": {"queries": 58, "hit_at_1": 55, "hit_at_3": 57, "hit_at_10": 58},
+  "smoke_after": {"queries": 58, "hit_at_1": 53, "hit_at_3": 56, "hit_at_10": 58},
+  "hard_before": {"answerable_queries": 31, "hit_at_1": 21, "hit_at_3": 27, "hit_at_10": 30},
+  "hard_after": {"answerable_queries": 31, "hit_at_1": 21, "hit_at_3": 27, "hit_at_10": 29},
+  "reason": "The hard regression gate lost a previously found regional migration measure. Survey intention/reason questions mentioning Bundesland were incorrectly classified as geographic fields.",
+  "correction": "Primary geographic-field/explicit-identifier eligibility, exclusion of intention/attachment/weight/response-time fields, and an explicit observation-type statement in retrieval documents. No query-specific override or model-weight tuning.",
+  "later_rejected_candidate": {
+    "rule_version": "1.5",
+    "deployed": false,
+    "source_outputs": ["output/gesis-index/rejected-v1.5-smoke.json", "output/gesis-index/rejected-v1.5-hard.json"],
+    "smoke_hit_at_10": "58/58",
+    "hard_hit_at_10": "28/31",
+    "hard_misses": ["share of dwellings heated with gas", "AI1401", "INT251"],
+    "reason": "The large archive crowded existing sources out of the dense candidate pool, and exact provider codes lacked a retrieval path.",
+    "correction": "Bounded provider-diverse recall, explicit single alphanumeric-code lookup, compact collection periods and observation-type retrieval text. A later generic grid/geospatial scope rule (1.6) repaired omitted georeferenced study coverage. Final positive, negative, source-contract and paired SOEP results remain in QA_REPORT and SOEP_SHARED_CHECK_REPORT; no named-query override."
+  }
+}

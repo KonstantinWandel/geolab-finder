@@ -1,0 +1,33 @@
+{
+  "checked_at": "2026-10-04T19:22:25.330382+00:00",
+  "url": "https://geodb.geolab.soz.uni-bielefeld.de/",
+  "api": "https://geodb.geolab.soz.uni-bielefeld.de/",
+  "passed": true,
+  "build_index_sha256": null,
+  "checks": [
+    {
+      "viewport": "desktop",
+      "locale": "en-GB",
+      "results": 20,
+      "selected_exports": {
+        "CSV": "output/gesis-index/desktop-selected.csv",
+        "JSON": "output/gesis-index/desktop-selected.json"
+      },
+      "no_horizontal_overflow": true,
+      "javascript_errors": [],
+      "quality_or_analytics_requests": 0
+    },
+    {
+      "viewport": "mobile",
+      "locale": "de-DE",
+      "results": 20,
+      "selected_exports": {
+        "CSV": "output/gesis-index/mobile-selected.csv",
+        "JSON": "output/gesis-index/mobile-selected.json"
+      },
+      "no_horizontal_overflow": true,
+      "javascript_errors": [],
+      "quality_or_analytics_requests": 0
+    }
+  ]
+}

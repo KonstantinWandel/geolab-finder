@@ -1,0 +1,118 @@
+{
+  "summarized_at": "2026-10-04T19:19:11.138614+00:00",
+  "scope": "Existing GeoDB providers: sampled availability and reviewed metadata issues, not exhaustive content, licence or semantic-quality certification. TLS validation was disabled in the legacy reachability checker; no TLS-security claim.",
+  "root_addresses": {
+    "count": 45,
+    "exceptions": [
+      {
+        "source": "hochschulkompass",
+        "status": 400,
+        "url": "https://www.hochschulkompass.de/hochschulen/hochschulsuche.html",
+        "final_origin_path": "https://www.hochschulkompass.de/.enodia/challenge",
+        "error": "",
+        "title": "Enodia Verification",
+        "classification": "provider challenge; not bypassed"
+      },
+      {
+        "source": "gesis",
+        "status": 403,
+        "url": "https://search.gesis.org/",
+        "final_origin_path": "https://search.gesis.org/",
+        "error": "",
+        "title": "Just a moment...",
+        "classification": "provider challenge; not bypassed"
+      }
+    ],
+    "unexpected_domain_changes": []
+  },
+  "sampled_links": {
+    "count": 164,
+    "source_keys": 41,
+    "verdicts": {
+      "ok": 143,
+      "shell": 16,
+      "http-400": 4,
+      "unreachable": 1
+    }
+  },
+  "browser_followup": {
+    "complete": true,
+    "count": 17,
+    "visible_record_evidence": 16,
+    "unresolved": [
+      {
+        "source": "regionalstatistik",
+        "url": "https://www.regionalstatistik.de/genesis/online?operation=table&code=52111-02-01-4-B",
+        "code": "52111-02-01-4-B",
+        "error": "Error: Page.goto: net::ERR_TIMED_OUT at https://www.regionalstatistik.de/genesis/online?operation=table&code=52111-02-01-4-B\nCall log:\n  - navigating to \"https://www.regionalstatistik.de/genesis/online?operation=table&code=52111-02-01-4-B\", waiting until \"d"
+      }
+    ]
+  },
+  "facets": {
+    "records": 11841,
+    "missing": {
+      "spatial_levels": {
+        "count": 3,
+        "by_source": {
+          "geoportal": 3
+        }
+      },
+      "available_years_text": {
+        "count": 3118,
+        "by_source": {
+          "ba_glossar": 309,
+          "geoportal": 8,
+          "hochschulkompass": 11,
+          "db_stada": 37,
+          "transit_formats": 246,
+          "regionalstatistik": 2440,
+          "german_companies": 12,
+          "genesis_bund": 19,
+          "fdz_statistik": 10,
+          "fdz_iab": 13,
+          "gbe": 13
+        }
+      }
+    },
+    "link_levels": {
+      "indicator": 1668,
+      "portal": 201,
+      "dataset": 2972,
+      "statistic": 1668,
+      "table": 5332
+    },
+    "unverified_links": {
+      "count": 1500,
+      "by_source": {
+        "regionalstatistik": 1500
+      }
+    },
+    "caution": "Boilerplate mentions of grids, municipalities and coordinates are not evidence that every record has those observation levels. No automatic regex-based facet changes were deployed."
+  },
+  "confirmed_metadata_issues": [
+    {
+      "item_id": "fdz:10_7807_bridge_2015_v1",
+      "source": "fdz_ruhr",
+      "status": "documented; existing record unchanged",
+      "problem": "PLZ-to-municipality crosswalk uses generic Kreis/Bundesland facets, 2005-2024 coverage and source-wide access wording.",
+      "provider_evidence": "Provider identifies PLZ/Gemeinden, territorial vintage 2015 and availability NotAvailable. Do not confuse publication in 2017 with observation years.",
+      "url": "https://fdz.rwi-essen.de/doi-detail/id-107807bridge2015v1.html",
+      "next_action": "Parse per-dataset geographic vintage and access; rebuild and evaluate a separate correction candidate, not a blanket FDZ-source default."
+    },
+    {
+      "item_id": "offeneregister:federal_state",
+      "source": "offeneregister",
+      "status": "documented; existing record unchanged",
+      "problem": "Explicit register-court state field lacks Bundeslaender facet because all attributes inherit address-level source defaults.",
+      "provider_evidence": "Provider documents federal_state as the state of the register court, not the company's verified observation location.",
+      "url": "https://offeneregister.de/daten/",
+      "next_action": "Apply field-level geography instead of promoting every register attribute to state level; retain the archive's historical collection window."
+    }
+  ],
+  "input_sha256": {
+    "all-source-urls.json": "2f803757eff5703343bd8d1d182c466c0b0065827392f567a295a0911c9f8397",
+    "existing-link-health.json": "657722b187258259275be56829b9f95a8e917d89c8f66d3127075c2b4f37a62b",
+    "existing-browser-links.json": "3883bb6b3ef013ecc20beb0c443e0663408680ceb3ce3247882d9e0d2b6f80a9",
+    "existing-facets.json": "44444af70d7042282880a0823d0ddcba9fa9e97dd9d326aef989baf66850be46"
+  }
+}

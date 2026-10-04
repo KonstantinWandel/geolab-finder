@@ -1,0 +1,32 @@
+{
+  "landing": "https://data.gesis.org/sharing/#!Detail/10.7802/2969",
+  "doi": "10.7802/2969",
+  "version": "2.0.0",
+  "license": "CC-BY-4.0",
+  "files": {
+    "GESISKG_readme_v2-0-0_.txt": {
+      "fetched_at": "2026-10-04T17:17:05.555614+00:00",
+      "bytes": 1573,
+      "sha256": "a139758ffe1b76846c71876124951a8d366300137bdc805dcbda703bbea2d155",
+      "provider_md5": "9961dc3c2aca0dccbf5d51ec020fe5d6"
+    },
+    "GESISKG_resources_researchdata_v2-0-0.zip": {
+      "fetched_at": "2026-10-04T17:17:06.766082+00:00",
+      "bytes": 19109673,
+      "sha256": "9bc9f89b811da400a388b1b96e9838b846e20ec5521a325b35a1ad8cddeaac9c",
+      "provider_md5": "ff29f286269986dce2b337d7b83fb8b6"
+    },
+    "GESISKG_resources_variable_links_v2-0-0.zip": {
+      "fetched_at": "2026-10-04T17:17:07.124945+00:00",
+      "bytes": 1143075,
+      "sha256": "70f6f1dacad7002d8bacef00f936e91324dafe18408a166bebfd17c13cd8d883",
+      "provider_md5": "0fe917bcc2f959a7f07c388a26e75d43"
+    },
+    "GESISKG_resources_variables_v2-0-0.zip": {
+      "fetched_at": "2026-10-04T17:17:28.136247+00:00",
+      "bytes": 190648869,
+      "sha256": "dcb35d0e29f1239ed1b5fb3683254181d11b49ca2b90db54cacbf8c53c458d54",
+      "provider_md5": "dbf414637523e0ad5b60d3de1241579e"
+    }
+  }
+}

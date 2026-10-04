@@ -1,0 +1,327 @@
+{
+  "validated_at": "2026-10-04T17:29:53.141594+00:00",
+  "export_doi": "10.7802/2969",
+  "export_version": "2.0.0",
+  "classes": {
+    "kg_dataset": {
+      "records": 7553,
+      "api_count": 7553,
+      "samples": [
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/SDN-10.25652-diw_data_S0018.1",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 33,
+          "api_triples": 33,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA0015",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 65,
+          "api_triples": 65,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA0756",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 61,
+          "api_triples": 61,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA1596",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 87,
+          "api_triples": 87,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA2874",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 117,
+          "api_triples": 117,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA4066",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 76,
+          "api_triples": 76,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA5183",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 103,
+          "api_triples": 103,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA6027",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 63,
+          "api_triples": 63,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA6779",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 246,
+          "api_triples": 246,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA7490",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 83,
+          "api_triples": 83,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/ZA8269",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 61,
+          "api_triples": 61,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/missy-structure-of-earnings-survey-2006",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 14,
+          "api_triples": 14,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        }
+      ]
+    },
+    "kg_variable": {
+      "records": 1407148,
+      "api_count": 1407148,
+      "samples": [
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA0003_VarBeruf",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 23,
+          "api_triples": 23,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA1681A_VarV195",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 41,
+          "api_triples": 41,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA2824_Varv14_374",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 28,
+          "api_triples": 28,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA3702_VarV555",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 37,
+          "api_triples": 37,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA4582_Varv1398",
+          "core_equal": true,
+          "all_triples_equal": true,
+          "export_triples": 7,
+          "api_triples": 7,
+          "export_only_predicates": [],
+          "api_only_predicates": []
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA5280_Varscagec",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 49,
+          "api_triples": 49,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA5712_Varmerkel_m_t013246",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 37,
+          "api_triples": 37,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA6122_Varl07_7034",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 37,
+          "api_triples": 37,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA6629_Varb2_79",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 27,
+          "api_triples": 27,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA6975_VarV1",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 37,
+          "api_triples": 37,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/exploredata-ZA7661_Varbcor13_3",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 41,
+          "api_triples": 41,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        },
+        {
+          "id": "https://data.gesis.org/gesiskg/resource/missy-ses-2006-year",
+          "core_equal": true,
+          "all_triples_equal": false,
+          "export_triples": 16,
+          "api_triples": 16,
+          "export_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ],
+          "api_only_predicates": [
+            "https://data.gesis.org/gesiskg/schema/hasFulltext"
+          ]
+        }
+      ]
+    }
+  }
+}

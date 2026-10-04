@@ -1,0 +1,307 @@
+{
+  "tested_at": "2026-10-04T19:00:40.707443+00:00",
+  "passed": true,
+  "queries": 59,
+  "metadata_sha256": "42794de91504ce0f92cdc4e956776a97b224c758bc1cea5a6379051bbb6c8883",
+  "baseline_service_sha256": "f9e3a8d3d35d2b2c29455005140413df87a7b06f1d96c30955d8241ad02d3273",
+  "candidate_service_sha256": "fb9541562a04722bfa6f9d144f063ce5b86ed2075fbca0e43b5722fabfd8a22e",
+  "embedding_model": "intfloat/multilingual-e5-large-instruct",
+  "reranker": "Alibaba-NLP/gte-multilingual-reranker-base",
+  "results": [
+    {
+      "query": "Nettoerwerbseinkommen im letzten Monat",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Bruttoerwerbseinkommen aus Haupttätigkeit",
+      "identities_and_scores_equal": true,
+      "rank": 7
+    },
+    {
+      "query": "monatliches Haushaltsnettoeinkommen",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "bedarfsgewichtetes Haushaltseinkommen",
+      "identities_and_scores_equal": true,
+      "rank": 6
+    },
+    {
+      "query": "Bildungsjahre einer Person",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "höchster Schulabschluss",
+      "identities_and_scores_equal": true,
+      "rank": 2
+    },
+    {
+      "query": "berufliche Stellung",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Beruf nach ISCO-Klassifikation",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Beruf nach KldB 2010",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "tatsächliche Arbeitszeit pro Woche",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "vereinbarte Wochenarbeitszeit",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Beschäftigungsstatus und Erwerbsstatus",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "arbeitslos gemeldet",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Nettovermögen des Haushalts",
+      "identities_and_scores_equal": true,
+      "rank": 2
+    },
+    {
+      "query": "Wohnfläche der Wohnung in Quadratmetern",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Miete pro Monat",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Wohneigentum oder Mieter",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "allgemeiner Gesundheitszustand",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Lebenszufriedenheit heute",
+      "identities_and_scores_equal": true,
+      "rank": 2
+    },
+    {
+      "query": "Zufriedenheit mit dem Haushaltseinkommen",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Rauchen und Zigarettenkonsum",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "wie oft wird Fleisch gegessen",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Sport und körperliche Aktivität",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Big Five Persönlichkeitsmerkmale",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Risikobereitschaft",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "allgemeines Vertrauen in andere Menschen",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Locus of Control, Kontrollüberzeugung",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Pflegebedürftige Person im Haushalt",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Anzahl der Kinder einer Person",
+      "identities_and_scores_equal": true,
+      "rank": 2
+    },
+    {
+      "query": "Geburtsjahr der befragten Person",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Geschlecht der befragten Person",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Haushaltsgröße, Zahl der Personen",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Familienstand",
+      "identities_and_scores_equal": true,
+      "rank": 5
+    },
+    {
+      "query": "Migrationshintergrund",
+      "identities_and_scores_equal": true,
+      "rank": 2
+    },
+    {
+      "query": "Staatsangehörigkeit",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Partner im Haushalt",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Interesse an Politik",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Parteineigung",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Religionszugehörigkeit",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Bundesland des Haushalts",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Gewichtungsfaktor für Hochrechnungen",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Erhebungsjahr der Befragung",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "net labour income last month",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "years of education",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "current self-rated health",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "overall life satisfaction",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "household net wealth",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "actual weekly working hours",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "employment status of the individual",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "frequency of meat consumption",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "political interest",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "migration background of the respondent",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "number of children in the household",
+      "identities_and_scores_equal": true,
+      "rank": 2
+    },
+    {
+      "query": "size of the dwelling in square metres",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "wie viel verdient jemand netto im Monat",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "wie zufrieden sind die Leute mit ihrem Leben",
+      "identities_and_scores_equal": true,
+      "rank": 6
+    },
+    {
+      "query": "Bildungsabschluss der Eltern",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Einkommensarmut und Armutsgefährdung",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    },
+    {
+      "query": "Wohnort in Ost- oder Westdeutschland",
+      "identities_and_scores_equal": true,
+      "rank": 1
+    }
+  ]
+}

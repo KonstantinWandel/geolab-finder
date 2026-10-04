@@ -55,6 +55,12 @@ TERMS: Dict[str, str] = {
                  "the source of the data itself.",
     "soep": "SOEP-Core variable metadata © DIW Berlin / SOEP. Structural metadata from "
             "paneldata.org. No microdata is served.",
+    "gesis": "Public archive study metadata: [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). "
+             "GESIS Knowledge Graph metadata: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). "
+             "Biswas, D., Gupta, E., Yu, R., & Zapilko, B. (2025). GESIS Knowledge Graph, Version 2.0.0, "
+             "[DOI 10.7802/2969](https://doi.org/10.7802/2969). These metadata licences do not grant access to the research data; "
+             "check each study's access conditions. Individual geography fields and regional studies are "
+             "not automatically aggregate indicators or map-ready data.",
 }
 
 HEADER = """---
@@ -69,7 +75,7 @@ institutions publish, and every hit links out to the portal that holds the data.
 values and no microdata are stored in or served by the finders.
 
 - [GeoDB](https://geodb.geolab.soz.uni-bielefeld.de/): {geodb_rows} indicator,
-  table and dataset descriptions from {geodb_sources} German georeferenced data sources.
+  table and dataset descriptions from {geodb_sources} German and international georeferenced data sources.
 - [SOEP Variable Finder](https://soep-faiss.geolab.soz.uni-bielefeld.de/): survey-variable
   metadata of the German Socio-Economic Panel (SOEP-Core v41).
 
@@ -83,10 +89,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", required=True)
     parser.add_argument("--date", default=date.today().isoformat())
+    parser.add_argument("--metadata", type=Path, default=METADATA)
+    parser.add_argument("--inkar", type=Path, default=INKAR)
     args = parser.parse_args()
 
     registry = {entry["slug"]: entry for entry in json.loads(REGISTRY.read_text(encoding="utf-8"))["sources"]}
-    records = json.loads(METADATA.read_text(encoding="utf-8"))
+    records = json.loads(args.metadata.read_text(encoding="utf-8"))
     counts = Counter(record["source_key"] for record in records)
     labels: Dict[str, str] = {}
     urls: Dict[str, str] = {}
@@ -102,8 +110,8 @@ def main() -> None:
     if "geoportal" in counts:
         labels["geoportal"] = "Portal descriptions (one entry per portal)"
         urls["geoportal"] = ""
-    if INKAR.exists():
-        counts["inkar"] = len(json.loads(INKAR.read_text(encoding="utf-8")))
+    if args.inkar.exists():
+        counts["inkar"] = len(json.loads(args.inkar.read_text(encoding="utf-8")))
         labels["inkar"] = "INKAR (BBSR)"
         urls["inkar"] = "https://www.inkar.de/"
 
@@ -136,17 +144,21 @@ def main() -> None:
     # The sources whose own terms impose wording come first, because that wording is the reason
     # this page exists. Repeating the standard sentence on every remaining row buried them.
     lines.append("### Sources with their own attribution requirement\n")
+    lines.append("::: {.geodb-attribution}\n")
     lines.append("| Source | Records | Terms of use / attribution |")
     lines.append("|---|---:|---|")
     for key, count in specific:
         lines.append(row(key, count, True))
+    lines.append("\n:::\n")
 
     lines.append("\n### Sources under standard citation\n")
     lines.append(f"{STANDARD}\n")
+    lines.append("::: {.geodb-attribution}\n")
     lines.append("| Source | Records |")
     lines.append("|---|---:|")
     for key, count in standard:
         lines.append(row(key, count, False))
+    lines.append("\n:::\n")
 
     lines.append("\n## Portals listed without an indicator catalogue\n")
     lines.append("Some portals publish no machine-readable list of what they contain. They are "
@@ -162,8 +174,8 @@ def main() -> None:
     lines.append("The finders are open source (MIT) and archived on Zenodo. Retrieval uses the "
                  "multilingual `intfloat/multilingual-e5-large-instruct` bi-encoder (MIT) with the "
                  "`Alibaba-NLP/gte-multilingual-reranker-base` cross-encoder (Apache-2.0).\n")
-    lines.append("- Code: <https://github.com/KonstantinWandel/geolab-finder> and "
-                 "<https://github.com/KonstantinWandel/soep-variable-finder>\n")
+    lines.append("- Code: [GeoDB](https://github.com/KonstantinWandel/geolab-finder) and "
+                 "[SOEP Variable Finder](https://github.com/KonstantinWandel/soep-variable-finder)\n")
 
     out = Path(args.out)
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")

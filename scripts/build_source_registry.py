@@ -296,6 +296,8 @@ def read_workbook(path: Path) -> List[Dict[str, Any]]:
 
 
 def write_registry(records: List[Dict[str, Any]], out_dir: Path) -> Dict[str, Path]:
+    from registry_extras import supplement_sources
+    records = supplement_sources(records, out_dir / "registry")
     registry_dir = out_dir / "registry"
     registry_dir.mkdir(parents=True, exist_ok=True)
 
@@ -382,7 +384,7 @@ and leave them as downloaded, no manual cleaning.
 def scaffold(records: List[Dict[str, Any]], out_dir: Path) -> List[Path]:
     created: List[Path] = []
     for position, record in enumerate(records, start=1):
-        folder = out_dir / f"{position:02d}-{record['slug']}"
+        folder = out_dir / record.get("folder_name", f"{position:02d}-{record['slug']}")
         raw = folder / "raw"
         raw.mkdir(parents=True, exist_ok=True)
         gitkeep = raw / ".gitkeep"
@@ -453,8 +455,10 @@ def main() -> None:
             "If the workbook genuinely grew, re-run with --expected N and update EXPECTED_SOURCES."
         )
 
-    missing_url = [r["name"] for r in records if not r["url"]]
     out_dir = Path(args.out_dir)
+    from registry_extras import supplement_sources
+    records = supplement_sources(records, out_dir / "registry")
+    missing_url = [r["name"] for r in records if not r["url"]]
     paths = write_registry(records, out_dir)
     created = [] if args.no_scaffold else scaffold(records, out_dir)
 

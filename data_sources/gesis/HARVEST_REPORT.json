@@ -1,0 +1,31 @@
+{
+  "started": "2026-10-04T15:17:12.339241+00:00",
+  "scope": "All public GESIS OAI archive dataset metadata and GESIS KG dataset/variable metadata; no microdata. Vitrine partner indices are separately reported as blocked.",
+  "stages": {
+    "oai_de": {
+      "records": 7950,
+      "pages": 159,
+      "complete": true,
+      "metadata_gaps": []
+    },
+    "oai_en": {
+      "records": 7950,
+      "pages": 159,
+      "complete": true,
+      "metadata_gaps": []
+    },
+    "kg_dataset": {
+      "records": 7553,
+      "reported": 7553,
+      "complete": true,
+      "retrieval": "Published RDF export DOI 10.7802/2969 v2.0.0, API count and core-field sample validation"
+    },
+    "kg_variable": {
+      "records": 1407148,
+      "reported": 1407148,
+      "complete": true,
+      "retrieval": "Published RDF export DOI 10.7802/2969 v2.0.0, API count and core-field sample validation"
+    }
+  },
+  "updated": "2026-10-04T17:53:28.528959+00:00"
+}

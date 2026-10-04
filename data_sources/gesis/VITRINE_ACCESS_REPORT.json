@@ -1,0 +1,91 @@
+{
+  "checked_at": "2026-10-04T16:50:08.277809+00:00",
+  "documentation": "https://api.vitrine.gesis.org/",
+  "challenge_bypass_attempted": false,
+  "indices": [
+    {
+      "index": "exzclu-soda",
+      "url": "https://api.vitrine.gesis.org/search/exzclu-soda/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "78f27246c1e9452ce659e38f0229909eb30b63817455c5cb144ec8af9c602981"
+    },
+    {
+      "index": "gesis-soda",
+      "url": "https://api.vitrine.gesis.org/search/gesis-soda/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "e988299cb1c2b208623e57af636014645124423efe4b8c396cc963cbfa48685c"
+    },
+    {
+      "index": "giga-soda",
+      "url": "https://api.vitrine.gesis.org/search/giga-soda/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "85d0c2af6619dafebd3e318e11d8045461575ba8b4851f17c4dfd8bf8e53b615"
+    },
+    {
+      "index": "iamo-soda",
+      "url": "https://api.vitrine.gesis.org/search/iamo-soda/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "95ed1f0b45a20153ec95db9ce3a94364390fa2181c904376e0d350d0d83356f8"
+    },
+    {
+      "index": "null-soda",
+      "url": "https://api.vitrine.gesis.org/search/null-soda/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "9d3d96244eeb688b32def9f719031f06b7a8558e2542e6754efb1a9e99a268a0"
+    },
+    {
+      "index": "swp-soda",
+      "url": "https://api.vitrine.gesis.org/search/swp-soda/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "4debf9d904b61d943e14164c5251c2c0c2590155e1b0a6260f4e023b68558db1"
+    },
+    {
+      "index": "wzb-soda",
+      "url": "https://api.vitrine.gesis.org/search/wzb-soda/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "27846be80d427f77893c740ad8169320b7fefef345383960c8c019d18cb7f694"
+    },
+    {
+      "index": "dprex-soda",
+      "url": "https://api.vitrine.gesis.org/search/dprex-soda/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "51854a4a020a38c7846faf9c5c8cda7b9f75dc79ca46cd45318f9424dc876574"
+    },
+    {
+      "index": "diw-soda",
+      "url": "https://api.vitrine.gesis.org/search/diw-soda/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "4ef8a04edf506b48713589f0a2d0024622b1b7cbe2d7c7f0aa1a7946ebe0cb66"
+    },
+    {
+      "index": "dprex-dbkapps-oai",
+      "url": "https://api.vitrine.gesis.org/search/dprex-dbkapps-oai/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "90399950116f08b32da680b6a70d24451f93b84c5aababd3884933b71b872060"
+    },
+    {
+      "index": "dprex-pangaea-oai",
+      "url": "https://api.vitrine.gesis.org/search/dprex-pangaea-oai/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "f09d6e5d74bdbd8ea7e6698b4237876a8e7af76e42b5638963b8484e4cb18e97"
+    },
+    {
+      "index": "test-dbkapps-git",
+      "url": "https://api.vitrine.gesis.org/search/test-dbkapps-git/_search?size=1",
+      "http_status": 403,
+      "provider_challenge": true,
+      "response_sha256": "28bf78c693013a9cdf77fe577df8d6494d40c527f86ce6be37468249eaab63ed"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21134145.svg)](https://doi.org/10.5281/zenodo.21134145)
 
-GeoDB, short for GeoDataBase, is a semantic search over the metadata of German georeferenced data
+GeoDB, short for GeoDataBase, is a semantic search over German and international georeferenced data
 sources. You describe what you are looking for in plain language, in German or English
 ("Arztdichte", "childcare coverage in rural districts"), and get back the indicators, tables and
 datasets that measure it, from the Bundesland down to grid cells. Each result carries its spatial
@@ -17,10 +17,14 @@ Bielefeld University and DIW Berlin.
 
 ## What is indexed
 
-41 sources and about 12,500 records (index of 11 September 2026), among them the
+42 provider keys and 36,723 descriptions (verified index of 4 October 2026), among them the
 Regionaldatenbank and GENESIS-Online of the statistical offices, Zensus 2022, INKAR (BBSR), the
 Regionalatlas, the Deutschlandatlas, the IÖR-Monitor, the Bundesagentur für Arbeit and
-OpenStreetMap point layers. The full list, with each source's licence and attribution, is on the
+OpenStreetMap point layers. GESIS adds 24,222 study and variable descriptions selected from a
+catalogue-wide public archive/Knowledge Graph harvest, not a manually chosen study list. Individual
+survey geography, mixed regional studies, historical aggregates and current regional indicators
+remain distinct; a metadata hit is not a promise of open observations or a modern boundary join.
+The full list, with each source's licence and attribution, is on the
 [data sources page](https://geolab.soz.uni-bielefeld.de/data-sources.html).
 
 The index holds descriptions and links. The data stays with the institutions that publish it.
@@ -38,6 +42,11 @@ The index holds descriptions and links. The data stays with the institutions tha
   [`BAAI/bge-reranker-v2-m3`](https://huggingface.co/BAAI/bge-reranker-v2-m3), set with
   `SOEP_RAG_RERANKER_MODEL`. The reranker has to be multilingual: the records and the queries mix
   German and English.
+- **Bounded provider-diverse recall** retains the global dense head, then adds one candidate
+  per otherwise absent provider, at most doubling the fixed pool. Large catalogues do not get a
+  per-item boost. Explicit single alphanumeric codes can add exact matches; ordinary words and
+  full sentences remain semantic queries. Study-local codes are identified by provider resource
+  URIs rather than collapsed across studies.
 - **Score fusion** of the bi-encoder, the reranker and a lexical-overlap signal, with a bonus for
   an exact match on a record's code.
 - **Filters** by source, spatial level, year range and theme. Each filter shows how many records
@@ -63,9 +72,10 @@ default and off in production; the finders only retrieve.
 The pipeline lives in `scripts/`, one step per script:
 
 ```bash
-python scripts/build_source_registry.py   # source workbook -> data_sources/registry/
-python scripts/fetch_sources.py           # portals -> data_sources/<NN>-<slug>/raw/
-python scripts/build_geodb_metadata.py    # raw/ -> soep_metadata_output/geodb_metadata.json
+E=$HOME/miniconda3/envs/geolab-rag/bin/python
+$E scripts/build_source_registry.py       # source workbook + additional-source registry
+$E scripts/fetch_sources.py               # portals -> data_sources/<NN>-<slug>/raw/
+$E scripts/build_geodb_metadata.py        # raw/ -> soep_metadata_output/geodb_metadata.json
 bash scripts/refresh_all.sh --no-deploy   # all of the above, then embedding and the retrieval gate
 ```
 
@@ -75,7 +85,29 @@ source. Two retrieval tests guard changes to the models or the records:
 `scripts/eval_geodb_search.py` (58 queries) and `scripts/eval_geodb_hard.py` (concept-only and
 cross-language questions, plus questions the index cannot answer).
 
+GESIS acquisition is an explicit separate pipeline; see
+[source scope, reproduction and measured quality limits](data_sources/gesis/SOURCE.md).
+The normal builder accepts only a complete, checksum-verified GESIS snapshot. The original source
+workbook is unchanged; additional API sources live in `registry/additional_sources.json`.
+
 The interface is built with `bash frontend/build.sh inkar`, which writes `frontend/dist-inkar/`.
+For an isolated candidate, set `GEOLAB_METADATA_ROOT` to its directory. Counts and source names
+are derived from the index, not typed into an ad hoc Vite build. Selected CSV/JSON exports retain
+GESIS metadata attribution/licence, study ID, provenance URI and separate data-access conditions.
+
+## Verification And Handoff
+
+Canonical reports under `data_sources/gesis/` record the harvest, index hashes, before/after
+retrieval gates, source contracts, paired SOEP equality, desktop/mobile exports and rollback paths.
+The smoke gate retains all 58 expected top-ten hits; the hard gate has 31/31, versus 30/31 before.
+First-rank and weak-match warning performance did not universally improve. Read `QA_REPORT.json`
+for negatives and limits; these are regression checks, not held-out expert certification.
+
+`EXISTING_GEODB_AUDIT_REPORT.json` also checks the other providers: 45 roots, 164 sampled links
+and browser followups. One Regionalstatistik timeout and two documented legacy facet/access/date
+problems remain for a separate correction candidate; unchanged existing records were not silently
+rewritten. All 59 SOEP queries have identical full ranked IDs and scores before/after the shared
+code change. No SOEP index or live frontend was redeployed.
 
 ## Running it
 

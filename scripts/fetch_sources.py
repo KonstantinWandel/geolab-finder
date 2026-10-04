@@ -1133,10 +1133,11 @@ def sha256_of(path: Path) -> str:
 
 
 def source_dirs() -> Dict[str, Path]:
+    from registry_extras import supplement_sources
     registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
     mapping: Dict[str, Path] = {}
-    for position, record in enumerate(registry["sources"], start=1):
-        mapping[record["slug"]] = DATA_SOURCES / f"{position:02d}-{record['slug']}"
+    for position, record in enumerate(supplement_sources(registry["sources"], REGISTRY.parent), start=1):
+        mapping[record["slug"]] = DATA_SOURCES / record.get("folder_name", f"{position:02d}-{record['slug']}")
     return mapping
 
 

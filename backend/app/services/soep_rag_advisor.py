@@ -1392,17 +1392,20 @@ class SOEPRagAdvisorService:
         answer rather than a missing one.
 
         Three conditions, all of them necessary:
-          * only the SOEP deployment. GeoDB codes (INT251, AI1401) are internal to the
-            statistical offices and nobody types them.
+          * SOEP codes, or an alphanumeric GeoDB code. Ordinary GeoDB words still
+            use semantic retrieval even when an archive uses that word as a code.
           * only a one-word query. A code inside a sentence is a word: an earlier version pulled
             up the record named `ABRUF` for "Wie funktioniert der Abruf der Daten".
           * only a token that is not itself a word of the corpus, so a query for "Bevölkerung"
             keeps going through the normal ranking even if some row carries that name.
         """
-        if self.app_mode != "soep":
+        if self.app_mode not in {"soep", "inkar"}:
             return []
         token = (query or "").strip().strip(".,;:()[]").lower()
         if not token or len(token) < 4 or re.search(r"[\s,;/]", token):
+            return []
+        if self.app_mode == "inkar" and not (
+                any(c.isdigit() for c in token) and any(c.isalpha() for c in token)):
             return []
 
         if self._name_index is None:
@@ -1427,7 +1430,11 @@ class SOEPRagAdvisorService:
             allowed = set(candidate_idx)
         q_vec = self._query_vector(query)
         out: List[Dict[str, Any]] = []
-        for position in self._name_index[token][: limit * 3]:
+        positions = self._name_index[token]
+        if self.app_mode == "inkar":
+            positions = sorted((p for p in positions if allowed is None or p in allowed),
+                               key=lambda p: float(self._embeddings[p] @ q_vec[0]), reverse=True)
+        for position in positions[: limit * 3]:
             if allowed is not None and position not in allowed:
                 continue        # the user's own filter excludes it; leave it out
             row = dict(self._rows[position])
@@ -1437,7 +1444,8 @@ class SOEPRagAdvisorService:
                 break
         return out
 
-    def _search(self, query: str, k: int, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def _search(self, query: str, k: int, filters: Optional[Dict[str, Any]] = None,
+                source_diverse: bool = False) -> List[Dict[str, Any]]:
         if not self._rows or self._embedder is None or self._embeddings is None:
             raise RuntimeError("Metadata RAG advisor not loaded.")
 
@@ -1457,7 +1465,20 @@ class SOEPRagAdvisorService:
         # quantised GEMMs to pay for their overhead.
         q_vec = self._query_vector(query)
         score_vec = (candidates @ q_vec[0]).astype("float32")
-        best_local_idx = np.argsort(score_vec)[::-1][: min(k, len(candidate_idx))]
+        ranked = np.argsort(score_vec)[::-1]
+        best_local_idx = list(ranked[: min(k, len(candidate_idx))])
+        if source_diverse:
+            # Keep the global semantic head, then give other providers a bounded
+            # opportunity to reach the reranker. A large archive must not consume
+            # every candidate slot merely by repeating a field across studies.
+            represented = {self._rows[candidate_idx[int(i)]].get("source_key") for i in best_local_idx}
+            for i in ranked[len(best_local_idx):]:
+                source = self._rows[candidate_idx[int(i)]].get("source_key")
+                if source not in represented:
+                    best_local_idx.append(i)
+                    represented.add(source)
+                    if len(best_local_idx) >= 2 * k:
+                        break
 
         out = []
         for local_idx in best_local_idx:
@@ -1665,6 +1686,10 @@ class SOEPRagAdvisorService:
             return ("inkar", (cand.get("variable_name") or "").lower())
         variable = (cand.get("variable_name") or "").lower()
         if cand.get("source_key") not in {"soep", "inkar"}:
+            # Archive variable codes can be study-local. A provider resource IRI
+            # identifies the actual variable without changing its displayed code.
+            if cand.get("metadata_resource_uri"):
+                return (cand.get("source_key"), cand["metadata_resource_uri"])
             # GeoDB sources: one slot per (source, code, label). Codes are only unique
             # within a source (AI0106 in Regionalatlas, BEV001 in GENESIS), so the
             # source key has to be part of the identity.
@@ -1815,13 +1840,18 @@ class SOEPRagAdvisorService:
         for q in set(splits):
             # With one slot per battery the dense list is read three times as deep, so the pool
             # still holds `pool` distinct candidates after the batteries are folded.
-            cands = self._search(q, (pool + extra) * (3 if self._collapse_batteries else 1), filters)
+            diverse = self.app_mode == "inkar"
+            depth = pool if diverse else (pool + extra) * (3 if self._collapse_batteries else 1)
+            cands = self._search(q, depth, filters, source_diverse=diverse)
             # A one-word query that names a SOEP variable is that variable; see _soep_code_rows.
             code_rows = self._soep_code_rows(q, filters)
             cands = code_rows + cands
             if self._collapse_batteries:
                 cands = self._one_per_battery(cands)
-            head = pool + len(code_rows)
+            head = len(cands) if diverse else pool + len(code_rows)
+            if diverse and extra:
+                selected = {c["item_id"] for c in cands}
+                cands += [c for c in self._search(q, depth + extra, filters) if c["item_id"] not in selected][:extra]
             for position, cand in enumerate(cands[: head + extra]):
                 item_id = cand["item_id"]
                 if item_id not in all_unique_cands:

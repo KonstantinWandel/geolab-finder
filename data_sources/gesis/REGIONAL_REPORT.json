@@ -1,0 +1,18 @@
+{
+  "built_at": "2026-10-04T18:55:14.212525+00:00",
+  "rule_version": "1.6",
+  "harvest_complete": true,
+  "studies_considered": 8076,
+  "variables_considered": 1407148,
+  "variables_without_study_metadata": 8258,
+  "indexed_records": 24222,
+  "classifications": {
+    "regional_study": 1541,
+    "regional_dataset": 23,
+    "survey_geography_variable": 12081,
+    "regional_dataset_variable": 10577
+  },
+  "metadata_only": true,
+  "modern_map_join_claimed": false,
+  "records_sha256": "116dc43de1a7b4670264acb6e5fbcdc65c4014970700b31bb164f306217aa4a5"
+}

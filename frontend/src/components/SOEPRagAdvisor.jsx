@@ -576,6 +576,13 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en', consent }) {
     link_level: row.link_level || '',
     link_verified: row.link_verified === false ? 'no' : 'yes',
     description: row.rich_description || row.search_description || row.stats_summary || '',
+    metadata_license: row.metadata_license || '',
+    metadata_attribution: row.metadata_attribution || '',
+    metadata_resource_uri: row.metadata_resource_uri || '',
+    study_id: row.study_id || '',
+    data_access: row.data_access || '',
+    metadata_only: row.metadata_only ?? '',
+    map_ready: row.map_ready ?? '',
   })
 
   const downloadBlob = (content, filename, type) => {
@@ -905,6 +912,15 @@ function SOEPRagAdvisor({ apiUrl, mode = 'all', language = 'en', consent }) {
                       >
                         {level.label}{row.link_verified === false ? '*' : ''}
                       </span>
+                    )}
+                    {['CC-BY-4.0', 'CC0-1.0'].includes(row.metadata_license) && (
+                      <a className="mini-chip link-chip"
+                         href={row.metadata_license === 'CC-BY-4.0'
+                           ? 'https://creativecommons.org/licenses/by/4.0/'
+                           : 'https://creativecommons.org/publicdomain/zero/1.0/'}
+                         target="_blank" rel="noreferrer" title={row.metadata_attribution || ''}>
+                        {t('row.metadataLicense', { license: row.metadata_license })}
+                      </a>
                     )}
                     {(row.api_hint || clampedRows[rowKey] || expanded) && (
                       <button type="button" className="result-toggle"

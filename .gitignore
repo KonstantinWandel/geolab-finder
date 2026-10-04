@@ -53,6 +53,10 @@ README_SOEP_RAG.md
 # ignore the downloaded catalogue files themselves (licence-bound, regenerable).
 data_sources/*/raw/*
 !data_sources/*/raw/.gitkeep
+data_sources/gesis/*.sqlite*
+data_sources/gesis/region*.jsonl
+data_sources/gesis/geodb_records.json
+output/
 
 # The source workbook and its pre-annotation copy are working data, not code. The public
 # facts they hold (source names, URLs, coverage, status) are published through

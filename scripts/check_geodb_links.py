@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import datetime, timezone
 import random
 import re
 import http.cookiejar
@@ -37,6 +38,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 METADATA = REPO_ROOT / "soep_metadata_output" / "geodb_metadata.json"
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
       "Chrome/122.0.0.0 Safari/537.36")
+MAX_BODY_BYTES = 1024 * 1024
 
 # url pattern -> a URL of the same shape with a deliberately invalid code
 BOGUS_PROBES = {
@@ -84,7 +86,7 @@ def fetch_size(url: str, timeout: int = 45) -> Any:
             urllib.request.HTTPSHandler(context=context),
         )
         with opener.open(request, timeout=timeout) as response:
-            return len(response.read())
+            return len(response.read(MAX_BODY_BYTES))
     except urllib.error.HTTPError as exc:
         return f"http-{exc.code}"
     except (urllib.error.URLError, ssl.SSLError, OSError) as exc:
@@ -97,6 +99,7 @@ def fetch_size(url: str, timeout: int = 45) -> Any:
             try:
                 done = subprocess.run(
                     [curl, "-sk", "-L", "--max-time", str(timeout), "-A", UA,
+                     "--range", f"0-{MAX_BODY_BYTES - 1}", "--max-filesize", str(MAX_BODY_BYTES),
                      "-o", "/dev/null", "-w", "%{http_code} %{size_download}", url],
                     capture_output=True, text=True, timeout=timeout + 10)
                 status, _, size = done.stdout.strip().partition(" ")
@@ -115,9 +118,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=20260825)
     parser.add_argument("--workers", type=int, default=6)
     parser.add_argument("--json-out", default="")
+    parser.add_argument("--metadata", type=Path, default=METADATA)
     args = parser.parse_args()
 
-    records = json.loads(METADATA.read_text(encoding="utf-8"))
+    records = json.loads(args.metadata.read_text(encoding="utf-8"))
     by_source: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     for record in records:
         by_source[record["source_key"]].append(record)
@@ -166,7 +170,11 @@ def main() -> None:
     if args.json_out:
         out = Path(args.json_out)
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps({"shells": {k: str(v) for k, v in shells.items()},
+        out.write_text(json.dumps({"checked_at": datetime.now(timezone.utc).isoformat(),
+                                   "metadata": str(args.metadata), "seed": args.seed,
+                                   "maximum_body_bytes": MAX_BODY_BYTES,
+                                   "scope": "Sampled HTTP reachability; shells and provider challenges require browser/manual review, not proof of exact dataset content.",
+                                   "shells": {k: str(v) for k, v in shells.items()},
                                    "results": results}, ensure_ascii=False, indent=2), encoding="utf-8")
 
 

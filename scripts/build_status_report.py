@@ -101,6 +101,11 @@ SOURCE_KEYS: Dict[str, List[str]] = {
 # `next` is the developer detail (English, shown in CHECKLIST.md); `de` is the short phrase
 # that goes into the German handoff table.
 OPEN_ITEMS: Dict[str, Dict[str, str]] = {
+    "gesis": {
+        "state": "partial",
+        "next": "Public archive OAI and KG RDF catalogue ingested with API count/sample checks. Vitrine partner indices return a provider challenge; no partner-coverage claim. Rebuild commands and measured counts: data_sources/gesis/SOURCE.md and *_REPORT.json.",
+        "de": "Oeffentliche Archiv-/KG-Metadaten katalogweit erfasst und gegen die API geprueft. Vitrine-Partnerkataloge sind durch eine Anbieter-Challenge nicht erreichbar und werden nicht als erfasst ausgegeben. Nur Metadaten, keine Befragungsdaten.",
+    },
     "regionalatlas-deutschland": {
         "de": "Vollständig eingebunden: alle 232 Indikatoren mit Beschreibung und direktem Link auf die passende Karte. Bei einer Aktualisierung des Atlas muss die Indikatorliste neu geladen werden.",
         "state": "done",
@@ -452,7 +457,8 @@ def check_url(url: str) -> str:
 
 
 def gather(link_check: bool) -> List[Dict[str, Any]]:
-    registry = json.loads(REGISTRY.read_text(encoding="utf-8"))["sources"]
+    from registry_extras import supplement_sources
+    registry = supplement_sources(json.loads(REGISTRY.read_text(encoding="utf-8"))["sources"], REGISTRY.parent)
     records: List[Dict[str, Any]] = []
     if METADATA.exists():
         records = json.loads(METADATA.read_text(encoding="utf-8"))
@@ -476,7 +482,7 @@ def gather(link_check: bool) -> List[Dict[str, Any]]:
 
     rows: List[Dict[str, Any]] = []
     for position, source in enumerate(registry, start=1):
-        folder = DATA_SOURCES / f"{position:02d}-{source['slug']}"
+        folder = DATA_SOURCES / source.get("folder_name", f"{position:02d}-{source['slug']}")
         raw = folder / "raw"
         files = sorted(
             (p for p in raw.iterdir() if p.name not in {".gitkeep", "FETCH_LOG.json"}),
@@ -485,7 +491,7 @@ def gather(link_check: bool) -> List[Dict[str, Any]]:
         size = sum(p.stat().st_size for p in files if p.is_file())
         log_path = raw / "FETCH_LOG.json"
         log = json.loads(log_path.read_text(encoding="utf-8")) if log_path.exists() else {"artifacts": {}}
-        schluessel = SOURCE_KEYS.get(source["slug"], []) + [f"portal:{source['slug']}"]
+        schluessel = SOURCE_KEYS.get(source["slug"], [source["slug"]] if source.get("source_origin") == "additional" else []) + [f"portal:{source['slug']}"]
         indexed = sum(counts.get(key, 0) for key in schluessel)
         levels: Dict[str, int] = {}
         unverified_count = 0

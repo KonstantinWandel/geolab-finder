@@ -1,0 +1,833 @@
+{
+  "tested_at": "2026-10-04T19:02:16.913839+00:00",
+  "passed": true,
+  "metadata_sha256": "381990c313524c95814f86dec5701e1913cb3bed79b526bf31ab86a5cc487d4a",
+  "source_grounded_rows_checked": 24222,
+  "service_sha256": "fb9541562a04722bfa6f9d144f063ce5b86ed2075fbca0e43b5722fabfd8a22e",
+  "production_model": "intfloat/multilingual-e5-large-instruct",
+  "production_reranker": "Alibaba-NLP/gte-multilingual-reranker-base",
+  "candidate_policy": "GeoDB: global dense head plus one best candidate per other provider, at most twice the fixed pool; exact alphanumeric code injection. SOEP unchanged.",
+  "configured_global_pool": 12,
+  "rerank_doc_chars": 480,
+  "regression_gates": {
+    "smoke": {
+      "before": {
+        "queries": 58,
+        "hit@1": 55,
+        "hit@3": 57,
+        "hit@10": 58,
+        "misses": []
+      },
+      "after": {
+        "queries": 58,
+        "hit@1": 53,
+        "hit@3": 57,
+        "hit@10": 58,
+        "misses": []
+      }
+    },
+    "hard": {
+      "before": {
+        "graded_queries": 31,
+        "hit@1": 21,
+        "hit@3": 27,
+        "hit@10": 30,
+        "misses": [
+          "INT251"
+        ],
+        "by_kind": {
+          "concept": {
+            "n": 8,
+            "hit@1": 5,
+            "hit@3": 7,
+            "hit@10": 8
+          },
+          "lay": {
+            "n": 5,
+            "hit@1": 3,
+            "hit@3": 4,
+            "hit@10": 5
+          },
+          "crosslingual": {
+            "n": 5,
+            "hit@1": 4,
+            "hit@3": 4,
+            "hit@10": 5
+          },
+          "discrimination": {
+            "n": 5,
+            "hit@1": 3,
+            "hit@3": 5,
+            "hit@10": 5
+          },
+          "constraint": {
+            "n": 5,
+            "hit@1": 4,
+            "hit@3": 5,
+            "hit@10": 5
+          },
+          "code": {
+            "n": 3,
+            "hit@1": 2,
+            "hit@3": 2,
+            "hit@10": 2
+          }
+        },
+        "negative_controls": 28,
+        "false_positives": [
+          "Anzahl der Straßenlaternen pro Straße",
+          "Lieblingsfarbe der Bevölkerung"
+        ],
+        "seconds_median": 0.23,
+        "seconds_max": 1.89,
+        "margin_signal": {
+          "auc": 0.442,
+          "threshold": 0.0467,
+          "impossible_caught": "5/28",
+          "answerable_flagged": "6/31",
+          "answerable_median": 0.0848,
+          "impossible_median": 0.0917
+        },
+        "top_rerank_signal": {
+          "auc": 0.808,
+          "threshold": 0.4826,
+          "impossible_caught": "20/28",
+          "answerable_flagged": "5/31",
+          "answerable_median": 0.5603,
+          "impossible_median": 0.4268
+        },
+        "weak_match_as_deployed": {
+          "impossible_caught": "20/28",
+          "answerable_flagged": "5/31"
+        }
+      },
+      "after": {
+        "graded_queries": 31,
+        "hit@1": 21,
+        "hit@3": 29,
+        "hit@10": 31,
+        "misses": [],
+        "by_kind": {
+          "concept": {
+            "n": 8,
+            "hit@1": 6,
+            "hit@3": 8,
+            "hit@10": 8
+          },
+          "lay": {
+            "n": 5,
+            "hit@1": 3,
+            "hit@3": 4,
+            "hit@10": 5
+          },
+          "crosslingual": {
+            "n": 5,
+            "hit@1": 3,
+            "hit@3": 4,
+            "hit@10": 5
+          },
+          "discrimination": {
+            "n": 5,
+            "hit@1": 3,
+            "hit@3": 5,
+            "hit@10": 5
+          },
+          "constraint": {
+            "n": 5,
+            "hit@1": 3,
+            "hit@3": 5,
+            "hit@10": 5
+          },
+          "code": {
+            "n": 3,
+            "hit@1": 3,
+            "hit@3": 3,
+            "hit@10": 3
+          }
+        },
+        "negative_controls": 28,
+        "false_positives": [
+          "Anzahl der Straßenlaternen pro Straße",
+          "Lieblingsfarbe der Bevölkerung",
+          "Anzahl der Freundschaften pro Person"
+        ],
+        "seconds_median": 0.35,
+        "seconds_max": 2.25,
+        "margin_signal": {
+          "auc": 0.576,
+          "threshold": 0.0569,
+          "impossible_caught": "10/28",
+          "answerable_flagged": "6/31",
+          "answerable_median": 0.0784,
+          "impossible_median": 0.0645
+        },
+        "top_rerank_signal": {
+          "auc": 0.79,
+          "threshold": 0.4724,
+          "impossible_caught": "18/28",
+          "answerable_flagged": "6/31",
+          "answerable_median": 0.5668,
+          "impossible_median": 0.4496
+        },
+        "weak_match_as_deployed": {
+          "impossible_caught": "18/28",
+          "answerable_flagged": "7/31"
+        }
+      }
+    }
+  },
+  "gesis": {
+    "passed": true,
+    "cases": [
+      {
+        "query": "Bundesland des Wohnorts",
+        "kind": "geography",
+        "rank": 1,
+        "top": [
+          {
+            "id": "gesis:exploredata-ZA7682_VarS12_1",
+            "label": "S12.1. Wohnort (Bundesland)",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:missy-mz-2021-di0500p",
+            "label": "Wohnungswechsel (i.d. letzten 12 Mon.): Bundesland des früh. Wohnsitzes",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:missy-mz-2021-tp-ec0100p",
+            "label": "Arbeitsstätte: Selbes Bundesland wie Wohnsitz",
+            "type": "survey_geography_variable"
+          }
+        ],
+        "weak_match": false
+      },
+      {
+        "query": "administrative district identification code",
+        "kind": "geography",
+        "rank": 3,
+        "top": [
+          {
+            "id": "gesis:exploredata-ZA3450_VarV840",
+            "label": "REGIERUNGSBEZIRK",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA3762_VarV894",
+            "label": "REGIERUNGSBEZIRK",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA1919_Varv316",
+            "label": "Regierungsbezirk",
+            "type": "survey_geography_variable"
+          }
+        ],
+        "weak_match": true
+      },
+      {
+        "query": "town size of respondent place of residence",
+        "kind": "geography",
+        "rank": 1,
+        "top": [
+          {
+            "id": "gesis:exploredata-ZA8801_Vartownsize",
+            "label": "Ortsgrößenklassen",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA3431_VarFR86",
+            "label": "fr86: Town size",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA4218_Varvar055",
+            "label": "Town size",
+            "type": "survey_geography_variable"
+          }
+        ],
+        "weak_match": true
+      },
+      {
+        "query": "Postleitzahl des Wohnorts",
+        "kind": "geography",
+        "rank": 1,
+        "top": [
+          {
+            "id": "gesis:exploredata-ZA5547_VarS10_1",
+            "label": "Postleitzahl Wohnort",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA6185_Varc05_7163",
+            "label": "Postleitzahl des Wohnortes",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA7994_Varv_163",
+            "label": "w1 Bitte geben Sie die 5-stellige PLZ Ihres Hauptwohnsitzes an. - Ortsgröße",
+            "type": "survey_geography_variable"
+          }
+        ],
+        "weak_match": false
+      },
+      {
+        "query": "Wahlkreisnummer in einer deutschen Wahlstudie",
+        "kind": "geography",
+        "rank": 1,
+        "top": [
+          {
+            "id": "gesis:exploredata-ZA6835_Varwknr_17",
+            "label": "Wahlkreisnummer 2017",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA4217_VarQ28",
+            "label": "Electoral district (Wahlkreis-Nr)",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA5305_Varelecdist9",
+            "label": "Wahlkreis, nicht eindeutig zuordenbar: 9. Moeglichkeit",
+            "type": "survey_geography_variable"
+          }
+        ],
+        "weak_match": false
+      },
+      {
+        "query": "SOLIKRIS macro data NUTS1",
+        "kind": "aggregate",
+        "rank": 1,
+        "top": [
+          {
+            "id": "gesis:SDN-10.7802-1933",
+            "label": "Macro data for Germany on NUTS1-level 2008-2016, collected for the SOLIKRIS project",
+            "type": "regional_dataset"
+          },
+          {
+            "id": "gesis:exploredata-ZA5773_Vard12rat",
+            "label": "REGION AT - NUTS 1",
+            "type": "survey_geography_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA5773_Vard12rel",
+            "label": "REGION GR - NUTS 1",
+            "type": "survey_geography_variable"
+          }
+        ],
+        "weak_match": false
+      },
+      {
+        "query": "regional election aggregates Germany 1976 1980",
+        "kind": "aggregate",
+        "rank": 1,
+        "top": [
+          {
+            "id": "gesis:ZA1184",
+            "label": "Aggregatdaten für die Wahlkreise der Bundesrepublik (1976-1980)",
+            "type": "regional_dataset"
+          },
+          {
+            "id": "gesis:exploredata-ZA1184_Varv14",
+            "label": "% GUELTIGE ERSTSTIMMEN NPD BTW 1976",
+            "type": "regional_dataset_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA1184_Varv3",
+            "label": "WAHLBETEILIGUNG BTW 1976",
+            "type": "regional_dataset_variable"
+          }
+        ],
+        "weak_match": false
+      },
+      {
+        "query": "Reichstagswahlen zwischen 1890 und 1912",
+        "kind": "historical",
+        "rank": 1,
+        "top": [
+          {
+            "id": "gesis:ZA8145",
+            "label": "Wählerbewegung im Wilhelminischen Deutschland. Die Reichstagswahlen von 1890 bis 1912",
+            "type": "regional_dataset"
+          },
+          {
+            "id": "gesis:exploredata-ZA8145E_Varand12p",
+            "label": "Stimmanteil anderer Parteien",
+            "type": "regional_dataset_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA8145E_Varztr12p",
+            "label": "Stimmanteil der Zentrumspartei",
+            "type": "regional_dataset_variable"
+          }
+        ],
+        "weak_match": false
+      },
+      {
+        "query": "georeferenced radical right support Europe SCoRE",
+        "kind": "study",
+        "rank": 1,
+        "top": [
+          {
+            "id": "gesis:ZA8769",
+            "label": "SCoRE - Sub-national Context and Radical Right Support in Europe - Geo-referenced Data",
+            "type": "regional_study"
+          },
+          {
+            "id": "gesis:SDN-10.7802-2774",
+            "label": "Right-Wing Extremist Mobilization in Germany",
+            "type": "regional_study"
+          },
+          {
+            "id": "gesis:exploredata-ZA5681_Vard12rfr",
+            "label": "Region_FR_RECODED NUTS 1",
+            "type": "survey_geography_variable"
+          }
+        ],
+        "weak_match": false
+      },
+      {
+        "query": "ZA0950",
+        "kind": "code",
+        "rank": 1,
+        "top": [
+          {
+            "id": "gesis:ZA0950",
+            "label": "Aggregatdaten für die Wahlkreise der Bundesrepublik (1949-1969) in der Einteilung der Bundestagswahl 1965",
+            "type": "regional_dataset"
+          },
+          {
+            "id": "gesis:exploredata-ZA2472_Varvza009",
+            "label": "ALTER 45 BIS 65 50",
+            "type": "regional_dataset_variable"
+          },
+          {
+            "id": "gesis:exploredata-ZA2472_Varvza019",
+            "label": "ERWERBSPERS 50",
+            "type": "regional_dataset_variable"
+          }
+        ],
+        "weak_match": false
+      }
+    ],
+    "nuts_filter_passed": true,
+    "source_facet": {
+      "value": "gesis",
+      "label": "GESIS"
+    }
+  },
+  "all_source_contracts": {
+    "passed": true,
+    "scope": "One deterministic metadata lookup per provider, checking nonempty results and no source-filter leakage; not an independent semantic-quality benchmark.",
+    "sources": [
+      {
+        "source": "ba_arbeitsmarkt_kommunal",
+        "query": "AMK-017",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "amk:017",
+        "top_label": "Sozialversicherungspflichtig Beschäftigte am Wohnort (Stichtag 30.06.): 55 Jahre und älter"
+      },
+      {
+        "source": "ba_arbeitsmarktreport",
+        "query": "AMR-213DD6",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "amr:Eckwerte:213DD6",
+        "top_label": "Zugang an Arbeitslosen: aus Ausbildung/sonst. Maßnahme [Eckwerte]"
+      },
+      {
+        "source": "ba_glossar",
+        "query": "Haushaltsbudget",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "ba_glossar:haushaltsbudget",
+        "top_label": "Haushaltsbudget"
+      },
+      {
+        "source": "ba_strukturdaten",
+        "query": "BA-SDI-035",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "ba_sdi:Strukturdaten:0035",
+        "top_label": "Regelleistungsberechtigte"
+      },
+      {
+        "source": "bkg",
+        "query": "kfz250",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "bkg:sonstige:kfz250",
+        "top_label": "kfz250 (Gitter, geografische Namen und weitere Geobasisdaten)"
+      },
+      {
+        "source": "boris_d",
+        "query": "Bodenrichtwerte Hessen",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "boris:land:hessen",
+        "top_label": "Bodenrichtwerte Hessen"
+      },
+      {
+        "source": "breitband",
+        "query": "Sonstige ≥ 50 Mbit/s (Krankenhäuser)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "breitband:bba_12_2025:Krankenhäuser:Sonstige ≥ 50 Mbit/s",
+        "top_label": "Sonstige ≥ 50 Mbit/s (Krankenhäuser)"
+      },
+      {
+        "source": "btw_strukturdaten",
+        "query": "BTW2025-01",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "btw2025:01",
+        "top_label": "Gemeinden am 31.12.2023 (Anzahl) [2025]"
+      },
+      {
+        "source": "bundes_klinik_atlas",
+        "query": "Sicherstellungsauftrag (Kontakt Daten)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "bundesklinikatlas:StandortKontaktDaten:Sicherstellungsauftrag",
+        "top_label": "Sicherstellungsauftrag (Kontakt Daten)"
+      },
+      {
+        "source": "db_isr",
+        "query": "Lst Betriebsbeschr (Streckenabschnitte)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "db_isr:field:ISR:ISR_V_GEO_STRECKENABSCHNITTE:LST_BETRIEBSBESCHR",
+        "top_label": "Lst Betriebsbeschr (Streckenabschnitte)"
+      },
+      {
+        "source": "db_stada",
+        "query": "Reisebedarf / Einkaufsmöglichkeit (Bahnhof)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "db_stada:hasTravelNecessities",
+        "top_label": "Reisebedarf / Einkaufsmöglichkeit (Bahnhof)"
+      },
+      {
+        "source": "destatis_mobilitaet",
+        "query": "Mobilität im Tagesverlauf (Mobilfunkdaten)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "destatis_mobilitaet:mobilität im tages­verlauf",
+        "top_label": "Mobilität im Tagesverlauf (Mobilfunkdaten)"
+      },
+      {
+        "source": "deutschlandatlas",
+        "query": "Erreichbarkeit des Öffentlichen Verkehrs (Haltestellen)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "deutschlandatlas:oenv",
+        "top_label": "Erreichbarkeit des Öffentlichen Verkehrs (Haltestellen)"
+      },
+      {
+        "source": "dwd_cdc",
+        "query": "Globalstrahlung, Vieljährige Mittelwerte (Klimanormalperioden) (1-km-Raster)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "dwd:grids_germany:multi_annual:radiation_global",
+        "top_label": "Globalstrahlung, Vieljährige Mittelwerte (Klimanormalperioden) (1-km-Raster)"
+      },
+      {
+        "source": "fdz_iab",
+        "query": "IAB-Stellenerhebung (IAB-SE) und IAB-SE-Befragungsdaten verknüpft mit den administrativen Daten des IAB (IABSE-ADIAB)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "fdz_iab:iab-stellenerhebung",
+        "top_label": "IAB-Stellenerhebung (IAB-SE) und IAB-SE-Befragungsdaten verknüpft mit den administrativen Daten des IAB (IABSE-ADIAB)"
+      },
+      {
+        "source": "fdz_ruhr",
+        "query": "Extra analysis for Wuppertal Institute using RWI-GEO-RED-V9 House Rent Data (FDZ Ruhr)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "fdz:10_7807_immo_red_hm_wi_suf_v9",
+        "top_label": "Extra analysis for Wuppertal Institute using RWI-GEO-RED-V9 House Rent Data (FDZ Ruhr)"
+      },
+      {
+        "source": "fdz_statistik",
+        "query": "Mikrozensus",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "fdz_statistik:de:haushalte:mikrozensus",
+        "top_label": "Mikrozensus"
+      },
+      {
+        "source": "gba_qualitaetsbericht",
+        "query": "Pflegekraefte (Personal des Krankenhauses)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "gba:Personal_des_Krankenhauses:Pflegekraefte",
+        "top_label": "Pflegekraefte (Personal des Krankenhauses)"
+      },
+      {
+        "source": "gbe",
+        "query": "GBE_10_14",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "gbe:ind:31014",
+        "top_label": "Gesundheitsausgaben der Arbeitgeber nach Leistungsarten (in Millionen Euro, in %, je Einwohner), Deutschland, ab 1992"
+      },
+      {
+        "source": "genesis_bund",
+        "query": "Mit Keltertrauben bestockte Rebfläche: Deutschland, Jahre, Rebsorte",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "destatis_table:41252-0002",
+        "top_label": "Mit Keltertrauben bestockte Rebfläche: Deutschland, Jahre, Weinanbaugebiete, Rebsorte"
+      },
+      {
+        "source": "geoportal",
+        "query": "German Companies (Datenportal)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "portal:german-companies",
+        "top_label": "German Companies (Datenportal)"
+      },
+      {
+        "source": "german_companies",
+        "query": "Implisense-ID (Unternehmensdaten)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "german_companies:id",
+        "top_label": "Implisense-ID (Unternehmensdaten)"
+      },
+      {
+        "source": "gesis",
+        "query": "% Erstst.=SPD bei Zweitst.=DP",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "gesis:exploredata-ZA2794_VarNDPESPD",
+        "top_label": "Zahl Erstst.=SPD bei Zweitst.=DP"
+      },
+      {
+        "source": "hochschulkompass",
+        "query": "Mitglied HRK (Hochschulverzeichnis)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "hochschulkompass:Mitglied HRK",
+        "top_label": "Mitglied HRK (Hochschulverzeichnis)"
+      },
+      {
+        "source": "inkar",
+        "query": "Neubauwohnungen je Einwohner",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "inkar:Raumbeobachtung DE:q_fert_wo_bev",
+        "top_label": "Neubauwohnungen je Einwohner"
+      },
+      {
+        "source": "ioer_monitor",
+        "query": "O10AT",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "ioer:O10AT",
+        "top_label": "Fläche für Hochwasserretention (IÖR-Monitor)"
+      },
+      {
+        "source": "laendermonitor",
+        "query": "KiTa | Personal | Leitung",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "laendermonitor:kita-personal-leitung",
+        "top_label": "KiTa | Personal | Leitung"
+      },
+      {
+        "source": "marktstammdaten",
+        "query": "EinheitenGenehmigung",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "mastr:EinheitenGenehmigung",
+        "top_label": "EinheitenGenehmigung"
+      },
+      {
+        "source": "mid",
+        "query": "MiD_2017",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "mid:mid_2017",
+        "top_label": "MiD 2017"
+      },
+      {
+        "source": "migration_integration",
+        "query": "Ausländer mit EU-Niederlassungsfreiheit",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "migration_integration:AZR_EUNIEDERL",
+        "top_label": "Ausländer mit EU-Niederlassungsfreiheit"
+      },
+      {
+        "source": "offeneregister",
+        "query": "Registernummer in nationaler Schreibweise (Handelsregister)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "offeneregister:native_company_number",
+        "top_label": "Registernummer in nationaler Schreibweise (Handelsregister)"
+      },
+      {
+        "source": "opendata_oepnv",
+        "query": "Linien mit Haltestellenreferenz",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "opendata_oepnv:linien-haltestellenreferenz-rnv",
+        "top_label": "Linien mit Haltestellenreferenz"
+      },
+      {
+        "source": "osm_poi",
+        "query": "Apotheken (OpenStreetMap)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "osm:pharmacy",
+        "top_label": "Apotheken (OpenStreetMap)"
+      },
+      {
+        "source": "pks",
+        "query": "Anlage-5-Beispielsammlung.pdf",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "pks:pks_2025_richtlinien_anlage_5_beispielsammlung_pdf_451kb",
+        "top_label": "PKS 2025 - Richtlinien - Anlage 5 - Beispielsammlung (PDF, 451KB)"
+      },
+      {
+        "source": "regionalatlas",
+        "query": "AI0419",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "regionalatlas:AI004-3:AI0419",
+        "top_label": "AB in Kunst, Unterh. und Erholung je 1.000 EW im erwerbsf. Alter"
+      },
+      {
+        "source": "regionalstatistik",
+        "query": "PRE042",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "genesis:PRE042",
+        "top_label": "Preisindex für schlüsselfertiges Bauen"
+      },
+      {
+        "source": "transit_formats",
+        "query": "to_stop_id (pathways.txt)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "gtfs:pathways.txt:to_stop_id",
+        "top_label": "to_stop_id (pathways.txt)"
+      },
+      {
+        "source": "uba_laerm",
+        "query": "Lärmwirkungen auf die Gesundheit",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "laerm:l_rmwirkungen_auf_die_gesundheit",
+        "top_label": "Lärmwirkungen auf die Gesundheit"
+      },
+      {
+        "source": "uba_luft",
+        "query": "PM10BAP",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "uba:PM10BAP",
+        "top_label": "Benzo(a)pyren im Feinstaub (BaP)"
+      },
+      {
+        "source": "unfallatlas",
+        "query": "Unfall-ID (laufende Nummer je Unfall)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "unfallatlas:UIDENTSTLAE",
+        "top_label": "Unfall-ID (laufende Nummer je Unfall)"
+      },
+      {
+        "source": "wahlergebnisse",
+        "query": "Stimmen für GRÜNE (Wahlergebnis)",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "wahl:partei:gr_ne",
+        "top_label": "Stimmen für GRÜNE (Wahlergebnis)"
+      },
+      {
+        "source": "wegweiser_kommune",
+        "query": "Pflegebedürftige - Dauerhaft vollstationär - Ist-Daten",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "wegweiser:281",
+        "top_label": "Pflegebedürftige - Dauerhaft vollstationär - Ist-Daten"
+      },
+      {
+        "source": "zensus2022",
+        "query": "2000S-3050",
+        "rows": 5,
+        "source_filter_passed": true,
+        "top_id": "zensus_table:2000S-3050",
+        "top_label": "Personen ab 15 Jahren: Einwanderungsgeschichte/Geschlecht - Erwerbsstatus (ausführlich) - Höchster Schulabschluss"
+      }
+    ],
+    "records_by_source": {
+      "inkar": 660,
+      "regionalatlas": 232,
+      "geoportal": 43,
+      "breitband": 632,
+      "ba_glossar": 309,
+      "ba_strukturdaten": 68,
+      "ba_arbeitsmarktreport": 292,
+      "ba_arbeitsmarkt_kommunal": 33,
+      "migration_integration": 140,
+      "gba_qualitaetsbericht": 51,
+      "bundes_klinik_atlas": 41,
+      "deutschlandatlas": 86,
+      "hochschulkompass": 11,
+      "db_isr": 415,
+      "db_stada": 37,
+      "opendata_oepnv": 77,
+      "transit_formats": 246,
+      "destatis_mobilitaet": 6,
+      "regionalstatistik": 3305,
+      "german_companies": 12,
+      "offeneregister": 13,
+      "laendermonitor": 17,
+      "btw_strukturdaten": 98,
+      "unfallatlas": 25,
+      "genesis_bund": 3026,
+      "zensus2022": 1440,
+      "osm_poi": 26,
+      "wegweiser_kommune": 393,
+      "dwd_cdc": 136,
+      "boris_d": 21,
+      "wahlergebnisse": 38,
+      "ioer_monitor": 91,
+      "fdz_ruhr": 28,
+      "bkg": 70,
+      "fdz_statistik": 75,
+      "fdz_iab": 34,
+      "marktstammdaten": 31,
+      "uba_luft": 13,
+      "uba_laerm": 6,
+      "pks": 13,
+      "mid": 7,
+      "gbe": 204,
+      "gesis": 24222
+    }
+  },
+  "report_files_sha256": {
+    "existing-link-health.json": "657722b187258259275be56829b9f95a8e917d89c8f66d3127075c2b4f37a62b",
+    "all-source-contracts.json": "34e4ddad880367072f9ed5ffc106df38ad0b712e8e7d696d4823b1df037526c2",
+    "candidate-diagnosis.json": "764379f33861d832e3313792638b1a10156148d3e8768dd976b965b1a798ab55",
+    "candidate-hard.json": "e2e4c90a56654c5425cfdbb7878ecf872678a0044dcdb2e1fec0ec32032761ae",
+    "gesis-retrieval.json": "25dfb0e9107d550ab1bb19960f52470616f20315c7fcba334d6422600477b8c5",
+    "baseline-smoke.json": "44b5f2f59b80d427618c3c0d64586638d67bcbcf76afa6469d13edaab64f7e22",
+    "existing-facets.json": "44444af70d7042282880a0823d0ddcba9fa9e97dd9d326aef989baf66850be46",
+    "rejected-v1.3-hard.json": "5f82c9711b10ec6bdca1fa2a984e2e6612d7ef72fcac2a440fe9b3b5b058c507",
+    "soep-shared-path.json": "623b40230c46d3ad113488b681ab1b8ffdb9b1a384437c803a5e49fd679be826",
+    "rejected-v1.3-smoke.json": "9a04c518ef52f033d671878f0755ecdf28bcae1b900d0d691efbb2e7caf347d6",
+    "all-source-urls.json": "2f803757eff5703343bd8d1d182c466c0b0065827392f567a295a0911c9f8397",
+    "baseline-hard.json": "d03fd54219d23ffc92828bf2682452a20a108dd9e98223c7e4284d3787d9223f",
+    "existing-browser-links.json": "3883bb6b3ef013ecc20beb0c443e0663408680ceb3ce3247882d9e0d2b6f80a9",
+    "rejected-v1.5-smoke.json": "45e15834f736d1f06efbf69ade8de92a0e1ebbc4551e1b237977b81143b07a90",
+    "rejected-v1.5-hard.json": "ed15fea55f9236d54d80119525a278da5c6c75a88c506007f9aeecc50ec28296",
+    "candidate-smoke.json": "f4139c5cfe8b7ee7a5d35e5a47f7ef90a93b5cd8f17bd1787222b97ee7849354",
+    "pre-grid-qa.json": "f13e1acf7a2638f07d24cd284338097f3034be163556d15b59a06c4d6e447721"
+  }
+}

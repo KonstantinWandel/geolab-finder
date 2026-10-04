@@ -46,7 +46,7 @@ export const STRINGS = {
     'theme.light': 'Light',
     'lang.aria': 'Language',
 
-    'blurb.inkar': 'Semantic search across German georeferenced data sources. Describe the concept you need data on; every hit links out to the source that holds it, and says how precisely that link lands.',
+    'blurb.inkar': 'Semantic search across German and international georeferenced data sources. Describe the concept you need data on; every hit links out to the source that holds it, and says how precisely that link lands.',
     'blurb.soep': 'Multilingual semantic search over SOEP-Core variable metadata.',
     'blurb.all': 'Semantic search over SOEP variables and regional indicators.',
     'action.clear': 'Clear',
@@ -54,6 +54,7 @@ export const STRINGS = {
     'action.searching': 'Searching...',
 
     'filter.source': 'Search source',
+    'row.metadataLicense': 'Metadata: {license}',
     'filter.allSources': 'All metadata sources',
     'filter.allSelected': 'all',
     'filter.close': 'done',
@@ -234,7 +235,7 @@ export const STRINGS = {
     'theme.light': 'Hell',
     'lang.aria': 'Sprache',
 
-    'blurb.inkar': 'Semantische Suche über deutsche georeferenzierte Datenquellen. Beschreiben Sie das Konzept, zu dem Sie Daten brauchen; jeder Treffer verlinkt auf die Quelle, die die Daten hält, und nennt, wie genau der Link dort landet.',
+    'blurb.inkar': 'Semantische Suche über deutsche und internationale georeferenzierte Datenquellen. Beschreiben Sie das Konzept, zu dem Sie Daten brauchen; jeder Treffer verlinkt auf die Quelle, die die Daten hält, und nennt, wie genau der Link dort landet.',
     'blurb.soep': 'Mehrsprachige semantische Suche über die Variablenmetadaten des SOEP-Core.',
     'blurb.all': 'Semantische Suche über SOEP-Variablen und regionale Indikatoren.',
     'action.clear': 'Verlauf löschen',
@@ -242,6 +243,7 @@ export const STRINGS = {
     'action.searching': 'Suche läuft...',
 
     'filter.source': 'Datenquelle',
+    'row.metadataLicense': 'Metadaten: {license}',
     'filter.allSources': 'Alle Metadatenquellen',
     'filter.allSelected': 'alle',
     'filter.close': 'fertig',
